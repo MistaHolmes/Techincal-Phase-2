@@ -10,22 +10,22 @@ datasource db {
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
-  blogs         Blog[]
-  notifications Notification[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  blogs         Blog[]
+  notifications Notification[]
 }
 
 model Blog {
-  id                String     @id @default(cuid())
-  title             String
-  content           String     
-  published         Boolean    @default(false)
-  authorId          String
-  author            User       @relation(fields: [authorId], references: [id])
-  likes             Int      @default(0)
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  published Boolean  @default(false)
+  authorId  String
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id])
 }
 
 model Notification {
@@ -33,7 +33,8 @@ model Notification {
   message   String
   read      Boolean  @default(false)
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
   @@index([userId])
 }

@@ -289,14 +289,14 @@ async function broadcastNotificationUpdate(userId: string) {
   prisma.notification.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
-  }).then(notifications => {
-    const unreadCount = notifications.filter(n => !n.read).length;
+  }).then((notifications: any[]) => {
+    const unreadCount = notifications.filter((n: any) => !n.read).length;
     connection.ws.send(JSON.stringify({
       type: 'notification_update',
       notifications,
       unreadCount,
     }));
-  }).catch(err => console.error('broadcastNotificationUpdate error:', err));
+  }).catch((err: any) => console.error('broadcastNotificationUpdate error:', err));
 }
 
 // Public route - no auth required
