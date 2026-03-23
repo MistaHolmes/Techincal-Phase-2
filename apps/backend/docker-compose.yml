@@ -37,7 +37,7 @@ services:
     configs:
       - source: nginx_config
         target: /etc/nginx/nginx.conf
-    networks:r
+    networks:
       - draftdock-network
     depends_on:
       backend:
