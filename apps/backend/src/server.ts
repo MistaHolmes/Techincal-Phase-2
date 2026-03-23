@@ -10,6 +10,11 @@ import { createClient } from 'redis';
 import { sendBlogPublishedEmail } from './email';
 import rateLimit from 'express-rate-limit';
 
+import abinashRouter from './routes/abinash';
+import skRouter from './routes/sk';
+import soumyaRouter from './routes/soumya';
+import supritRouter from './routes/suprit';
+
 // MUST be first — loads REDIS_URL, DATABASE_URL etc. before anything reads process.env
 dotenv.config();
 
@@ -68,6 +73,12 @@ const authLimiter = rateLimit({
 
 app.use(globalLimiter);
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Team Member Routes Setup
+app.use('/api/abinash', abinashRouter);
+app.use('/api/sk', skRouter);
+app.use('/api/soumya', soumyaRouter);
+app.use('/api/suprit', supritRouter);
 
 // Store user WebSocket connections with ping/pong tracking
 interface UserConnection {
