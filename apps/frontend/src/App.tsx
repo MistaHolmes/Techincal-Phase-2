@@ -10,7 +10,7 @@ import { MyStory } from "./components/MyStory";
 import { Contact } from "./components/Contact";
 import ProfileComponent from "./pages/Profile";
 
-// Lazy-loaded new pages
+// Lazy-loaded pages
 const Explore = lazy(() => import("./pages/Explore"));
 const Drafts = lazy(() => import("./pages/Drafts"));
 const TagBlogs = lazy(() => import("./pages/TagBlogs"));
@@ -18,6 +18,9 @@ const Bookmarks = lazy(() => import("./pages/Bookmarks"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AuthorProfile = lazy(() => import("./pages/AuthorProfile"));
 const Settings = lazy(() => import("./pages/Settings"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
+const ReadingHistory = lazy(() => import("./pages/ReadingHistory"));
+const SeriesPage = lazy(() => import("./pages/SeriesPage"));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -42,7 +45,7 @@ const App: React.FC = () => {
           <Route path="/my-story" element={<MyStory />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/profile" element={<ProfileComponent />} />
-          {/* New routes */}
+          {/* Feature routes */}
           <Route path="/explore" element={<Explore />} />
           <Route path="/drafts" element={<RequireAuth><Drafts /></RequireAuth>} />
           <Route path="/tags/:tagName" element={<TagBlogs />} />
@@ -50,6 +53,10 @@ const App: React.FC = () => {
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/author/:userId" element={<AuthorProfile />} />
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+          {/* New feature routes */}
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/history" element={<RequireAuth><ReadingHistory /></RequireAuth>} />
+          <Route path="/series/:id" element={<SeriesPage />} />
         </Routes>
       </Suspense>
     </Router>

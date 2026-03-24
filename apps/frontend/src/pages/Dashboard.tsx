@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
-import { BarChart2, Heart, FileText, Trophy, MessageCircle } from "lucide-react";
+import { BarChart2, Heart, FileText, Trophy, MessageCircle, Users } from "lucide-react";
 import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
 import BackgroundGlow from "@/components/ui/BackgroundGlow";
@@ -45,6 +45,7 @@ const Dashboard = () => {
   const { getToken } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [followerCount, setFollowerCount] = useState(0);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -55,6 +56,13 @@ const Dashboard = () => {
           withCredentials: true,
         });
         setStats(res.data);
+        // Fetch follower count
+        try {
+          const followersRes = await axios.get(`${API_URL}/api/user/followers`, {
+            headers: { Authorization: `Bearer ${token}` }, withCredentials: true,
+          });
+          setFollowerCount(Array.isArray(followersRes.data) ? followersRes.data.length : 0);
+        } catch {}
       } catch (err) {
         console.error("Failed to fetch stats:", err);
       } finally {
@@ -105,6 +113,7 @@ const Dashboard = () => {
               <StatCard label="Drafts" value={stats.draftCount} icon={<FileText size={18} />} color="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400" delay={0.2} />
               <StatCard label="Total Likes" value={stats.totalLikes} icon={<Heart size={18} />} color="bg-rose-50 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400" delay={0.3} />
               <StatCard label="Comments Received" value={stats.commentCount} icon={<MessageCircle size={18} />} color="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400" delay={0.4} />
+              <StatCard label="Followers" value={followerCount} icon={<Users size={18} />} color="bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400" delay={0.5} />
             </div>
 
             {/* Top Blog */}

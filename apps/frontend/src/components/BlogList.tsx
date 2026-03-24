@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Share, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share, Heart, Clock } from "lucide-react";
 import { ShareButton } from "./ui/shareButton";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -183,7 +183,10 @@ const BlogList: React.FC<BlogListProps> = ({ posts }) => {
               className="w-full max-w-3xl border border-gray-200 dark:border-gray-800 rounded-lg px-6 py-4 shadow-sm bg-white/70 dark:bg-gray-900/40 backdrop-blur-sm cursor-pointer transition-colors hover:text-gray-500 dark:hover:text-gray-400"
             >
               <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
-                <span>{post.published}</span>
+                <div className="flex items-center gap-2">
+                  <span>{post.published}</span>
+                  <span className="flex items-center gap-1"><Clock size={12} className="opacity-60" />{Math.max(1, Math.ceil(stripHtmlTags(post.summary).split(/\s+/).filter(Boolean).length / 200))} min read</span>
+                </div>
                 <span className="text-gray-400 dark:text-gray-500">By {post.author}</span>
               </div>
               <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">{stripHtmlTags(post.title)}</h3>

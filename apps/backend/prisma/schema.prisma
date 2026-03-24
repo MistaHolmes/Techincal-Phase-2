@@ -19,6 +19,10 @@ model User {
   comments       Comment[]
   bookmarks      Bookmark[]
   notifications  Notification[]
+  followers      Follow[]     @relation("Following")
+  following      Follow[]     @relation("Followers")
+  readingHistory ReadingHistory[]
+  series         Series[]
 }
 
 model Blog {
@@ -31,12 +35,18 @@ model Blog {
   authorId    String
   likes       Int        @default(0)
   views       Int        @default(0)
+  seriesId    String?
+  seriesOrder Int?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   author      User       @relation(fields: [authorId], references: [id])
   tags        Tag[]
   comments    Comment[]
   bookmarks   Bookmark[]
+  series      Series?    @relation(fields: [seriesId], references: [id])
+  readingHistory ReadingHistory[]
+
+  @@index([seriesId])
 }
 
 model Tag {
@@ -81,4 +91,43 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("Followers", fields: [followerId], references: [id])
+  following   User     @relation("Following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model ReadingHistory {
+  id     String   @id @default(cuid())
+  userId String
+  blogId String
+  readAt DateTime @default(now())
+  user   User     @relation(fields: [userId], references: [id])
+  blog   Blog     @relation(fields: [blogId], references: [id])
+
+  @@unique([userId, blogId])
+  @@index([userId])
+  @@index([blogId])
+}
+
+model Series {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  author      User     @relation(fields: [authorId], references: [id])
+  blogs       Blog[]
+
+  @@index([authorId])
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Ship, Plus, ArrowRight, Sun, Moon } from "lucide-react";
+import { Ship, Plus, ArrowRight, Sun, Moon, Search } from "lucide-react";
 import { Notifications } from "../Notifications";
 import { ProfileButton } from "./profilebutton";
 
@@ -71,6 +71,14 @@ const Header2 = () => {
 
       {/* Right: Buttons & User */}
       <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+        {/* Search */}
+        <button
+          onClick={() => navigate("/search")}
+          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          title="Search blogs"
+        >
+          <Search className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+        </button>
         {/* Dark Mode Toggle */}
         <button
           onClick={() => setIsDark(!isDark)}

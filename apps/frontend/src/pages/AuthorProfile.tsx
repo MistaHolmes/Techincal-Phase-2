@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { Calendar, ArrowLeft } from "lucide-react";
+import { Calendar, ArrowLeft, UserPlus, UserMinus, Users } from "lucide-react";
+import { useAuth } from "@clerk/clerk-react";
 import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
 
@@ -30,9 +31,14 @@ interface Author {
 const AuthorProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { getToken, isSignedIn } = useAuth();
   const [author, setAuthor] = useState<Author | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
     if (!userId) return;
@@ -42,6 +48,26 @@ const AuthorProfile = () => {
         if (!res.ok) { setNotFound(true); return; }
         const data = await res.json();
         setAuthor(data);
+
+        // Fetch follow counts
+        const countsRes = await fetch(`${API_URL}/api/authors/${userId}/follow-counts`);
+        if (countsRes.ok) {
+          const counts = await countsRes.json();
+          setFollowerCount(counts.followerCount);
+          setFollowingCount(counts.followingCount);
+        }
+
+        // Check if current user follows this author
+        if (isSignedIn) {
+          const token = await getToken();
+          const followRes = await fetch(`${API_URL}/api/user/is-following/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (followRes.ok) {
+            const followData = await followRes.json();
+            setIsFollowing(followData.isFollowing);
+          }
+        }
       } catch {
         setNotFound(true);
       } finally {
@@ -49,7 +75,35 @@ const AuthorProfile = () => {
       }
     };
     fetchAuthor();
-  }, [userId]);
+  }, [userId, isSignedIn]);
+
+  const handleFollowToggle = async () => {
+    if (!isSignedIn || !userId) return;
+    setFollowLoading(true);
+    try {
+      const token = await getToken();
+      if (isFollowing) {
+        await fetch(`${API_URL}/api/user/unfollow/${userId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setIsFollowing(false);
+        setFollowerCount((c) => Math.max(0, c - 1));
+      } else {
+        await fetch(`${API_URL}/api/user/follow`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ userId }),
+        });
+        setIsFollowing(true);
+        setFollowerCount((c) => c + 1);
+      }
+    } catch (err) {
+      console.error("Follow toggle failed:", err);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   const displayName = author?.name || author?.email?.split("@")[0] || "Anonymous";
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -110,12 +164,41 @@ const AuthorProfile = () => {
               {author.bio && (
                 <p className="text-gray-600 dark:text-gray-300 text-base mb-4 leading-relaxed">{author.bio}</p>
               )}
+
+              {/* Follow Button */}
+              {isSignedIn && (
+                <button
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                  className={`inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                    isFollowing
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 border border-gray-300 dark:border-gray-600"
+                      : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
+                  } disabled:opacity-50`}
+                >
+                  {isFollowing ? (
+                    <><UserMinus size={14} /> Unfollow</>
+                  ) : (
+                    <><UserPlus size={14} /> Follow</>
+                  )}
+                </button>
+              )}
             </div>
 
-            {/* Blog count badge */}
-            <div className="text-center">
-              <span className="text-3xl font-bold text-gray-900 dark:text-white">{author.blogs.length}</span>
-              <p className="text-xs text-gray-400 dark:text-gray-500">blog{author.blogs.length !== 1 ? "s" : ""}</p>
+            {/* Stats badges */}
+            <div className="flex gap-6 text-center flex-shrink-0">
+              <div>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">{author.blogs.length}</span>
+                <p className="text-xs text-gray-400 dark:text-gray-500">blogs</p>
+              </div>
+              <div>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">{followerCount}</span>
+                <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1"><Users size={10} />followers</p>
+              </div>
+              <div>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">{followingCount}</span>
+                <p className="text-xs text-gray-400 dark:text-gray-500">following</p>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -128,6 +211,8 @@ const AuthorProfile = () => {
           <div className="space-y-4">
             {author.blogs.map((blog, i) => {
               const excerpt = blog.content.replace(/[#*`>\[\]]/g, "").slice(0, 140) + "...";
+              const wordCount = blog.content.split(/\s+/).filter(Boolean).length;
+              const readingTime = Math.max(1, Math.ceil(wordCount / 200));
               return (
                 <motion.div
                   key={blog.id}
@@ -145,7 +230,10 @@ const AuthorProfile = () => {
                       <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition line-clamp-1">{blog.title}</h3>
                       <p className="text-gray-500 dark:text-gray-400 text-sm mb-2 line-clamp-2">{excerpt}</p>
                       <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
-                        <span>{new Date(blog.updatedAt).toLocaleDateString()}</span>
+                        <div className="flex items-center gap-3">
+                          <span>{new Date(blog.updatedAt).toLocaleDateString()}</span>
+                          <span>{readingTime} min read</span>
+                        </div>
                         <span>❤️ {blog.likes}</span>
                       </div>
                     </div>

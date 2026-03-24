@@ -1493,6 +1493,372 @@ app.put('/api/blogs/:id/tags', requireAuth(), writeLimiter, async (req, res: any
   }
 });
 
+// ── Follow System ─────────────────────────────────────────────────────────────
+
+// POST /api/user/follow — follow a user
+app.post('/api/user/follow', requireAuth(), writeLimiter, async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { userId: targetUserId } = req.body;
+    if (!targetUserId) return res.status(400).json({ error: 'userId is required' });
+    if (targetUserId === user.id) return res.status(400).json({ error: 'Cannot follow yourself' });
+
+    const targetUser = await prisma.user.findUnique({ where: { id: targetUserId }, select: { id: true, name: true, email: true } });
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+
+    const follow = await prisma.follow.upsert({
+      where: { followerId_followingId: { followerId: user.id, followingId: targetUserId } },
+      update: {},
+      create: { followerId: user.id, followingId: targetUserId },
+    });
+
+    // Notify the followed user
+    await prisma.notification.create({
+      data: {
+        message: `${user.name || user.email.split('@')[0]} started following you.`,
+        userId: targetUserId,
+        read: false,
+      },
+    });
+    await broadcastNotificationUpdate(targetUserId);
+    await redisClient.del(`author:${targetUserId}`);
+
+    return res.status(201).json({ message: 'Followed successfully', follow });
+  } catch (err) {
+    console.error('Error following user:', err);
+    return res.status(500).json({ error: 'Failed to follow user' });
+  }
+});
+
+// DELETE /api/user/unfollow/:userId — unfollow a user
+app.delete('/api/user/unfollow/:userId', requireAuth(), writeLimiter, async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { userId: targetUserId } = req.params;
+    await prisma.follow.deleteMany({ where: { followerId: user.id, followingId: targetUserId } });
+    await redisClient.del(`author:${targetUserId}`);
+
+    return res.json({ message: 'Unfollowed successfully' });
+  } catch (err) {
+    console.error('Error unfollowing user:', err);
+    return res.status(500).json({ error: 'Failed to unfollow user' });
+  }
+});
+
+// GET /api/user/followers — current user's followers
+app.get('/api/user/followers', requireAuth(), async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const followers = await prisma.follow.findMany({
+      where: { followingId: user.id },
+      include: { follower: { select: { id: true, email: true, name: true, profilePicture: true, bio: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.json(followers.map((f: any) => f.follower));
+  } catch (err) {
+    console.error('Error fetching followers:', err);
+    return res.status(500).json({ error: 'Failed to fetch followers' });
+  }
+});
+
+// GET /api/user/following — current user's following list
+app.get('/api/user/following', requireAuth(), async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const following = await prisma.follow.findMany({
+      where: { followerId: user.id },
+      include: { following: { select: { id: true, email: true, name: true, profilePicture: true, bio: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.json(following.map((f: any) => f.following));
+  } catch (err) {
+    console.error('Error fetching following:', err);
+    return res.status(500).json({ error: 'Failed to fetch following' });
+  }
+});
+
+// GET /api/user/is-following/:userId — check follow status
+app.get('/api/user/is-following/:userId', requireAuth(), async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { userId: targetUserId } = req.params;
+    const follow = await prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId: user.id, followingId: targetUserId } },
+    });
+
+    return res.json({ isFollowing: !!follow });
+  } catch (err) {
+    console.error('Error checking follow status:', err);
+    return res.status(500).json({ error: 'Failed to check follow status' });
+  }
+});
+
+// GET /api/authors/:userId/follow-counts — public follower/following counts
+app.get('/api/authors/:userId/follow-counts', async (req, res: any) => {
+  try {
+    const { userId } = req.params;
+    const [followerCount, followingCount] = await Promise.all([
+      prisma.follow.count({ where: { followingId: userId } }),
+      prisma.follow.count({ where: { followerId: userId } }),
+    ]);
+    return res.json({ followerCount, followingCount });
+  } catch (err) {
+    console.error('Error fetching follow counts:', err);
+    return res.status(500).json({ error: 'Failed to fetch follow counts' });
+  }
+});
+
+// ── Search ────────────────────────────────────────────────────────────────────
+
+// GET /api/blogs/search?q=... — search blogs by title/content
+app.get('/api/blogs/search', async (req, res: any) => {
+  try {
+    const q = (req.query.q as string || '').trim();
+    if (!q) return res.json([]);
+
+    const cacheKey = `search:${q.toLowerCase().slice(0, 100)}`;
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json(JSON.parse(cached));
+
+    const blogs = await prisma.blog.findMany({
+      where: {
+        published: true,
+        OR: [
+          { title: { contains: q, mode: 'insensitive' } },
+          { content: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      include: { author: { select: { email: true, name: true } }, tags: true },
+      orderBy: { updatedAt: 'desc' },
+      take: 20,
+    });
+
+    await redisClient.setEx(cacheKey, 120, JSON.stringify(blogs));
+    return res.json(blogs);
+  } catch (err) {
+    console.error('Error searching blogs:', err);
+    return res.status(500).json({ error: 'Failed to search blogs' });
+  }
+});
+
+// ── Reading History ───────────────────────────────────────────────────────────
+
+// POST /api/user/history — record reading
+app.post('/api/user/history', requireAuth(), async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { blogId } = req.body;
+    if (!blogId) return res.status(400).json({ error: 'blogId is required' });
+
+    await prisma.readingHistory.upsert({
+      where: { userId_blogId: { userId: user.id, blogId } },
+      update: { readAt: new Date() },
+      create: { userId: user.id, blogId },
+    });
+
+    return res.json({ message: 'History recorded' });
+  } catch (err) {
+    console.error('Error recording history:', err);
+    return res.status(500).json({ error: 'Failed to record history' });
+  }
+});
+
+// GET /api/user/history — get reading history
+app.get('/api/user/history', requireAuth(), async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const history = await prisma.readingHistory.findMany({
+      where: { userId: user.id },
+      include: {
+        blog: {
+          include: { author: { select: { email: true, name: true } }, tags: true },
+        },
+      },
+      orderBy: { readAt: 'desc' },
+      take: 50,
+    });
+
+    return res.json(history.map((h: any) => ({ ...h.blog, readAt: h.readAt })));
+  } catch (err) {
+    console.error('Error fetching history:', err);
+    return res.status(500).json({ error: 'Failed to fetch history' });
+  }
+});
+
+// DELETE /api/user/history — clear reading history
+app.delete('/api/user/history', requireAuth(), writeLimiter, async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    await prisma.readingHistory.deleteMany({ where: { userId: user.id } });
+    return res.json({ message: 'History cleared' });
+  } catch (err) {
+    console.error('Error clearing history:', err);
+    return res.status(500).json({ error: 'Failed to clear history' });
+  }
+});
+
+// ── Series ────────────────────────────────────────────────────────────────────
+
+// POST /api/series — create a series
+app.post('/api/series', requireAuth(), writeLimiter, async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { name, description } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'Series name is required' });
+
+    const series = await prisma.series.create({
+      data: { name: name.trim(), description: description?.trim() || null, authorId: user.id },
+    });
+
+    return res.status(201).json(series);
+  } catch (err) {
+    console.error('Error creating series:', err);
+    return res.status(500).json({ error: 'Failed to create series' });
+  }
+});
+
+// GET /api/series/:id — get series with blogs
+app.get('/api/series/:id', async (req, res: any) => {
+  try {
+    const { id } = req.params;
+    const series = await prisma.series.findUnique({
+      where: { id },
+      include: {
+        author: { select: { id: true, email: true, name: true } },
+        blogs: {
+          where: { published: true },
+          orderBy: { seriesOrder: 'asc' },
+          include: { author: { select: { email: true, name: true } }, tags: true },
+        },
+      },
+    });
+    if (!series) return res.status(404).json({ error: 'Series not found' });
+    return res.json(series);
+  } catch (err) {
+    console.error('Error fetching series:', err);
+    return res.status(500).json({ error: 'Failed to fetch series' });
+  }
+});
+
+// GET /api/user/series — current user's series
+app.get('/api/user/series', requireAuth(), async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const seriesList = await prisma.series.findMany({
+      where: { authorId: user.id },
+      include: { _count: { select: { blogs: true } } },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    return res.json(seriesList);
+  } catch (err) {
+    console.error('Error fetching user series:', err);
+    return res.status(500).json({ error: 'Failed to fetch series' });
+  }
+});
+
+// PUT /api/blogs/:id/series — assign blog to series
+app.put('/api/blogs/:id/series', requireAuth(), writeLimiter, async (req, res: any) => {
+  try {
+    const { id } = req.params;
+    const { seriesId, seriesOrder } = req.body;
+
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const blog = await prisma.blog.findFirst({ where: { id, authorId: user.id } });
+    if (!blog) return res.status(404).json({ error: 'Blog not found' });
+
+    const updated = await prisma.blog.update({
+      where: { id },
+      data: { seriesId: seriesId || null, seriesOrder: seriesOrder ?? null },
+    });
+
+    return res.json(updated);
+  } catch (err) {
+    console.error('Error updating blog series:', err);
+    return res.status(500).json({ error: 'Failed to update blog series' });
+  }
+});
+
+// GET /api/blogs/:id/related — related blogs by shared tags
+app.get('/api/blogs/:id/related', async (req, res: any) => {
+  try {
+    const { id } = req.params;
+
+    const blog = await prisma.blog.findUnique({
+      where: { id },
+      include: { tags: { select: { id: true } } },
+    });
+    if (!blog) return res.status(404).json({ error: 'Blog not found' });
+
+    const tagIds = blog.tags.map((t: any) => t.id);
+    if (tagIds.length === 0) return res.json([]);
+
+    const related = await prisma.blog.findMany({
+      where: {
+        published: true,
+        id: { not: id },
+        tags: { some: { id: { in: tagIds } } },
+      },
+      include: { author: { select: { email: true, name: true } }, tags: true },
+      orderBy: { likes: 'desc' },
+      take: 4,
+    });
+
+    return res.json(related);
+  } catch (err) {
+    console.error('Error fetching related blogs:', err);
+    return res.status(500).json({ error: 'Failed to fetch related blogs' });
+  }
+});
+
+// ── Trending Tags ─────────────────────────────────────────────────────────────
+
+// GET /api/tags/trending — top tags by blog count
+app.get('/api/tags/trending', async (req, res: any) => {
+  try {
+    const cacheKey = 'tags:trending';
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json(JSON.parse(cached));
+
+    const tags = await prisma.tag.findMany({
+      include: { _count: { select: { blogs: true } } },
+      orderBy: { blogs: { _count: 'desc' } },
+      take: 15,
+    });
+
+    const result = tags.map((t: any) => ({ name: t.name, count: t._count.blogs }));
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(result));
+    return res.json(result);
+  } catch (err) {
+    console.error('Error fetching trending tags:', err);
+    return res.status(500).json({ error: 'Failed to fetch trending tags' });
+  }
+});
+
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });

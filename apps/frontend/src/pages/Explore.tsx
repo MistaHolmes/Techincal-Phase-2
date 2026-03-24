@@ -39,7 +39,7 @@ const Explore = () => {
           fetch(`${API_URL}/api/blogs/trending`),
           fetch(`${API_URL}/api/blogs/featured`),
           fetch(`${API_URL}/api/blogs`),
-          fetch(`${API_URL}/api/tags`),
+          fetch(`${API_URL}/api/tags/trending`),
         ]);
         const [tData, fData, rData, tagsData] = await Promise.all([
           tRes.json(), fRes.json(), rRes.json(), tagsRes.json(),
@@ -145,7 +145,10 @@ const Explore = () => {
                   <span className="material-symbols-outlined text-4xl group-hover:text-white text-stitch-on-surface" data-icon={idx % 4 === 0 ? "memory" : idx % 4 === 1 ? "palette" : idx % 4 === 2 ? "smart_toy" : "spa"}>
                     {idx % 4 === 0 ? "memory" : idx % 4 === 1 ? "palette" : idx % 4 === 2 ? "smart_toy" : "spa"}
                   </span>
-                  <span className="font-headline text-2xl font-medium group-hover:text-white text-stitch-on-surface">{tag.name}</span>
+                  <div>
+                    <span className="font-headline text-2xl font-medium group-hover:text-white text-stitch-on-surface block">{tag.name}</span>
+                    <span className="font-label text-xs text-stitch-secondary group-hover:text-white/70">{tag.count} blog{tag.count !== 1 ? "s" : ""}</span>
+                  </div>
                 </div>
               ))}
             </div>
