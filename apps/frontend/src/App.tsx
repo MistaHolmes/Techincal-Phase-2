@@ -38,14 +38,14 @@ const App: React.FC = () => {
           <Route path="/blogs" element={<RequireAuth><UserBlogs /></RequireAuth>} />
           <Route path="/create-blog" element={<RequireAuth><BlogForm /></RequireAuth>} />
           <Route path="/edit-blog/:blogId" element={<RequireAuth><BlogForm /></RequireAuth>} />
-          <Route path="/blog/:blogId" element={<RequireAuth><BlogView /></RequireAuth>} />
+          <Route path="/blog/:blogId" element={<BlogView />} />
           <Route path="/my-story" element={<MyStory />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/profile" element={<ProfileComponent />} />
           {/* New routes */}
-          <Route path="/explore" element={<RequireAuth><Explore /></RequireAuth>} />
+          <Route path="/explore" element={<Explore />} />
           <Route path="/drafts" element={<RequireAuth><Drafts /></RequireAuth>} />
-          <Route path="/tags/:tagName" element={<RequireAuth><TagBlogs /></RequireAuth>} />
+          <Route path="/tags/:tagName" element={<TagBlogs />} />
           <Route path="/bookmarks" element={<RequireAuth><Bookmarks /></RequireAuth>} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/author/:userId" element={<AuthorProfile />} />
