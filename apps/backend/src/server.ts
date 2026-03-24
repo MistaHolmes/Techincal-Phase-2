@@ -983,6 +983,494 @@ app.get("/redis-test", async (req, res) => {
   }
 });
 
+// ── Blog Update ───────────────────────────────────────────────────────────────
+
+// PUT /api/blogs/:id — update blog (edit mode)
+app.put('/api/blogs/:id', requireAuth(), writeLimiter, async (req: any, res: any) => {
+  try {
+    const { id } = req.params;
+    const { title, content, published, coverImage } = req.body;
+
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const existing = await prisma.blog.findFirst({ where: { id, authorId: user.id } });
+    if (!existing) return res.status(404).json({ error: 'Blog not found' });
+
+    const updated = await prisma.blog.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(content !== undefined && { content }),
+        ...(published !== undefined && { published }),
+        ...(coverImage !== undefined && { coverImage }),
+      },
+    });
+
+    // Invalidate caches
+    await redisClient.del(`blog:${id}`);
+    await invalidateUserBlogsCache(user.id);
+    await invalidatePublicBlogsCache();
+
+    return res.json(updated);
+  } catch (err) {
+    console.error('Error updating blog:', err);
+    return res.status(500).json({ error: 'Failed to update blog' });
+  }
+});
+
+// ── User Drafts ────────────────────────────────────────────────────────────────
+
+// GET /api/user/blogs/drafts — get current user's unpublished draft blogs
+app.get('/api/user/blogs/drafts', requireAuth(), async (req: any, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const drafts = await prisma.blog.findMany({
+      where: { authorId: user.id, published: false },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, title: true, content: true, published: true, createdAt: true, updatedAt: true },
+    });
+
+    return res.json({ blogs: drafts });
+  } catch (err) {
+    console.error('Error fetching drafts:', err);
+    return res.status(500).json({ error: 'Failed to fetch drafts' });
+  }
+});
+
+// GET /api/user/blogs — get current user's all blogs (published + drafts for sidebar)
+app.get('/api/user/blogs', requireAuth(), async (req: any, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const cacheKey = `user_blogs:${user.id}`;
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json({ blogs: JSON.parse(cached) });
+
+    const blogs = await prisma.blog.findMany({
+      where: { authorId: user.id },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, title: true, content: true, published: true, createdAt: true, updatedAt: true, coverImage: true },
+    });
+
+    await redisClient.setEx(cacheKey, 120, JSON.stringify(blogs));
+    return res.json({ blogs });
+  } catch (err) {
+    console.error('Error fetching user blogs:', err);
+    return res.status(500).json({ error: 'Failed to fetch user blogs' });
+  }
+});
+
+// PATCH /api/blogs/:id/publish — publish a blog
+app.patch('/api/blogs/:id/publish', requireAuth(), writeLimiter, async (req: any, res: any) => {
+  try {
+    const { id } = req.params;
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const existing = await prisma.blog.findFirst({ where: { id, authorId: user.id } });
+    if (!existing) return res.status(404).json({ error: 'Blog not found' });
+
+    const updated = await prisma.blog.update({ where: { id }, data: { published: true } });
+
+    await redisClient.del(`blog:${id}`);
+    await invalidateUserBlogsCache(user.id);
+    await invalidatePublicBlogsCache();
+
+    return res.json({ message: 'Blog published', blog: updated });
+  } catch (err) {
+    console.error('Error publishing blog:', err);
+    return res.status(500).json({ error: 'Failed to publish blog' });
+  }
+});
+
+// DELETE /api/blogs/:id — delete a blog (RESTful route)
+app.delete('/api/blogs/:id', requireAuth(), writeLimiter, async (req: any, res: any) => {
+  try {
+    const { id } = req.params;
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const existing = await prisma.blog.findFirst({ where: { id, authorId: user.id } });
+    if (!existing) return res.status(404).json({ error: 'Blog not found' });
+
+    await prisma.blog.delete({ where: { id } });
+
+    await redisClient.del(`blog:${id}`);
+    await invalidateUserBlogsCache(user.id);
+    await invalidatePublicBlogsCache();
+
+    return res.json({ message: 'Blog deleted' });
+  } catch (err) {
+    console.error('Error deleting blog:', err);
+    return res.status(500).json({ error: 'Failed to delete blog' });
+  }
+});
+
+// ── Tags ─────────────────────────────────────────────────────────────────────
+
+
+// GET /api/tags — all unique tags with blog count
+app.get('/api/tags', async (req, res: any) => {
+  try {
+    const cacheKey = 'tags:all';
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json(JSON.parse(cached));
+
+    const tags = await prisma.tag.findMany({
+      include: { _count: { select: { blogs: true } } },
+      orderBy: { name: 'asc' },
+    });
+
+    const result = tags.map((t: any) => ({ name: t.name, count: t._count.blogs }));
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(result));
+    return res.json(result);
+  } catch (err) {
+    console.error('Error fetching tags:', err);
+    return res.status(500).json({ error: 'Failed to fetch tags' });
+  }
+});
+
+// GET /api/blogs/trending — top blogs by likes in last 7 days
+app.get('/api/blogs/trending', async (req, res: any) => {
+  try {
+    const cacheKey = 'blogs:trending';
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json(JSON.parse(cached));
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const blogs = await prisma.blog.findMany({
+      where: { published: true, updatedAt: { gte: sevenDaysAgo } },
+      include: { author: { select: { email: true, name: true } }, tags: true },
+      orderBy: { likes: 'desc' },
+      take: 6,
+    });
+
+    await redisClient.setEx(cacheKey, 120, JSON.stringify(blogs));
+    return res.json(blogs);
+  } catch (err) {
+    console.error('Error fetching trending:', err);
+    return res.status(500).json({ error: 'Failed to fetch trending blogs' });
+  }
+});
+
+// GET /api/blogs/featured — featured blogs
+app.get('/api/blogs/featured', async (req, res: any) => {
+  try {
+    const cacheKey = 'blogs:featured';
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json(JSON.parse(cached));
+
+    const blogs = await prisma.blog.findMany({
+      where: { published: true, featured: true },
+      include: { author: { select: { email: true, name: true } }, tags: true },
+      orderBy: { updatedAt: 'desc' },
+      take: 6,
+    });
+
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(blogs));
+    return res.json(blogs);
+  } catch (err) {
+    console.error('Error fetching featured:', err);
+    return res.status(500).json({ error: 'Failed to fetch featured blogs' });
+  }
+});
+
+// GET /api/blogs/by-tag/:tag — filter by tag name
+app.get('/api/blogs/by-tag/:tag', async (req, res: any) => {
+  try {
+    const { tag } = req.params;
+    const cacheKey = `blogs:tag:${tag}`;
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json(JSON.parse(cached));
+
+    const blogs = await prisma.blog.findMany({
+      where: { published: true, tags: { some: { name: { equals: tag, mode: 'insensitive' } } } },
+      include: { author: { select: { email: true, name: true } }, tags: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(blogs));
+    return res.json(blogs);
+  } catch (err) {
+    console.error('Error fetching blogs by tag:', err);
+    return res.status(500).json({ error: 'Failed to fetch blogs by tag' });
+  }
+});
+
+// ── Comments ─────────────────────────────────────────────────────────────────
+
+// GET /api/blogs/:id/comments
+app.get('/api/blogs/:id/comments', async (req, res: any) => {
+  try {
+    const { id } = req.params;
+    const comments = await prisma.comment.findMany({
+      where: { blogId: id },
+      include: { author: { select: { email: true, name: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+    return res.json(comments);
+  } catch (err) {
+    console.error('Error fetching comments:', err);
+    return res.status(500).json({ error: 'Failed to fetch comments' });
+  }
+});
+
+// POST /api/blogs/:id/comments (auth)
+app.post('/api/blogs/:id/comments', requireAuth(), writeLimiter, async (req, res: any) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+    if (!content?.trim()) return res.status(400).json({ error: 'Comment content is required' });
+
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const blog = await prisma.blog.findUnique({ where: { id }, select: { id: true } });
+    if (!blog) return res.status(404).json({ error: 'Blog not found' });
+
+    const comment = await prisma.comment.create({
+      data: { content: content.trim(), blogId: id, authorId: user.id },
+      include: { author: { select: { email: true, name: true } } },
+    });
+
+    return res.status(201).json(comment);
+  } catch (err) {
+    console.error('Error creating comment:', err);
+    return res.status(500).json({ error: 'Failed to create comment' });
+  }
+});
+
+// DELETE /api/comments/:id (auth, own comments only)
+app.delete('/api/comments/:id', requireAuth(), writeLimiter, async (req, res: any) => {
+  try {
+    const { id } = req.params;
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const comment = await prisma.comment.findFirst({ where: { id, authorId: user.id } });
+    if (!comment) return res.status(404).json({ error: 'Comment not found or not authorized' });
+
+    await prisma.comment.delete({ where: { id } });
+    return res.json({ message: 'Comment deleted' });
+  } catch (err) {
+    console.error('Error deleting comment:', err);
+    return res.status(500).json({ error: 'Failed to delete comment' });
+  }
+});
+
+// ── Bookmarks ────────────────────────────────────────────────────────────────
+
+// GET /api/user/bookmarks (auth)
+app.get('/api/user/bookmarks', requireAuth(), async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const bookmarks = await prisma.bookmark.findMany({
+      where: { userId: user.id },
+      include: {
+        blog: {
+          include: { author: { select: { email: true, name: true } }, tags: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.json(bookmarks.map((b: any) => b.blog));
+  } catch (err) {
+    console.error('Error fetching bookmarks:', err);
+    return res.status(500).json({ error: 'Failed to fetch bookmarks' });
+  }
+});
+
+// POST /api/user/bookmarks (auth)
+app.post('/api/user/bookmarks', requireAuth(), writeLimiter, async (req, res: any) => {
+  try {
+    const { blogId } = req.body;
+    if (!blogId) return res.status(400).json({ error: 'blogId required' });
+
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const bookmark = await prisma.bookmark.upsert({
+      where: { userId_blogId: { userId: user.id, blogId } },
+      update: {},
+      create: { userId: user.id, blogId },
+    });
+
+    return res.status(201).json(bookmark);
+  } catch (err) {
+    console.error('Error creating bookmark:', err);
+    return res.status(500).json({ error: 'Failed to bookmark' });
+  }
+});
+
+// DELETE /api/user/bookmarks/:blogId (auth)
+app.delete('/api/user/bookmarks/:blogId', requireAuth(), writeLimiter, async (req, res: any) => {
+  try {
+    const { blogId } = req.params;
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    await prisma.bookmark.deleteMany({ where: { userId: user.id, blogId } });
+    return res.json({ message: 'Bookmark removed' });
+  } catch (err) {
+    console.error('Error removing bookmark:', err);
+    return res.status(500).json({ error: 'Failed to remove bookmark' });
+  }
+});
+
+// GET /api/user/bookmarks/ids — get just the bookmarked blog IDs for client state (auth)
+app.get('/api/user/bookmarks/ids', requireAuth(), async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const bookmarks = await prisma.bookmark.findMany({
+      where: { userId: user.id },
+      select: { blogId: true },
+    });
+    return res.json(bookmarks.map((b: any) => b.blogId));
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch bookmark IDs' });
+  }
+});
+
+// ── Dashboard Stats ───────────────────────────────────────────────────────────
+
+// GET /api/user/stats (auth)
+app.get('/api/user/stats', requireAuth(), async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const [blogs, commentCount] = await Promise.all([
+      prisma.blog.findMany({
+        where: { authorId: user.id },
+        select: { id: true, title: true, published: true, likes: true, createdAt: true },
+        orderBy: { likes: 'desc' },
+      }),
+      prisma.comment.count({ where: { blog: { authorId: user.id } } }),
+    ]);
+
+    const totalLikes = blogs.reduce((sum: number, b: any) => sum + b.likes, 0);
+    const publishedCount = blogs.filter((b: any) => b.published).length;
+    const draftCount = blogs.filter((b: any) => !b.published).length;
+    const topBlog = blogs[0] || null;
+
+    return res.json({ totalBlogs: blogs.length, publishedCount, draftCount, totalLikes, commentCount, topBlog, blogs });
+  } catch (err) {
+    console.error('Error fetching stats:', err);
+    return res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+// ── Author Profiles ───────────────────────────────────────────────────────────
+
+// GET /api/authors/:userId — public author profile
+app.get('/api/authors/:userId', async (req, res: any) => {
+  try {
+    const { userId } = req.params;
+    const cacheKey = `author:${userId}`;
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json(JSON.parse(cached));
+
+    const author = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        bio: true,
+        createdAt: true,
+        blogs: {
+          where: { published: true },
+          select: { id: true, title: true, content: true, likes: true, createdAt: true, updatedAt: true, coverImage: true, tags: true },
+          orderBy: { updatedAt: 'desc' },
+        },
+      },
+    });
+
+    if (!author) return res.status(404).json({ error: 'Author not found' });
+
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(author));
+    return res.json(author);
+  } catch (err) {
+    console.error('Error fetching author:', err);
+    return res.status(500).json({ error: 'Failed to fetch author' });
+  }
+});
+
+// ── User Profile Update ───────────────────────────────────────────────────────
+
+// PATCH /api/user/profile (auth)
+app.patch('/api/user/profile', requireAuth(), writeLimiter, async (req, res: any) => {
+  try {
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { name, bio } = req.body;
+
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(bio !== undefined && { bio }),
+      },
+      select: { id: true, email: true, name: true, bio: true },
+    });
+
+    // Invalidate author cache
+    await redisClient.del(`author:${user.id}`);
+    return res.json(updated);
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    return res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// ── Blog Tags Update (extend existing blog create/update) ────────────────────
+
+// POST /api/blogs/:id/tags — set tags for a blog (replace all)
+app.put('/api/blogs/:id/tags', requireAuth(), writeLimiter, async (req, res: any) => {
+  try {
+    const { id } = req.params;
+    const { tags } = req.body; // string[]
+    if (!Array.isArray(tags)) return res.status(400).json({ error: 'tags must be an array' });
+
+    const user = await syncUser(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const blog = await prisma.blog.findFirst({ where: { id, authorId: user.id } });
+    if (!blog) return res.status(404).json({ error: 'Blog not found' });
+
+    // Upsert tags and connect
+    const tagRecords = await Promise.all(
+      tags.map((name: string) => prisma.tag.upsert({
+        where: { name: name.toLowerCase().trim() },
+        update: {},
+        create: { name: name.toLowerCase().trim() },
+      }))
+    );
+
+    await prisma.blog.update({
+      where: { id },
+      data: { tags: { set: tagRecords.map((t: any) => ({ id: t.id })) } },
+    });
+
+    await redisClient.del(`blog:${id}`);
+    await redisClient.del('tags:all');
+    return res.json({ message: 'Tags updated', tags: tagRecords });
+  } catch (err) {
+    console.error('Error updating tags:', err);
+    return res.status(500).json({ error: 'Failed to update tags' });
+  }
+});
+
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });

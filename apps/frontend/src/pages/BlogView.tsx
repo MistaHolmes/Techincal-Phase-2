@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import BlogSkeleton from "@/components/BlogSkeleton";
 import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
 import { BackButton } from "@/components/ui/backButton";
-import { ChevronLeft, Heart, Share } from "lucide-react";
+import { ChevronLeft, Heart, Share, MessageCircle, Send, Trash2 } from "lucide-react";
 import { ShareButton } from "@/components/ui/shareButton";
 import 'highlight.js/styles/atom-one-dark.css';
 import MDEditor from '@uiw/react-md-editor';
@@ -15,18 +16,33 @@ interface Blog {
   content: string;
   createdAt: string;
   likes: number;
+  coverImage?: string;
+  authorId?: string;
   author: {
     email: string;
   };
 }
 
+interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: { email: string; name?: string };
+  authorId?: string;
+}
+
 const BlogView = () => {
   const { blogId } = useParams();
+  const navigate = useNavigate();
+  const { getToken, userId: currentUserId } = useAuth();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [copied, setCopied] = useState(false);
   const [likes, setLikes] = useState(0);
   const [liked, setLiked] = useState(false);
-  const [likeQueue, setLikeQueue] = useState(0); // Tracks pending likes (+ or -)
+  const [likeQueue, setLikeQueue] = useState(0);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -39,6 +55,9 @@ const BlogView = () => {
         const data = await res.json();
         setBlog(data);
         setLikes(data.likes ?? 0);
+        // also fetch comments
+        const commentsRes = await fetch(`${API_URL}/api/blogs/${blogId}/comments`);
+        if (commentsRes.ok) setComments(await commentsRes.json());
       } catch (err) {
         console.error("Failed to fetch blog", err);
       }
@@ -160,11 +179,21 @@ const BlogView = () => {
             {blog.title}
           </h1>
 
+          {/* Cover Image */}
+          {blog.coverImage && (
+            <img src={blog.coverImage} alt={blog.title} className="w-full max-h-72 object-cover rounded-xl mb-6 shadow-sm" />
+          )}
+
           {/* Meta Info */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm sm:text-base text-gray-700 font-sans mb-8">
             {/* Left: Author and Date */}
             <div className="flex items-center gap-2">
-              <span>By <span className="font-medium">{blog.author.email}</span></span>
+              <span>By{" "}
+                <button
+                  onClick={() => blog.authorId && navigate(`/author/${blog.authorId}`)}
+                  className="font-medium hover:underline hover:text-blue-600 transition"
+                >{blog.author.email}</button>
+              </span>
               <span className="text-gray-400">•</span>
               <span>{formattedDate}</span>
             </div>
@@ -230,6 +259,88 @@ const BlogView = () => {
             />
           </div>
 
+          {/* ─────────────── Comments ─────────────── */}
+          <div className="mt-12">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <MessageCircle size={20} /> Comments ({comments.length})
+            </h2>
+
+            {/* Comment input */}
+            <div className="flex gap-3 mb-8">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Write a comment..."
+                rows={2}
+                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-black transition resize-none"
+              />
+              <button
+                onClick={async () => {
+                  if (!newComment.trim() || submittingComment) return;
+                  setSubmittingComment(true);
+                  try {
+                    const token = await getToken();
+                    const res = await fetch(`${API_URL}/api/blogs/${blogId}/comments`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ content: newComment.trim() }),
+                    });
+                    if (res.ok) {
+                      const comment = await res.json();
+                      setComments((prev) => [...prev, comment]);
+                      setNewComment("");
+                    }
+                  } catch (err) {
+                    console.error("Failed to post comment", err);
+                  } finally {
+                    setSubmittingComment(false);
+                  }
+                }}
+                disabled={!newComment.trim() || submittingComment}
+                className="px-4 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition disabled:opacity-40 flex items-center gap-1.5 self-start mt-0.5"
+              >
+                <Send size={14} /> {submittingComment ? "Posting..." : "Post"}
+              </button>
+            </div>
+
+            {/* Comments list */}
+            <div className="space-y-4">
+              {comments.length === 0 ? (
+                <p className="text-gray-400 italic text-sm py-4">No comments yet. Be the first!</p>
+              ) : (
+                comments.map((c) => (
+                  <div key={c.id} className="flex gap-3 group">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
+                      {(c.author.name || c.author.email || "?").slice(0, 1).toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-semibold text-gray-900">{c.author.name || c.author.email.split("@")[0]}</span>
+                        <span className="text-xs text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-gray-700 text-sm leading-relaxed">{c.content}</p>
+                    </div>
+                    {c.authorId === currentUserId && (
+                      <button
+                        onClick={async () => {
+                          const token = await getToken();
+                          await fetch(`${API_URL}/api/comments/${c.id}`, {
+                            method: "DELETE",
+                            headers: { Authorization: `Bearer ${token}` },
+                          });
+                          setComments((prev) => prev.filter((x) => x.id !== c.id));
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 text-red-400 hover:text-red-600 transition"
+                        title="Delete comment"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
           {/* ────────────────────────────────────────────────────── */}
         </div>
       </main>

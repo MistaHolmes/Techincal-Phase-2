@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Footer } from "./Footer";
 import { BlogSkeleton, DraftBlogSkeleton } from "./ui/blogSkeleton";
+import { Pencil } from "lucide-react";
+
 
 interface Blog {
   id: string;
@@ -28,6 +31,7 @@ const UserContentSection = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   const stripHtmlTags = (html: string) => {
     const tempDiv = document.createElement("div");
@@ -179,6 +183,13 @@ const UserContentSection = () => {
                             Published on {new Date(blog.createdAt).toLocaleDateString()}
                         </p>
                         </div>
+                        <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/edit-blog/${blog.id}`); }}
+                        className="ml-4 p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-colors duration-200 opacity-0 group-hover:opacity-100"
+                        title="Edit blog"
+                        >
+                        <Pencil className="w-4 h-4" />
+                        </button>
                         <button
                         onClick={(e) => handleDeleteClick(e, blog.id)}
                         className="ml-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200 opacity-0 group-hover:opacity-100"
