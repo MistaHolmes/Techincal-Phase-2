@@ -112,12 +112,12 @@ const Explore = () => {
                          <span className="material-symbols-outlined text-sm">person</span>
                       </div>
                       <span className="font-label text-sm font-medium">
-                        {featuredBlog.author?.name || featuredBlog.author?.email.split('@')[0]}
+                        {featuredBlog.author?.name || featuredBlog.author?.email?.split('@')[0] || 'Anonymous'}
                       </span>
                     </div>
                     <span className="w-1 h-1 rounded-full bg-white/40"></span>
                     <span className="font-label text-sm opacity-80">
-                      {Math.ceil(featuredBlog.content.length / 1000)} min read
+                      {Math.ceil((featuredBlog.content || "").length / 1000) || 1} min read
                     </span>
                   </div>
                 </div>
@@ -176,21 +176,21 @@ const Explore = () => {
                     />
                   </div>
                   <div className="flex gap-2 mb-4">
-                    {blog.tags.slice(0, 2).map(t => (
+                    {(blog.tags || []).slice(0, 2).map(t => (
                       <span key={t.id} className="font-label text-[10px] uppercase tracking-widest px-2 py-1 bg-stitch-surface-container-high rounded text-stitch-on-surface-variant font-bold">
                         {t.name}
                       </span>
                     ))}
                   </div>
                   <h4 className="font-headline text-2xl font-bold mb-4 leading-snug group-hover:text-stitch-tertiary-container transition-colors text-stitch-on-surface">
-                    {blog.title}
+                    {blog.title || "Untitled Draft"}
                   </h4>
                   <p className="text-stitch-secondary font-body line-clamp-3 mb-6 leading-relaxed">
-                    {blog.content.replace(/[#*`>\[\]]/g, "").slice(0, 150)}...
+                    {(blog.content || "").replace(/[#*`>\[\]]/g, "").slice(0, 150)}...
                   </p>
                   <div className="mt-auto pt-4 flex items-center justify-between border-t border-stitch-outline-variant/20">
                     <span className="font-label text-sm text-stitch-secondary font-medium">
-                      By {blog.author?.name || blog.author?.email.split('@')[0]}
+                      By {blog.author?.name || blog.author?.email?.split('@')[0] || 'Anonymous'}
                     </span>
                     <button className="font-label text-sm font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform text-stitch-on-surface">
                       Read More <span className="material-symbols-outlined text-sm">arrow_forward</span>
