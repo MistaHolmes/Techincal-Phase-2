@@ -22,6 +22,7 @@ const ReadingHistory = lazy(() => import("./pages/ReadingHistory"));
 const SeriesPage = lazy(() => import("./pages/SeriesPage"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Messages = lazy(() => import("./pages/Messages"));
+const Drafts = lazy(() => import("./pages/Drafts"));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -53,6 +54,7 @@ const App: React.FC = () => {
           <Route path="/messages" element={<RequireAuth><AppShell activePage="messages"><Messages /></AppShell></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><AppShell activePage="settings"><Settings /></AppShell></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><AppShell activePage="profile"><ProfileComponent /></AppShell></RequireAuth>} />
+          <Route path="/drafts" element={<RequireAuth><Drafts /></RequireAuth>} />
 
           {/* Workflow Routes */}
           <Route path="/create-blog" element={<RequireAuth><AppShell hideRightPanel><BlogForm /></AppShell></RequireAuth>} />

@@ -1,3 +1,4 @@
+import { useState as useLocalState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Ship, Plus, Sun, Moon, Search } from "lucide-react";
 import { Notifications } from "../Notifications";
@@ -11,12 +12,25 @@ interface AppHeaderProps {
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({ 
-  searchTerm = "", 
+  searchTerm, 
   setSearchTerm,
   showSearch = true 
 }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const [localSearch, setLocalSearch] = useLocalState(searchTerm || "");
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setLocalSearch(val);
+    setSearchTerm?.(val);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && localSearch.trim()) {
+      navigate(`/search?q=${encodeURIComponent(localSearch.trim())}`);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-[60] border-b border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl px-4 h-16 flex items-center justify-between transition-all duration-300">
@@ -43,9 +57,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             type="text"
             placeholder="Search drafts, authors, tags..."
             className="w-full h-10 bg-gray-100 dark:bg-gray-900 border-transparent focus:bg-white dark:focus:bg-black border border-gray-100 dark:border-gray-800 focus:border-violet-500 rounded-xl pl-10 pr-4 text-sm transition-all focus:outline-none focus:ring-4 focus:ring-violet-500/10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm?.(e.target.value)}
-            onFocus={() => !setSearchTerm && navigate("/search")}
+            value={localSearch}
+            onChange={handleSearchChange}
+            onKeyDown={handleSearchKeyDown}
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1">
              <kbd className="px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700 text-[10px] text-gray-400 font-bold bg-white dark:bg-gray-800">⌘</kbd>

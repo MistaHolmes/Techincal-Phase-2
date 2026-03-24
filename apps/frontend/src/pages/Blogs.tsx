@@ -17,6 +17,7 @@ interface Blog {
   published: string;
   image?: string;
   tags?: { id: string, name: string }[];
+  coverImage?: string;
 }
 
 const Blogs: React.FC = () => {
@@ -39,18 +40,35 @@ const Blogs: React.FC = () => {
       .then((res) => {
         const fetchedBlogs = res.data
           .filter((b: any) => b.published === true)
-          .map((b: any) => ({
-            id: b.id,
-            title: b.title,
-            summary: b.content.slice(0, 150) + "...",
-            author: b.author?.email
-              ? b.author.email.split("@")[0].replace(/^./, (c: any) => c.toUpperCase())
-              : "Anonymous",
-            authorId: b.authorId,
-            updatedAt: new Date(b.updatedAt),
-            published: new Date(b.updatedAt).toLocaleDateString(),
-            tags: b.tags || [],
-          }))
+          .map((b: any) => {
+            // Robustly strip both HTML and Markdown (like images/links) to get clean text for summary
+            const content = b.content || '';
+            const cleanContent = content
+              .replace(/!\[.*?\]\(.*?\)/g, '') // Strip markdown images
+              .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Strip markdown links but keep text
+              .replace(/[#*`>]/g, '') // Strip common markdown symbols
+              .replace(/<[^>]*>?/gm, ''); // Strip remaining HTML tags
+            
+            const plainText = cleanContent.trim();
+            
+            // Extract first image from markdown as fallback if coverImage is empty
+            const mdImageRegex = /!\[.*?\]\((.*?)\)/;
+            const fallbackImage = content.match(mdImageRegex)?.[1] || "";
+
+            return {
+              id: b.id,
+              title: b.title,
+              summary: plainText.slice(0, 150) + (plainText.length > 150 ? "..." : ""),
+              coverImage: b.coverImage || fallbackImage,
+              author: b.author?.email
+                ? b.author.email.split("@")[0].replace(/^./, (c: any) => c.toUpperCase())
+                : "Anonymous",
+              authorId: b.authorId,
+              updatedAt: new Date(b.updatedAt),
+              published: new Date(b.updatedAt).toLocaleDateString(),
+              tags: b.tags || [],
+            };
+          })
           .sort((a: any, b: any) => b.updatedAt.getTime() - a.updatedAt.getTime());
         
         setAllBlogs(fetchedBlogs);

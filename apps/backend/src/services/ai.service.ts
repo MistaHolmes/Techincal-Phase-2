@@ -113,20 +113,185 @@ class MockAIProvider implements AIProvider {
   }
 }
 
+import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// ── Gemini Provider ──────────────────────────────────────────────────────────
+
+class GeminiProvider implements AIProvider {
+  private genAI: GoogleGenerativeAI;
+  private model: any;
+
+  constructor(apiKey: string) {
+    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  }
+
+  async suggestTitles(content: string): Promise<string[]> {
+    try {
+      const prompt = `You are a professional blog editor. Suggest 5 catchy, SEO-friendly titles for the following content. Return only a JSON array of strings: ${content.slice(0, 4000)}`;
+      const result = await this.model.generateContent(prompt);
+      const text = result.response.text();
+      // Clean possible markdown wrappers
+      const json = text.replace(/```json\n?|\n?```/g, '').trim();
+      return JSON.parse(json);
+    } catch (err) {
+      console.error("Gemini suggestTitles error:", err);
+      return new MockAIProvider().suggestTitles(content);
+    }
+  }
+
+  async suggestTags(content: string): Promise<string[]> {
+    try {
+      const prompt = `Suggest 5 relevant tech/lifestyle tags for the following content. Return only a JSON array of strings: ${content.slice(0, 2000)}`;
+      const result = await this.model.generateContent(prompt);
+      const text = result.response.text();
+      const json = text.replace(/```json\n?|\n?```/g, '').trim();
+      return JSON.parse(json);
+    } catch (err) {
+      console.error("Gemini suggestTags error:", err);
+      return new MockAIProvider().suggestTags(content);
+    }
+  }
+
+  async generateSummary(content: string): Promise<string> {
+    try {
+      const prompt = `Write a concise 2-sentence summary (max 250 chars) of the following blog post: ${content.slice(0, 3000)}`;
+      const result = await this.model.generateContent(prompt);
+      return result.response.text().trim();
+    } catch (err) {
+      console.error("Gemini generateSummary error:", err);
+      return new MockAIProvider().generateSummary(content);
+    }
+  }
+
+  async checkGrammar(text: string): Promise<GrammarSuggestion[]> {
+    try {
+      const prompt = `Identify grammar and spelling issues in the following text. Return ONLY a JSON array of objects with {original, suggestion, reason, offset, length}: ${text.slice(0, 2000)}`;
+      const result = await this.model.generateContent(prompt);
+      const output = result.response.text();
+      const json = output.replace(/```json\n?|\n?```/g, '').trim();
+      const issues = JSON.parse(json);
+      return Array.isArray(issues) ? issues : (issues.issues || []);
+    } catch (err) {
+      console.error("Gemini checkGrammar error:", err);
+      return new MockAIProvider().checkGrammar(text);
+    }
+  }
+
+  async generateImage(prompt: string): Promise<string> {
+    return new MockAIProvider().generateImage(prompt);
+  }
+}
+
+// ── OpenAI Provider ──────────────────────────────────────────────────────────
+
+class OpenAIProvider implements AIProvider {
+  private client: OpenAI;
+
+  constructor(apiKey: string) {
+    this.client = new OpenAI({ apiKey });
+  }
+
+  async suggestTitles(content: string): Promise<string[]> {
+    try {
+      const response = await this.client.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "You are a professional blog editor. Suggest 5 catchy, SEO-friendly titles for the following content. Return only a JSON array of strings." },
+          { role: "user", content: content.slice(0, 4000) }
+        ],
+        response_format: { type: "json_object" }
+      });
+      const data = JSON.parse(response.choices[0].message.content || '{"titles": []}');
+      return data.titles || data.suggestions || [];
+    } catch (err) {
+      console.error("OpenAI suggestTitles error:", err);
+      return new MockAIProvider().suggestTitles(content);
+    }
+  }
+
+  async suggestTags(content: string): Promise<string[]> {
+    try {
+      const response = await this.client.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "Suggest 5 relevant tech/lifestyle tags for the following content. Return only a JSON array of strings." },
+          { role: "user", content: content.slice(0, 2000) }
+        ],
+        response_format: { type: "json_object" }
+      });
+      const data = JSON.parse(response.choices[0].message.content || '{"tags": []}');
+      return data.tags || [];
+    } catch (err) {
+      console.error("OpenAI suggestTags error:", err);
+      return new MockAIProvider().suggestTags(content);
+    }
+  }
+
+  async generateSummary(content: string): Promise<string> {
+    try {
+      const response = await this.client.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "Write a concise 2-sentence summary (max 250 chars) of the following blog post." },
+          { role: "user", content: content.slice(0, 3000) }
+        ]
+      });
+      return response.choices[0].message.content || "";
+    } catch (err) {
+      console.error("OpenAI generateSummary error:", err);
+      return new MockAIProvider().generateSummary(content);
+    }
+  }
+
+  async checkGrammar(text: string): Promise<GrammarSuggestion[]> {
+    try {
+      const response = await this.client.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "Identify grammar and spelling issues in the following text. Return a JSON array of objects with {original, suggestion, reason, offset, length}." },
+          { role: "user", content: text.slice(0, 2000) }
+        ],
+        response_format: { type: "json_object" }
+      });
+      const data = JSON.parse(response.choices[0].message.content || '{"issues": []}');
+      return data.issues || [];
+    } catch (err) {
+      console.error("OpenAI checkGrammar error:", err);
+      return new MockAIProvider().checkGrammar(text);
+    }
+  }
+
+  async generateImage(prompt: string): Promise<string> {
+    // If we have an Unsplash key, we can use it here too, or just use the high-quality Unsplash source
+    return new MockAIProvider().generateImage(prompt);
+  }
+}
+
 // ── Provider Factory ─────────────────────────────────────────────────────────
 
 let provider: AIProvider | null = null;
 
 export function getAIProvider(): AIProvider {
   if (!provider) {
-    // Check for API keys to pick real provider
-    // For now, default to mock
+    const geminiKey = process.env.GEMINI_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
-    if (openaiKey) {
-      // TODO: Swap to OpenAI provider when ready
-      console.log('AI: OpenAI key detected (using mock until OpenAI provider is implemented)');
+
+    if (geminiKey && geminiKey !== 'your_gemini_api_key_here' && !geminiKey.includes('AIzaSy')) { // Basic check or prioritize if placeholder
+       // If it looks like a real key (starts with AIzaSy)
     }
-    provider = new MockAIProvider();
+
+    if (geminiKey && geminiKey.length > 20 && !geminiKey.includes('your_')) {
+      console.log('AI: Initializing Gemini Provider');
+      provider = new GeminiProvider(geminiKey);
+    } else if (openaiKey && openaiKey !== 'your_openai_api_key_here') {
+      console.log('AI: Initializing OpenAI Provider');
+      provider = new OpenAIProvider(openaiKey);
+    } else {
+      console.log('AI: No API key found, using Mock Provider');
+      provider = new MockAIProvider();
+    }
   }
   return provider!;
 }

@@ -5,8 +5,7 @@ import { motion } from "framer-motion";
 import { FileDiff, Trash2, Send, Pencil } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
-import Header2 from "@/components/ui/header2";
-import { Footer } from "@/components/Footer";
+import { AppShell } from "@/components/layout/AppShell";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -84,52 +83,71 @@ const Drafts = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <AppShell activePage="drafts" hideRightPanel>
       <Helmet>
         <title>My Drafts — DraftDock</title>
       </Helmet>
-      <Header2 />
 
-      <main className="max-w-3xl mx-auto px-4 pt-28 pb-16">
-        <div className="flex items-center gap-3 mb-8">
-          <FileDiff className="w-7 h-7 text-gray-700 dark:text-gray-200" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Drafts</h1>
-          <span className="ml-auto text-sm text-gray-400 dark:text-gray-500">{drafts.length} draft{drafts.length !== 1 ? "s" : ""}</span>
-        </div>
+      <div className="max-w-3xl mx-auto">
+        {/* Page Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 mb-8"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-yellow-50 dark:bg-yellow-900/20 flex items-center justify-center">
+            <FileDiff className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Drafts</h1>
+            <p className="text-xs text-gray-400 font-medium">{drafts.length} draft{drafts.length !== 1 ? "s" : ""} saved</p>
+          </div>
+        </motion.div>
 
+        {/* Content */}
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : drafts.length === 0 ? (
-          <div className="text-center py-20 text-gray-400 dark:text-gray-500">
-            <FileDiff className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p className="text-lg mb-4">No drafts yet.</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm"
+          >
+            <FileDiff className="w-12 h-12 mx-auto mb-4 text-gray-200 dark:text-gray-700" />
+            <p className="text-lg font-semibold text-gray-400 dark:text-gray-500 mb-2">No drafts yet</p>
+            <p className="text-sm text-gray-300 dark:text-gray-600 mb-6">Your unpublished stories will appear here</p>
             <button
               onClick={() => navigate("/create-blog")}
-              className="px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:opacity-80 transition"
+              className="px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-bold text-xs uppercase tracking-widest hover:opacity-80 transition"
             >
               Start Writing
             </button>
-          </div>
+          </motion.div>
         ) : (
           <div className="space-y-4">
-            {drafts.map((draft) => (
+            {drafts.map((draft, i) => (
               <motion.div
                 key={draft.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-xl border border-yellow-200 dark:border-yellow-800 p-5 shadow-sm"
+                transition={{ delay: i * 0.05 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded-full">Draft</span>
-                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[9px] font-black uppercase tracking-widest bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2.5 py-1 rounded-full">
+                        Draft
+                      </span>
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
                         Last edited {new Date(draft.updatedAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-lg truncate">{draft.title || "Untitled"}</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white text-lg truncate">
+                      {draft.title || "Untitled"}
+                    </h3>
                     <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 line-clamp-2">
                       {stripHtml(draft.content).slice(0, 150)}...
                     </p>
@@ -137,7 +155,7 @@ const Drafts = () => {
                   <div className="flex flex-col gap-2 flex-shrink-0">
                     <button
                       onClick={() => navigate(`/edit-blog/${draft.id}`)}
-                      className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                      className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-600 transition"
                       title="Edit"
                       disabled={actionId === draft.id}
                     >
@@ -145,7 +163,7 @@ const Drafts = () => {
                     </button>
                     <button
                       onClick={() => handlePublish(draft.id)}
-                      className="p-2 rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition"
+                      className="p-2.5 rounded-xl bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 transition"
                       title="Publish"
                       disabled={actionId === draft.id}
                     >
@@ -153,7 +171,7 @@ const Drafts = () => {
                     </button>
                     <button
                       onClick={() => handleDelete(draft.id)}
-                      className="p-2 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition"
+                      className="p-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition"
                       title="Delete"
                       disabled={actionId === draft.id}
                     >
@@ -165,9 +183,8 @@ const Drafts = () => {
             ))}
           </div>
         )}
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </AppShell>
   );
 };
 

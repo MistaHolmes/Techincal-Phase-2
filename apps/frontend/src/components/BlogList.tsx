@@ -108,6 +108,7 @@ interface Blog {
   summary: string;
   author: string;
   published: string;
+  coverImage?: string;
 }
 
 interface BlogListProps {
@@ -182,35 +183,44 @@ const BlogList: React.FC<BlogListProps> = ({ posts }) => {
               whileHover={{ y: -5, boxShadow: "0 16px 32px rgba(0,0,0,0.10)" }}
               className="w-full max-w-3xl border border-gray-200 dark:border-gray-800 rounded-lg px-6 py-4 shadow-sm bg-white/70 dark:bg-gray-900/40 backdrop-blur-sm cursor-pointer transition-colors hover:text-gray-500 dark:hover:text-gray-400"
             >
-              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
-                <div className="flex items-center gap-2">
-                  <span>{post.published}</span>
-                  <span className="flex items-center gap-1"><Clock size={12} className="opacity-60" />{Math.max(1, Math.ceil(stripHtmlTags(post.summary).split(/\s+/).filter(Boolean).length / 200))} min read</span>
+              <div className="flex gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span>{post.published}</span>
+                      <span className="flex items-center gap-1"><Clock size={12} className="opacity-60" />{Math.max(1, Math.ceil(stripHtmlTags(post.summary).split(/\s+/).filter(Boolean).length / 200))} min read</span>
+                    </div>
+                    <span className="text-gray-400 dark:text-gray-500">By {post.author}</span>
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">{stripHtmlTags(post.title)}</h3>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">{stripHtmlTags(post.summary)}</p>
+                  
+                  <div className="mt-4 flex items-end justify-end flex-col gap-3">
+                    <BlogCardLikeButton blogId={post.id} />
+                    
+                    <ShareButton
+                      variant="link"
+                      className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full px-3 py-1.5 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const postUrl = `${window.location.origin}/blog/${post.id}`;
+                        navigator.clipboard.writeText(postUrl)
+                          .then(() => {
+                            setCopiedId(post.id);
+                            setTimeout(() => setCopiedId(null), 1000);
+                          });
+                      }}
+                    >
+                      <Share className="opacity-60 dark:opacity-80" size={16} strokeWidth={2} aria-hidden="true" />
+                      <span className="text-gray-700 dark:text-gray-300 text-sm">{copiedId === post.id ? "Copied!" : "Share"}</span>
+                    </ShareButton>
+                  </div>
                 </div>
-                <span className="text-gray-400 dark:text-gray-500">By {post.author}</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">{stripHtmlTags(post.title)}</h3>
-              <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">{stripHtmlTags(post.summary)}</p>
-              
-              <div className="mt-4 flex items-end justify-end flex-col gap-3">
-                <BlogCardLikeButton blogId={post.id} />
-                
-                <ShareButton
-                  variant="link"
-                  className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full px-3 py-1.5 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const postUrl = `${window.location.origin}/blog/${post.id}`;
-                    navigator.clipboard.writeText(postUrl)
-                      .then(() => {
-                        setCopiedId(post.id);
-                        setTimeout(() => setCopiedId(null), 1000);
-                      });
-                  }}
-                >
-                  <Share className="opacity-60 dark:opacity-80" size={16} strokeWidth={2} aria-hidden="true" />
-                  <span className="text-gray-700 dark:text-gray-300 text-sm">{copiedId === post.id ? "Copied!" : "Share"}</span>
-                </ShareButton>
+                {post.coverImage && (
+                  <div className="flex-shrink-0 w-32 h-32 rounded-xl overflow-hidden hidden sm:block">
+                    <img src={post.coverImage} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}

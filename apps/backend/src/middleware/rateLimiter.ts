@@ -1,9 +1,9 @@
 import rateLimit from 'express-rate-limit';
 
-// Global limiter: 200 req / 15 min per IP
+// Global limiter: 1000 req / 15 min per IP (generous for dev)
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' },
@@ -12,7 +12,7 @@ export const globalLimiter = rateLimit({
 // Strict limiter for write operations
 export const writeLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many write requests, please slow down.' },
@@ -21,7 +21,7 @@ export const writeLimiter = rateLimit({
 // Auth-related limiter
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 60,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests.' },

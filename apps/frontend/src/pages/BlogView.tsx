@@ -182,7 +182,17 @@ const BlogView = () => {
       window.speechSynthesis.cancel();
       setIsPlaying(false);
     } else {
-      const text = `${blog?.title}. . . ${blog?.content.replace(/[#*`>\[\]]/g, "")}`;
+      const rawContent = blog?.content || '';
+      const cleanContent = rawContent
+        .replace(/!\[.*?\]\(.*?\)/g, '')           // Strip markdown images
+        .replace(/\[(.*?)\]\(.*?\)/g, '$1')        // Strip markdown links, keep text
+        .replace(/<[^>]*>?/gm, '')                 // Strip HTML tags
+        .replace(/https?:\/\/[^\s)]+/g, '')        // Strip any remaining URLs
+        .replace(/[#*`>\[\]]/g, '')                // Strip markdown symbols
+        .replace(/\n{2,}/g, '. ')                  // Convert paragraph breaks to pauses
+        .replace(/\s{2,}/g, ' ')                   // Collapse whitespace
+        .trim();
+      const text = `${blog?.title}. . . ${cleanContent}`;
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.onend = () => setIsPlaying(false);
       utteranceRef.current = utterance;
