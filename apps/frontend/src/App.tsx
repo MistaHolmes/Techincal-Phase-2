@@ -57,8 +57,8 @@ const App: React.FC = () => {
           <Route path="/drafts" element={<RequireAuth><Drafts /></RequireAuth>} />
 
           {/* Workflow Routes */}
-          <Route path="/create-blog" element={<RequireAuth><AppShell hideRightPanel><BlogForm /></AppShell></RequireAuth>} />
-          <Route path="/edit-blog/:blogId" element={<RequireAuth><AppShell hideRightPanel><BlogForm /></AppShell></RequireAuth>} />
+          <Route path="/create-blog" element={<RequireAuth><BlogForm /></RequireAuth>} />
+          <Route path="/edit-blog/:blogId" element={<RequireAuth><BlogForm /></RequireAuth>} />
           
           {/* Public Views */}
           <Route path="/blog/:blogId" element={<BlogView />} />

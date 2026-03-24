@@ -279,15 +279,20 @@ export function getAIProvider(): AIProvider {
     const openaiKey = process.env.OPENAI_API_KEY;
 
     if (geminiKey && geminiKey.startsWith('AIzaSy') && geminiKey.length > 20) {
-      console.log('AI: Initializing Gemini Provider');
+      console.log('AI: Initializing Gemini Provider (will fallback to Mock on errors)');
       provider = new GeminiProvider(geminiKey);
     } else if (openaiKey && openaiKey.startsWith('sk-') && openaiKey.length > 20) {
       console.log('AI: Initializing OpenAI Provider');
       provider = new OpenAIProvider(openaiKey);
     } else {
-      console.log('AI: No valid API key found, using Mock Provider');
+      console.log('AI: Using Mock Provider (no valid API key)');
       provider = new MockAIProvider();
     }
   }
   return provider!;
+}
+
+// Reset provider (useful if key changes)
+export function resetAIProvider(): void {
+  provider = null;
 }
