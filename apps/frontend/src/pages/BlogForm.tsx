@@ -23,12 +23,24 @@ export function BlogForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadingExisting, setLoadingExisting] = useState(isEditMode);
+  const [autoSaved, setAutoSaved] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
+  const AUTO_SAVE_KEY = "draftdock_autosave";
 
   // If edit mode, fetch existing blog data
   useEffect(() => {
     if (!isEditMode || !blogId) {
+      // Restore auto-saved draft for new blogs
+      try {
+        const saved = localStorage.getItem(AUTO_SAVE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.title || parsed.content) {
+            setFormData(prev => ({ ...prev, ...parsed }));
+          }
+        }
+      } catch { /* ignore parse errors */ }
       const timer = setTimeout(() => setIsLoaded(true), 100);
       return () => clearTimeout(timer);
     }
@@ -56,6 +68,23 @@ export function BlogForm() {
     };
     loadBlog();
   }, [blogId]);
+
+  // Auto-save to localStorage every 30 seconds (new blogs only)
+  useEffect(() => {
+    if (isEditMode) return;
+    const interval = setInterval(() => {
+      if (formData.title || formData.content) {
+        localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify({
+          title: formData.title,
+          content: formData.content,
+          coverImage: formData.coverImage,
+        }));
+        setAutoSaved(true);
+        setTimeout(() => setAutoSaved(false), 2000);
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [formData, isEditMode]);
 
   const handleSubmit = async (e: React.FormEvent, isDraft = false) => {
     e.preventDefault();
@@ -89,13 +118,19 @@ export function BlogForm() {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           withCredentials: true,
         });
-        if (response.status === 200) navigate(`/blog/${blogId}`);
+        if (response.status === 200) {
+          localStorage.removeItem(AUTO_SAVE_KEY);
+          navigate(`/blog/${blogId}`);
+        }
       } else {
         response = await axios.post(`${API_URL}/api/blogs`, payload, {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           withCredentials: true,
         });
-        if (response.status === 201) navigate("/blogs");
+        if (response.status === 201) {
+          localStorage.removeItem(AUTO_SAVE_KEY);
+          navigate("/blogs");
+        }
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -143,8 +178,15 @@ export function BlogForm() {
             <main className="flex flex-col items-center py-6 px-4 md:py-10 md:px-8 bg-white/80 dark:bg-gray-800/80">
               <div className="w-full max-w-4xl bg-muted/20 rounded-lg p-8" style={getAnimationStyle(200)}>
                 {/* Mode indicator */}
-                <div className="mb-4 text-sm text-gray-600 dark:text-gray-400 font-medium">
-                  {isEditMode ? "✏️ Editing blog" : "📝 Create new blog"}
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    {isEditMode ? "✏️ Editing blog" : "📝 Create new blog"}
+                  </span>
+                  {autoSaved && (
+                    <span className="text-xs text-green-600 dark:text-green-400 animate-pulse">
+                      ✓ Draft auto-saved
+                    </span>
+                  )}
                 </div>
 
                 {errors.server && (

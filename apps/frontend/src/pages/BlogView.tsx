@@ -5,8 +5,9 @@ import BlogSkeleton from "@/components/BlogSkeleton";
 import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
 import { BackButton } from "@/components/ui/backButton";
-import { ChevronLeft, Heart, Share, MessageCircle, Send, Trash2 } from "lucide-react";
+import { ChevronLeft, Heart, Share, MessageCircle, Send, Trash2, Clock, Eye } from "lucide-react";
 import { ShareButton } from "@/components/ui/shareButton";
+import ReadingProgressBar from "@/components/ui/ReadingProgressBar";
 import 'highlight.js/styles/atom-one-dark.css';
 import MDEditor from '@uiw/react-md-editor';
 
@@ -55,6 +56,8 @@ const BlogView = () => {
         const data = await res.json();
         setBlog(data);
         setLikes(data.likes ?? 0);
+        // Increment view count (fire-and-forget)
+        fetch(`${API_URL}/api/blogs/${blogId}/view`, { method: 'POST' }).catch(() => {});
         // also fetch comments
         const commentsRes = await fetch(`${API_URL}/api/blogs/${blogId}/comments`);
         if (commentsRes.ok) setComments(await commentsRes.json());
@@ -150,9 +153,13 @@ const BlogView = () => {
     day: "numeric",
   });
 
+  // Calculate reading time (~200 words per minute)
+  const wordCount = (blog.content || "").split(/\s+/).filter(Boolean).length;
+  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-gray-100/30">
+      <ReadingProgressBar />
       {/* Sticky Header */}
       <div className="fixed top-0 left-0 w-full z-50 bg-gray-100/30">
         <Header2 />
@@ -196,6 +203,14 @@ const BlogView = () => {
               </span>
               <span className="text-gray-400">•</span>
               <span>{formattedDate}</span>
+              <span className="text-gray-400">•</span>
+              <span className="flex items-center gap-1"><Clock size={14} className="opacity-60" />{readingTime} min read</span>
+              {blog.views !== undefined && (
+                <>
+                  <span className="text-gray-400">•</span>
+                  <span className="flex items-center gap-1"><Eye size={14} className="opacity-60" />{blog.views} views</span>
+                </>
+              )}
             </div>
 
             {/* Right: Like and Share Buttons */}

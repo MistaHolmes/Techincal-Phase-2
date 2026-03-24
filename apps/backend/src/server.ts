@@ -886,6 +886,24 @@ app.get('/api/blogs/:blogId', async (req, res: any) => {
   }
 });
 
+// POST /api/blogs/:blogId/view — increment view count
+app.post('/api/blogs/:blogId/view', async (req, res: any) => {
+  try {
+    const { blogId } = req.params;
+    const blog = await prisma.blog.update({
+      where: { id: blogId },
+      data: { views: { increment: 1 } },
+      select: { views: true },
+    });
+    // Invalidate cache so the updated views are reflected
+    await redisClient.del(`blog:${blogId}`);
+    return res.json({ views: blog.views });
+  } catch (err) {
+    console.error('Error incrementing views:', err);
+    return res.status(500).json({ error: 'Failed to increment views' });
+  }
+});
+
 //Notifications
 app.get('/api/user/notifications', requireAuth(), async (req, res: any) => {
   try {
