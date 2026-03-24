@@ -779,6 +779,75 @@ app.get('/api/user/blogs/all', requireAuth(), async (req, res: any) => {
   }
 });
 
+// ── IMPORTANT: These /api/blogs/* routes MUST come BEFORE /api/blogs/:blogId ──
+
+// GET /api/blogs/trending — top blogs by likes in last 7 days
+app.get('/api/blogs/trending', async (req, res: any) => {
+  try {
+    const cacheKey = 'blogs:trending';
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json(JSON.parse(cached));
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const blogs = await prisma.blog.findMany({
+      where: { published: true, updatedAt: { gte: sevenDaysAgo } },
+      include: { author: { select: { email: true, name: true } }, tags: true },
+      orderBy: { likes: 'desc' },
+      take: 6,
+    });
+
+    await redisClient.setEx(cacheKey, 120, JSON.stringify(blogs));
+    return res.json(blogs);
+  } catch (err) {
+    console.error('Error fetching trending:', err);
+    return res.status(500).json({ error: 'Failed to fetch trending blogs' });
+  }
+});
+
+// GET /api/blogs/featured — featured blogs
+app.get('/api/blogs/featured', async (req, res: any) => {
+  try {
+    const cacheKey = 'blogs:featured';
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json(JSON.parse(cached));
+
+    const blogs = await prisma.blog.findMany({
+      where: { published: true, featured: true },
+      include: { author: { select: { email: true, name: true } }, tags: true },
+      orderBy: { updatedAt: 'desc' },
+      take: 6,
+    });
+
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(blogs));
+    return res.json(blogs);
+  } catch (err) {
+    console.error('Error fetching featured:', err);
+    return res.status(500).json({ error: 'Failed to fetch featured blogs' });
+  }
+});
+
+// GET /api/blogs/by-tag/:tag — filter by tag name
+app.get('/api/blogs/by-tag/:tag', async (req, res: any) => {
+  try {
+    const { tag } = req.params;
+    const cacheKey = `blogs:tag:${tag}`;
+    const cached = await redisClient.get(cacheKey);
+    if (cached) return res.json(JSON.parse(cached));
+
+    const blogs = await prisma.blog.findMany({
+      where: { published: true, tags: { some: { name: { equals: tag, mode: 'insensitive' } } } },
+      include: { author: { select: { email: true, name: true } }, tags: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(blogs));
+    return res.json(blogs);
+  } catch (err) {
+    console.error('Error fetching blogs by tag:', err);
+    return res.status(500).json({ error: 'Failed to fetch blogs by tag' });
+  }
+});
+
 app.get('/api/blogs/:blogId', async (req, res: any) => {
   try {
     const { blogId } = req.params;
@@ -1131,73 +1200,6 @@ app.get('/api/tags', async (req, res: any) => {
   } catch (err) {
     console.error('Error fetching tags:', err);
     return res.status(500).json({ error: 'Failed to fetch tags' });
-  }
-});
-
-// GET /api/blogs/trending — top blogs by likes in last 7 days
-app.get('/api/blogs/trending', async (req, res: any) => {
-  try {
-    const cacheKey = 'blogs:trending';
-    const cached = await redisClient.get(cacheKey);
-    if (cached) return res.json(JSON.parse(cached));
-
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const blogs = await prisma.blog.findMany({
-      where: { published: true, updatedAt: { gte: sevenDaysAgo } },
-      include: { author: { select: { email: true, name: true } }, tags: true },
-      orderBy: { likes: 'desc' },
-      take: 6,
-    });
-
-    await redisClient.setEx(cacheKey, 120, JSON.stringify(blogs));
-    return res.json(blogs);
-  } catch (err) {
-    console.error('Error fetching trending:', err);
-    return res.status(500).json({ error: 'Failed to fetch trending blogs' });
-  }
-});
-
-// GET /api/blogs/featured — featured blogs
-app.get('/api/blogs/featured', async (req, res: any) => {
-  try {
-    const cacheKey = 'blogs:featured';
-    const cached = await redisClient.get(cacheKey);
-    if (cached) return res.json(JSON.parse(cached));
-
-    const blogs = await prisma.blog.findMany({
-      where: { published: true, featured: true },
-      include: { author: { select: { email: true, name: true } }, tags: true },
-      orderBy: { updatedAt: 'desc' },
-      take: 6,
-    });
-
-    await redisClient.setEx(cacheKey, 300, JSON.stringify(blogs));
-    return res.json(blogs);
-  } catch (err) {
-    console.error('Error fetching featured:', err);
-    return res.status(500).json({ error: 'Failed to fetch featured blogs' });
-  }
-});
-
-// GET /api/blogs/by-tag/:tag — filter by tag name
-app.get('/api/blogs/by-tag/:tag', async (req, res: any) => {
-  try {
-    const { tag } = req.params;
-    const cacheKey = `blogs:tag:${tag}`;
-    const cached = await redisClient.get(cacheKey);
-    if (cached) return res.json(JSON.parse(cached));
-
-    const blogs = await prisma.blog.findMany({
-      where: { published: true, tags: { some: { name: { equals: tag, mode: 'insensitive' } } } },
-      include: { author: { select: { email: true, name: true } }, tags: true },
-      orderBy: { updatedAt: 'desc' },
-    });
-
-    await redisClient.setEx(cacheKey, 300, JSON.stringify(blogs));
-    return res.json(blogs);
-  } catch (err) {
-    console.error('Error fetching blogs by tag:', err);
-    return res.status(500).json({ error: 'Failed to fetch blogs by tag' });
   }
 });
 
