@@ -4,7 +4,6 @@ import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { History, Trash2, Clock, Heart } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
-import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -72,64 +71,80 @@ const ReadingHistory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <>
       <Helmet>
         <title>Reading History — DraftDock</title>
       </Helmet>
-      <Header2 />
 
-      <main className="max-w-3xl mx-auto px-4 pt-28 pb-16">
+      <div className="max-w-4xl mx-auto py-8 px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <History className="w-6 h-6 text-gray-700 dark:text-gray-200" />
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Reading History</h1>
+          <div className="flex items-center justify-between mb-12">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-2xl">
+                 <History className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-headline font-bold text-gray-900 dark:text-white">Reading History</h1>
+                <p className="text-sm text-gray-500">{history.length} stories recently read</p>
+              </div>
             </div>
             {history.length > 0 && (
               <button
                 onClick={clearHistory}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-red-500 hover:text-white hover:bg-red-500 border border-red-100 dark:border-red-900/30 rounded-xl transition-all"
               >
-                <Trash2 size={14} /> Clear All
+                <Trash2 size={14} /> Clear History
               </button>
             )}
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-16">
-              <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+            <div className="flex justify-center py-20">
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : history.length === 0 ? (
-            <div className="text-center py-16 text-gray-400 dark:text-gray-500">
-              <History className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p className="text-lg">No reading history yet</p>
-              <p className="text-sm mt-2">Blogs you read will appear here</p>
+            <div className="text-center py-32 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+              <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6">
+                 <History className="w-10 h-10 text-gray-300 dark:text-gray-600" />
+              </div>
+              <h3 className="text-xl font-headline font-bold text-gray-900 dark:text-white mb-2">Your history is empty</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 max-w-xs mx-auto">Stories you read will appear here so you can easily find them again.</p>
+              <button
+                onClick={() => navigate("/blogs")}
+                className="px-8 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:opacity-90 transition shadow-lg"
+              >
+                Start Reading
+              </button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4">
               {history.map((blog, i) => {
-                const excerpt = blog.content.replace(/[#*`>\[\]]/g, "").slice(0, 120) + "...";
+                const excerpt = blog.content.replace(/[#*`>\[\]]/g, "").slice(0, 140) + "...";
                 const authorName = blog.author?.name || blog.author?.email?.split("@")[0] || "Anonymous";
                 return (
                   <motion.div
-                    key={blog.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    key={`${blog.id}-${blog.readAt}`}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.03 }}
                     onClick={() => navigate(`/blog/${blog.id}`)}
-                    className="cursor-pointer bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-all group"
+                    className="cursor-pointer bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-900/50 transition-all group"
                   >
-                    <div className="flex gap-4">
+                    <div className="flex gap-6 items-center">
                       {blog.coverImage && (
-                        <img src={blog.coverImage} alt={blog.title} className="w-14 h-14 object-cover rounded-lg flex-shrink-0" />
+                        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+                           <img src={blog.coverImage} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                        </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">{blog.title}</h3>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-1.5 line-clamp-1">{excerpt}</p>
-                        <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
-                          <span>{authorName}</span>
-                          <span className="flex items-center gap-1"><Clock size={11} />{formatReadAt(blog.readAt)}</span>
-                          <span className="flex items-center gap-1"><Heart size={11} />{blog.likes}</span>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate leading-snug">
+                          {blog.title}
+                        </h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-3 line-clamp-1 font-body leading-relaxed">{excerpt}</p>
+                        <div className="flex items-center gap-4 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                          <span className="flex items-center gap-1.5"><Clock size={12} className="text-blue-500" /> {formatReadAt(blog.readAt)}</span>
+                          <span className="flex items-center gap-1.5"><img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author?.email}`} className="w-4 h-4 rounded-full" alt="" /> {authorName}</span>
+                          <span className="flex items-center gap-1.5"><Heart size={12} className="text-rose-500" /> {blog.likes}</span>
                         </div>
                       </div>
                     </div>
@@ -139,9 +154,11 @@ const ReadingHistory = () => {
             </div>
           )}
         </motion.div>
-      </main>
-      <Footer />
-    </div>
+      </div>
+      <div className="mt-20 px-4">
+        <Footer />
+      </div>
+    </>
   );
 };
 

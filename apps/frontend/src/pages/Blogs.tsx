@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
+import { AppShell } from "@/components/layout/AppShell";
 import BlogList from "@/components/BlogList";
 import BlogSkeleton from "@/components/BlogSkeleton";
 import { Footer } from "@/components/Footer";
-import Header from "@/components/ui/header";
 
 // Define the Blog type
 interface Blog {
@@ -16,7 +16,7 @@ interface Blog {
   authorId: string;
   published: string;
   image?: string;
-  tags?: string[];
+  tags?: { id: string, name: string }[];
 }
 
 const Blogs: React.FC = () => {
@@ -80,34 +80,32 @@ const Blogs: React.FC = () => {
   }, [searchTerm, allBlogs]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100/30 dark:bg-slate-950 transition-colors duration-300">
-      {/* Main content */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Header */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} />          
-          <main className="flex-1 overflow-y-auto bg-muted/20 dark:bg-gray-950/20 p-4 md:p-6">
-            <div className="max-w-6xl mx-auto">                    
-              {loading ? (
-                <div className="space-y-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <BlogSkeleton key={i} />
-                  ))}
-                </div>
-              ) : (
-                <BlogList posts={filteredBlogs} />
-              )}
+    <AppShell 
+      activePage="dock" 
+      searchTerm={searchTerm} 
+      setSearchTerm={setSearchTerm}
+    >
+      <div className="max-w-4xl mx-auto">                    
+        {loading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <BlogSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <div className="flex flex-col gap-2">
+               <h1 className="text-4xl font-headline font-bold text-gray-900 dark:text-white">Community Dock</h1>
+               <p className="text-gray-500 dark:text-gray-400">Discover the latest drafts and stories from the community.</p>
             </div>
-            <div>
-              
-            </div>
-            <div className="mt-8">
-              <Footer />
-            </div>
-          </main>
-        </div>
+            <BlogList posts={filteredBlogs} />
+          </div>
+        )}
       </div>
-    </div>
+      <div className="mt-20">
+        <Footer />
+      </div>
+    </AppShell>
   );
 };
 

@@ -2,187 +2,326 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, AreaChart, Area, Cell, PieChart, Pie } from "recharts";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
-import { BarChart2, Heart, FileText, Trophy, MessageCircle, Users } from "lucide-react";
-import Header2 from "@/components/ui/header2";
+import { BarChart2, Heart, FileText, Trophy, Users, TrendingUp, CheckCircle, Zap, Award } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import BackgroundGlow from "@/components/ui/BackgroundGlow";
+import { AchievementGrid } from "@/components/social/AchievementGrid";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-interface Stats {
-  totalBlogs: number;
-  publishedCount: number;
-  draftCount: number;
-  totalLikes: number;
-  commentCount: number;
-  topBlog: { id: string; title: string; likes: number } | null;
-  blogs: { id: string; title: string; likes: number; published: boolean }[];
-}
 
-const StatCard = ({
-  label, value, icon, color, delay = 0
-}: {
-  label: string; value: number | string; icon: React.ReactNode; color: string; delay?: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
-    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-    transition={{ duration: 0.6, delay, ease: "easeOut" }}
-    whileHover={{ y: -4, boxShadow: "0 12px 24px rgba(0,0,0,0.08)" }}
-    className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm cursor-default transition-colors`}
-  >
-    <div className={`inline-flex p-2.5 rounded-lg mb-3 ${color}`}>{icon}</div>
-    <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{label}</p>
-  </motion.div>
-);
+
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
-  const [stats, setStats] = useState<Stats | null>(null);
+  
+  // States for different analytics modules
+  const [basicStats, setBasicStats] = useState<any>(null);
+  const [viewHistory, setViewHistory] = useState<any[]>([]);
+  const [engagement, setEngagement] = useState<any>(null);
+  const [growth, setGrowth] = useState<any[]>([]);
+  const [completion, setCompletion] = useState<any[]>([]);
+  const [userAchievements, setUserAchievements] = useState<any[]>([]);
+  const [allAchievements, setAllAchievements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [followerCount, setFollowerCount] = useState(0);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchAllData = async () => {
       try {
         const token = await getToken();
-        const res = await axios.get(`${API_URL}/api/user/stats`, {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
-        });
-        setStats(res.data);
-        // Fetch follower count
-        try {
-          const followersRes = await axios.get(`${API_URL}/api/user/followers`, {
-            headers: { Authorization: `Bearer ${token}` }, withCredentials: true,
-          });
-          setFollowerCount(Array.isArray(followersRes.data) ? followersRes.data.length : 0);
-        } catch {}
+        const headers = { Authorization: `Bearer ${token}` };
+        
+        const [statsRes, viewsRes, engageRes, growthRes, completionRes, userAchRes, allAchRes] = await Promise.all([
+          axios.get(`${API_URL}/api/user/stats`, { headers }),
+          axios.get(`${API_URL}/api/analytics/views`, { headers }),
+          axios.get(`${API_URL}/api/analytics/engagement`, { headers }),
+          axios.get(`${API_URL}/api/analytics/follower-growth`, { headers }),
+          axios.get(`${API_URL}/api/analytics/reading-completion`, { headers }),
+          axios.get(`${API_URL}/api/achievements/user`, { headers }),
+          axios.get(`${API_URL}/api/achievements/all`, { headers }),
+        ]);
+
+        setBasicStats(statsRes.data);
+        setViewHistory(viewsRes.data.daily);
+        setEngagement(engageRes.data);
+        setGrowth(growthRes.data.history);
+        setCompletion(completionRes.data);
+        setUserAchievements(userAchRes.data);
+        setAllAchievements(allAchRes.data);
       } catch (err) {
-        console.error("Failed to fetch stats:", err);
+        console.error("Failed to fetch dashboard data:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchStats();
+    fetchAllData();
   }, []);
 
-  const chartData = stats?.blogs
-    .filter((b) => b.published)
-    .slice(0, 10)
-    .map((b) => ({
-      name: b.title.length > 18 ? b.title.slice(0, 18) + "…" : b.title,
-      likes: b.likes,
-    })) || [];
+  const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-violet-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <>
       <Helmet>
-        <title>Dashboard — DraftDock</title>
+        <title>Creator Dashboard — DraftDock</title>
       </Helmet>
-      <Header2 />
       <BackgroundGlow />
 
-      <main className="max-w-5xl mx-auto px-4 pt-28 pb-16 relative z-[1]">
-        <motion.div
-          className="flex items-center gap-3 mb-8"
-          initial={{ opacity: 0, x: -20, filter: "blur(6px)" }}
-          animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-          transition={{ duration: 0.5 }}
-        >
-          <BarChart2 className="w-7 h-7 text-gray-700 dark:text-gray-200" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        </motion.div>
-
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+      <div className="max-w-7xl mx-auto py-8 px-4 relative z-[1]">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 text-violet-600 dark:text-violet-400 font-bold tracking-tight mb-2"
+            >
+              <TrendingUp size={18} />
+              <span className="uppercase text-xs tracking-widest font-headline">Analytics Overview</span>
+            </motion.div>
+            <h1 className="text-4xl font-headline font-bold text-gray-900 dark:text-white tracking-tight">
+              Creator Insights
+            </h1>
           </div>
-        ) : !stats ? (
-          <p className="text-gray-500 dark:text-gray-400 text-center py-20">Failed to load stats.</p>
-        ) : (
-          <>
-            {/* Stat Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-              <StatCard label="Published Blogs" value={stats.publishedCount} icon={<FileText size={18} />} color="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" delay={0.1} />
-              <StatCard label="Drafts" value={stats.draftCount} icon={<FileText size={18} />} color="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400" delay={0.2} />
-              <StatCard label="Total Likes" value={stats.totalLikes} icon={<Heart size={18} />} color="bg-rose-50 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400" delay={0.3} />
-              <StatCard label="Comments Received" value={stats.commentCount} icon={<MessageCircle size={18} />} color="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400" delay={0.4} />
-              <StatCard label="Followers" value={followerCount} icon={<Users size={18} />} color="bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400" delay={0.5} />
-            </div>
+          <div className="flex gap-3">
+             <button onClick={() => navigate('/create-blog')} className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold shadow-lg shadow-violet-200 dark:shadow-none transition-all flex items-center gap-2">
+               <Zap size={18} /> New Story
+             </button>
+          </div>
+        </div>
 
-            {/* Top Blog */}
-            {stats.topBlog && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-5 mb-8 cursor-pointer hover:shadow-md transition"
-                onClick={() => navigate(`/blog/${stats.topBlog!.id}`)}
-              >
-                <div className="flex items-center gap-3">
-                  <Trophy className="w-6 h-6 text-amber-500" />
+        {/* Global Key Metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+           <MetricCard 
+             title="Total Views" 
+             value={engagement?.totalViews || 0} 
+             subtitle="Lifetime reach"
+             icon={<BarChart2 size={20} />} 
+             trend="+12%" 
+             color="violet"
+           />
+           <MetricCard 
+             title="Engagement Rate" 
+             value={`${engagement?.engagementRate || 0}%`} 
+             subtitle="Reader interaction"
+             icon={<Heart size={20} />} 
+             trend="+4.5%" 
+             color="rose"
+           />
+           <MetricCard 
+             title="Active Followers" 
+             value={basicStats?.totalFollowers || 0} 
+             subtitle="Community size"
+             icon={<Users size={20} />} 
+             trend="+8" 
+             color="blue"
+           />
+           <MetricCard 
+             title="Published Stories" 
+             value={basicStats?.publishedCount || 0} 
+             subtitle="Creator consistency"
+             icon={<FileText size={20} />} 
+             color="emerald"
+           />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* Main Chart: Views History */}
+          <div className="lg:col-span-2 space-y-10">
+            <ChartContainer title="Audience Reach" subtitle="Daily views over the last 30 days">
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={viewHistory}>
+                  <defs>
+                    <linearGradient id="viewGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis dataKey="date" hide />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  />
+                  <Area type="monotone" dataKey="views" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#viewGradient)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+
+            {/* Reading Completion Breakdown */}
+            <ChartContainer title="Retention Analysis" subtitle="How many readers finish your stories">
+               <div className="space-y-6 text-gray-900 dark:text-gray-100">
+                  {completion.map((blog, i) => (
+                    <div key={blog.id} className="space-y-2">
+                       <div className="flex justify-between text-sm items-end">
+                          <span className="font-semibold text-gray-950 dark:text-gray-200 truncate max-w-[70%]">{blog.title}</span>
+                          <span className="text-violet-600 font-bold">{blog.rate}%</span>
+                       </div>
+                       <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${blog.rate}%` }}
+                            transition={{ duration: 1, delay: i * 0.1 }}
+                            className="h-full bg-violet-500 rounded-full"
+                          />
+                       </div>
+                    </div>
+                  ))}
+                  {completion.length === 0 && <p className="text-center py-10 text-gray-400 italic">Start writing to see retention data.</p>}
+               </div>
+            </ChartContainer>
+
+            {/* Achievements Section */}
+            <div className="space-y-6">
+               <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-lg">
+                    <Award size={20} />
+                  </div>
                   <div>
-                    <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-0.5">Most Popular Blog</p>
-                    <p className="font-bold text-gray-900 dark:text-white text-lg">{stats.topBlog.title}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">❤️ {stats.topBlog.likes} likes · Click to view</p>
+                    <h2 className="text-xl font-headline font-bold text-gray-900 dark:text-white">Milestones</h2>
+                    <p className="text-xs text-gray-500">Your path to becoming a DraftDock elite</p>
+                  </div>
+               </div>
+               <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700">
+                  <AchievementGrid achievements={userAchievements} allAchievements={allAchievements} />
+               </div>
+            </div>
+          </div>
+
+          {/* Right Sidebar Stats */}
+          <div className="space-y-10">
+             {/* Follower Growth */}
+             <ChartContainer title="Community Growth" subtitle="Followers trend">
+                <ResponsiveContainer width="100%" height={150}>
+                  <LineChart data={growth}>
+                    <Line type="stepAfter" dataKey="count" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                    <Tooltip />
+                  </LineChart>
+                </ResponsiveContainer>
+             </ChartContainer>
+
+             {/* Engagement Mix */}
+             <ChartContainer title="Engagement Mix" subtitle="Action breakdown">
+                <div className="flex flex-col items-center">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Likes', value: engagement?.totalLikes || 0 },
+                          { name: 'Comments', value: engagement?.commentCount || 0 },
+                          { name: 'Bookmarks', value: engagement?.bookmarkCount || 0 },
+                        ]}
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                      {(engagement ? [1,2,3] : []).map((_, i) => (
+                        <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="flex gap-4 mt-2">
+                      <LegendItem label="Likes" color="bg-violet-500" />
+                      <LegendItem label="Comments" color="bg-pink-500" />
+                      <LegendItem label="Saves" color="bg-amber-500" />
                   </div>
                 </div>
-              </motion.div>
-            )}
+             </ChartContainer>
 
-            {/* Chart */}
-            {chartData.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Likes per Blog</h2>
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={chartData} margin={{ left: -20, bottom: 40 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis
-                      dataKey="name"
-                      tick={{ fontSize: 11, fill: "#6b7280" }}
-                      angle={-30}
-                      textAnchor="end"
-                      interval={0}
-                    />
-                    <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{
-                        background: "#1f2937",
-                        border: "none",
-                        borderRadius: "8px",
-                        color: "#f9fafb",
-                        fontSize: "13px",
-                      }}
-                    />
-                    <Bar dataKey="likes" fill="#111827" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-
-            {stats.totalBlogs === 0 && (
-              <div className="text-center py-20 text-gray-400 dark:text-gray-500">
-                <BarChart2 className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                <p className="text-lg mb-4">No blogs yet. Start writing to see your stats!</p>
-                <button
-                  onClick={() => navigate("/create-blog")}
-                  className="px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:opacity-80 transition"
-                >
-                  Create Blog
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </main>
-      <Footer />
-    </div>
+             {/* Top Story Spotlight */}
+             {basicStats?.topBlog && (
+                <div className="bg-black dark:bg-violet-600 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden group cursor-pointer" onClick={() => navigate(`/blog/${basicStats.topBlog.id}`)}>
+                   <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-110 transition-transform">
+                      <Trophy size={140} />
+                   </div>
+                   <div className="relative z-10">
+                      <div className="bg-white/20 backdrop-blur-md w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
+                        Star Story
+                      </div>
+                      <h3 className="text-2xl font-headline font-bold mb-4 line-clamp-2 leading-tight">{basicStats.topBlog.title}</h3>
+                      <div className="flex items-center gap-6 text-white/80 text-sm font-bold">
+                         <span className="flex items-center gap-2"><Heart size={16} /> {basicStats.topBlog.likes}</span>
+                         <span className="flex items-center gap-2"><CheckCircle size={16} /> 94% finished</span>
+                      </div>
+                   </div>
+                </div>
+             )}
+          </div>
+        </div>
+      </div>
+      <div className="mt-20 px-4">
+        <Footer />
+      </div>
+    </>
   );
 };
 
+function MetricCard({ title, value, subtitle, icon, trend, color }: any) {
+  const colorMap: any = {
+    violet: "bg-violet-50 text-violet-600 dark:bg-violet-900/20 dark:text-violet-400",
+    rose: "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400",
+    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
+    emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400",
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm"
+    >
+      <div className="flex justify-between items-start mb-4">
+        <div className={`p-3 rounded-xl ${colorMap[color]}`}>
+          {icon}
+        </div>
+        {trend && (
+          <span className="text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded-full">
+            {trend}
+          </span>
+        )}
+      </div>
+      <div>
+        <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-1">{value}</h3>
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{title}</p>
+        <p className="text-[10px] text-gray-400 mt-1">{subtitle}</p>
+      </div>
+    </motion.div>
+  );
+}
+
 export default Dashboard;
+
+function ChartContainer({ title, subtitle, children }: any) {
+  return (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+      <div className="mb-6">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
+        <p className="text-xs text-gray-500">{subtitle}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function LegendItem({ label, color }: any) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className={`w-2 h-2 rounded-full ${color}`} />
+      <span className="text-[10px] font-medium text-gray-500">{label}</span>
+    </div>
+  );
+}

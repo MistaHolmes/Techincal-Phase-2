@@ -12,7 +12,6 @@ import ProfileComponent from "./pages/Profile";
 
 // Lazy-loaded pages
 const Explore = lazy(() => import("./pages/Explore"));
-const Drafts = lazy(() => import("./pages/Drafts"));
 const TagBlogs = lazy(() => import("./pages/TagBlogs"));
 const Bookmarks = lazy(() => import("./pages/Bookmarks"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -21,6 +20,8 @@ const Settings = lazy(() => import("./pages/Settings"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const ReadingHistory = lazy(() => import("./pages/ReadingHistory"));
 const SeriesPage = lazy(() => import("./pages/SeriesPage"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Messages = lazy(() => import("./pages/Messages"));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -31,32 +32,41 @@ const PageLoader = () => (
   </div>
 );
 
+import { AppShell } from "./components/layout/AppShell";
+
 const App: React.FC = () => {
   return (
     <Router>
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<HomeRedirector />} />
-          <Route path="/landing" element={<RequireAuth><LandingPage /></RequireAuth>} />
+          <Route path="/landing" element={<RequireAuth><AppShell hideSidebar hideRightPanel><LandingPage /></AppShell></RequireAuth>} />
+          
+          {/* Main AppShell Routes */}
           <Route path="/blogs" element={<RequireAuth><UserBlogs /></RequireAuth>} />
-          <Route path="/create-blog" element={<RequireAuth><BlogForm /></RequireAuth>} />
-          <Route path="/edit-blog/:blogId" element={<RequireAuth><BlogForm /></RequireAuth>} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/bookmarks" element={<RequireAuth><AppShell activePage="bookmarks"><Bookmarks /></AppShell></RequireAuth>} />
+          <Route path="/dashboard" element={<RequireAuth><AppShell activePage="dashboard"><Dashboard /></AppShell></RequireAuth>} />
+          <Route path="/search" element={<AppShell activePage="search"><SearchPage /></AppShell>} />
+          <Route path="/history" element={<RequireAuth><AppShell activePage="history"><ReadingHistory /></AppShell></RequireAuth>} />
+          <Route path="/leaderboard" element={<AppShell activePage="leaderboard"><Leaderboard /></AppShell>} />
+          <Route path="/messages" element={<RequireAuth><AppShell activePage="messages"><Messages /></AppShell></RequireAuth>} />
+          <Route path="/settings" element={<RequireAuth><AppShell activePage="settings"><Settings /></AppShell></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><AppShell activePage="profile"><ProfileComponent /></AppShell></RequireAuth>} />
+
+          {/* Workflow Routes */}
+          <Route path="/create-blog" element={<RequireAuth><AppShell hideRightPanel><BlogForm /></AppShell></RequireAuth>} />
+          <Route path="/edit-blog/:blogId" element={<RequireAuth><AppShell hideRightPanel><BlogForm /></AppShell></RequireAuth>} />
+          
+          {/* Public Views */}
           <Route path="/blog/:blogId" element={<BlogView />} />
+          <Route path="/author/:userId" element={<AppShell hideRightPanel><AuthorProfile /></AppShell>} />
+          <Route path="/tags/:tagName" element={<AppShell activePage="explore"><TagBlogs /></AppShell>} />
+          <Route path="/series/:id" element={<AppShell activePage="explore"><SeriesPage /></AppShell>} />
+          
+          {/* static */}
           <Route path="/my-story" element={<MyStory />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/profile" element={<ProfileComponent />} />
-          {/* Feature routes */}
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/drafts" element={<RequireAuth><Drafts /></RequireAuth>} />
-          <Route path="/tags/:tagName" element={<TagBlogs />} />
-          <Route path="/bookmarks" element={<RequireAuth><Bookmarks /></RequireAuth>} />
-          <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          <Route path="/author/:userId" element={<AuthorProfile />} />
-          <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
-          {/* New feature routes */}
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/history" element={<RequireAuth><ReadingHistory /></RequireAuth>} />
-          <Route path="/series/:id" element={<SeriesPage />} />
         </Routes>
       </Suspense>
     </Router>

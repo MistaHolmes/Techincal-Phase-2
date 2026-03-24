@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { LayoutGrid, FileDiff, Compass, Bookmark, BarChart2, Settings, Menu, X, Search, History } from "lucide-react";
+import { LayoutGrid, FileDiff, Compass, Bookmark, BarChart2, Settings, Menu, X, Search, History, Trophy, MessageSquare } from "lucide-react";
 import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
@@ -104,6 +104,8 @@ const Sidebar: React.FC<{ activePage?: string }> = ({ activePage = "dock" }) => 
           <NavItem href="/dashboard" icon={<BarChart2 size={16} />} active={activePage === "dashboard"}>Dashboard</NavItem>
           <NavItem href="/search" icon={<Search size={16} />} active={activePage === "search"}>Search</NavItem>
           <NavItem href="/history" icon={<History size={16} />} active={activePage === "history"}>History</NavItem>
+          <NavItem href="/leaderboard" icon={<Trophy size={16} />} active={activePage === "leaderboard"}>Leaderboard</NavItem>
+          <NavItem href="/messages" icon={<MessageSquare size={16} />} active={activePage === "messages"}>Messages</NavItem>
           <NavItem href="/settings" icon={<Settings size={16} />} active={activePage === "settings"}>Settings</NavItem>
 
           <div className="mt-4 px-2">

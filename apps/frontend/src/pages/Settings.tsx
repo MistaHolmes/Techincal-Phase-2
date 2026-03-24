@@ -6,7 +6,6 @@ import { Settings as SettingsIcon, Moon, Sun, User, Save } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { useTheme } from "@/lib/ThemeContext";
-import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -42,128 +41,136 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <>
       <Helmet>
         <title>Settings — DraftDock</title>
       </Helmet>
-      <Header2 />
 
-      <main className="max-w-2xl mx-auto px-4 pt-28 pb-16">
-        <div className="flex items-center gap-3 mb-8">
-          <SettingsIcon className="w-7 h-7 text-gray-700 dark:text-gray-200" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+      <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="flex items-center gap-4 mb-12">
+          <div className="p-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-2xl">
+             <SettingsIcon className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-headline font-bold text-gray-900 dark:text-white">Account Settings</h1>
+            <p className="text-sm text-gray-500">Manage your profile, appearance, and preferences</p>
+          </div>
         </div>
 
-        {/* Appearance */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm mb-6"
-        >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
-            Appearance
-          </h2>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-gray-800 dark:text-gray-200">Dark Mode</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Currently using <span className="font-semibold">{theme}</span> mode
-              </p>
-            </div>
-            <button
-              onClick={toggleTheme}
-              className={`relative w-14 h-7 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black dark:focus:ring-white ${
-                theme === "dark" ? "bg-black" : "bg-gray-200"
-              }`}
-              aria-label="Toggle dark mode"
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Profile Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-8 shadow-sm"
             >
-              <div
-                className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-sm transition-all duration-300 flex items-center justify-center ${
-                  theme === "dark" ? "translate-x-7" : "translate-x-0.5"
-                }`}
-              >
-                {theme === "dark" ? <Moon size={12} className="text-gray-700" /> : <Sun size={12} className="text-yellow-500" />}
+              <h2 className="text-xl font-headline font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+                <User size={20} className="text-violet-500" /> Public Profile
+              </h2>
+              <form onSubmit={handleSaveProfile} className="space-y-6">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Display Name</label>
+                  <input
+                    type="text"
+                    value={profile.name}
+                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                    placeholder="Your display name"
+                    className="w-full px-5 py-3 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-body"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Bio</label>
+                  <textarea
+                    value={profile.bio}
+                    onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                    placeholder="Tell the world a little about yourself..."
+                    rows={4}
+                    className="w-full px-5 py-3 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all resize-none font-body leading-relaxed"
+                  />
+                </div>
+
+                {error && <p className="text-sm text-red-500 font-bold">{error}</p>}
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex items-center gap-2 px-8 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:opacity-90 transition shadow-lg disabled:opacity-50"
+                >
+                  <Save size={18} />
+                  {saving ? "Saving..." : saved ? "Changes Saved!" : "Save Profile"}
+                </button>
+              </form>
+            </motion.div>
+
+            {/* Appearance Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-8 shadow-sm"
+            >
+              <h2 className="text-xl font-headline font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+                {theme === "dark" ? <Moon size={20} className="text-blue-400" /> : <Sun size={20} className="text-amber-500" />}
+                Appearance
+              </h2>
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
+                <div>
+                  <p className="font-bold text-gray-900 dark:text-white">Dark Mode</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Switch between light and dark themes
+                  </p>
+                </div>
+                <button
+                  onClick={toggleTheme}
+                  className={`relative w-14 h-8 rounded-full transition-all duration-300 focus:outline-none ${
+                    theme === "dark" ? "bg-violet-600" : "bg-gray-300"
+                  }`}
+                >
+                  <motion.div
+                    animate={{ x: theme === "dark" ? 24 : 4 }}
+                    className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center"
+                  >
+                    {theme === "dark" ? <Moon size={12} className="text-violet-600" /> : <Sun size={12} className="text-amber-500" />}
+                  </motion.div>
+                </button>
               </div>
-            </button>
+            </motion.div>
           </div>
-        </motion.div>
 
-        {/* Profile */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm mb-6"
-        >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <User size={18} /> Public Profile
-          </h2>
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Display Name</label>
-              <input
-                type="text"
-                value={profile.name}
-                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                placeholder="Your display name"
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition"
-              />
+          <div className="space-y-8">
+            {/* Quick Navigation */}
+            <div className="bg-violet-600 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden group">
+               <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-110 transition-transform">
+                  <SettingsIcon size={120} />
+               </div>
+               <div className="relative z-10 font-headline">
+                  <h3 className="text-xl font-bold mb-6 italic underline underline-offset-8 decoration-white/20">System Links</h3>
+                  <div className="flex flex-col gap-4">
+                    {[
+                      { label: "My Profile", href: "/profile" },
+                      { label: "Dashboard", href: "/dashboard" },
+                      { label: "My Drafts", href: "/blogs" },
+                      { label: "Explore Hub", href: "/explore" },
+                    ].map((link) => (
+                      <button
+                        key={link.href}
+                        onClick={() => navigate(link.href)}
+                        className="w-full text-left px-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-all border border-white/5"
+                      >
+                        {link.label}
+                      </button>
+                    ))}
+                  </div>
+               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bio</label>
-              <textarea
-                value={profile.bio}
-                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                placeholder="Tell the world a little about yourself..."
-                rows={3}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition resize-none"
-              />
-            </div>
-
-            {error && <p className="text-sm text-red-500">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:opacity-80 transition disabled:opacity-50"
-            >
-              <Save size={16} />
-              {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Profile"}
-            </button>
-          </form>
-        </motion.div>
-
-        {/* Quick Links */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm"
-        >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Links</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[
-              { label: "My Profile", href: "/profile" },
-              { label: "Dashboard", href: "/dashboard" },
-              { label: "My Drafts", href: "/drafts" },
-              { label: "Bookmarks", href: "/bookmarks" },
-              { label: "Explore", href: "/explore" },
-              { label: "Write Blog", href: "/create-blog" },
-            ].map((link) => (
-              <button
-                key={link.href}
-                onClick={() => navigate(link.href)}
-                className="px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition text-left font-medium border border-gray-100 dark:border-gray-600"
-              >
-                {link.label}
-              </button>
-            ))}
           </div>
-        </motion.div>
-      </main>
-      <Footer />
-    </div>
+        </div>
+      </div>
+      <div className="mt-20 px-4">
+        <Footer />
+      </div>
+    </>
   );
 };
 

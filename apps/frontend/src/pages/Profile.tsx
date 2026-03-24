@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { UserButton, useAuth } from "@clerk/clerk-react";
 import { Users, UserPlus, UserMinus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Header3 from "../components/ui/header3";
 import UserContentSection from "../components/UserContent";
+import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -103,102 +103,115 @@ const ProfileComponent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-slate-950 transition-colors duration-300">
-      <div className="w-full">
-        <Header3 />
-      </div>
-
-      <div className="max-w-7xl mx-auto p-4">
+    <>
+      <div className="max-w-7xl mx-auto py-8 px-4">
         {/* Account Management Box */}
-        <div className="bg-white dark:bg-gray-900/60 rounded-xl shadow-md border border-gray-300 dark:border-gray-800 p-6 flex flex-col md:flex-row items-center justify-between transition-colors">
-          <div className="md:w-3/4">
-            <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">Manage Your Account</h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              Access and update your personal details, security settings, and view your recent activity. Use the profile menu to manage your account efficiently.
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 flex flex-col md:flex-row items-center justify-between transition-all mb-10 overflow-hidden relative group">
+           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
+              <Users size={160} />
+           </div>
+           <div className="md:w-3/4 relative z-10">
+            <h2 className="text-3xl font-headline font-bold text-gray-900 dark:text-white mb-4">Account Management</h2>
+            <p className="text-gray-500 dark:text-gray-400 font-body leading-relaxed max-w-2xl">
+              Access your personal details, security settings, and professional profile. Use the Clerk dashboard to manage your authentication and session data securely.
             </p>
           </div>
-          <div className="md:w-1/4 flex justify-center md:justify-end mt-6 md:mt-0 mr-4">
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  userButtonAvatarBox: "w-12 h-12",
-                },
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Followers / Following Section */}
-        <div className="mt-8 bg-white dark:bg-gray-900/60 rounded-xl shadow-md border border-gray-300 dark:border-gray-800 p-6 transition-colors">
-          <div className="flex items-center gap-3 mb-6">
-            <Users className="w-5 h-5 text-gray-700 dark:text-gray-200" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Your Network</h2>
-          </div>
-
-          {/* Tab toggles */}
-          <div className="flex border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden w-fit mb-6">
-            <button
-              onClick={() => setActiveTab("followers")}
-              className={`px-5 py-2.5 font-semibold text-sm transition ${
-                activeTab === "followers"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-white text-gray-700 hover:bg-indigo-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-900/20"
-              }`}
-            >
-              Followers ({followers.length})
-            </button>
-            <div className="w-px bg-gray-300 dark:bg-gray-700"></div>
-            <button
-              onClick={() => setActiveTab("following")}
-              className={`px-5 py-2.5 font-semibold text-sm transition ${
-                activeTab === "following"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-white text-gray-700 hover:bg-indigo-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-900/20"
-              }`}
-            >
-              Following ({following.length})
-            </button>
-          </div>
-
-          {/* Content */}
-          {loadingFollow ? (
-            <div className="flex justify-center py-10">
-              <div className="w-6 h-6 border-3 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+          <div className="md:w-1/4 flex justify-center md:justify-end mt-8 md:mt-0 relative z-10">
+            <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-inner">
+               <UserButton
+                 afterSignOutUrl="/"
+                 appearance={{
+                   elements: {
+                     userButtonAvatarBox: "w-14 h-14",
+                   },
+                 }}
+               />
             </div>
-          ) : (
-            <AnimatePresence mode="wait">
-              {activeTab === "followers" ? (
-                <motion.div key="followers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
-                  {followers.length === 0 ? (
-                    <div className="text-center py-10 text-gray-400 dark:text-gray-500">
-                      <UserPlus className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                      <p className="text-sm">No followers yet. Share your blogs to grow your audience!</p>
-                    </div>
-                  ) : (
-                    followers.map((user) => renderUserCard(user, false))
-                  )}
-                </motion.div>
-              ) : (
-                <motion.div key="following" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
-                  {following.length === 0 ? (
-                    <div className="text-center py-10 text-gray-400 dark:text-gray-500">
-                      <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                      <p className="text-sm">You're not following anyone yet. Discover authors on the Explore page!</p>
-                    </div>
-                  ) : (
-                    following.map((user) => renderUserCard(user, true))
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          )}
+          </div>
         </div>
 
-        {/* Manage Your Blogs Section */}
-        <UserContentSection />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-2">
+             {/* Manage Your Blogs Section */}
+             <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
+                <UserContentSection />
+             </div>
+          </div>
+
+          <div className="space-y-10">
+            {/* Followers / Following Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 transition-all">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="p-2 bg-violet-100 dark:bg-violet-900/30 text-violet-600 rounded-xl">
+                   <Users className="w-5 h-5" />
+                </div>
+                <h2 className="text-xl font-headline font-bold text-gray-900 dark:text-white">Network</h2>
+              </div>
+
+              {/* Tab toggles */}
+              <div className="flex bg-gray-50 dark:bg-gray-900 p-1 rounded-2xl mb-8">
+                <button
+                  onClick={() => setActiveTab("followers")}
+                  className={`flex-1 py-3 font-bold text-xs uppercase tracking-widest rounded-xl transition-all ${
+                    activeTab === "followers"
+                      ? "bg-white dark:bg-gray-800 text-violet-600 shadow-md"
+                      : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                >
+                  Followers ({followers.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab("following")}
+                  className={`flex-1 py-3 font-bold text-xs uppercase tracking-widest rounded-xl transition-all ${
+                    activeTab === "following"
+                      ? "bg-white dark:bg-gray-800 text-violet-600 shadow-md"
+                      : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                >
+                  Following ({following.length})
+                </button>
+              </div>
+
+              {/* Content */}
+              {loadingFollow ? (
+                <div className="flex justify-center py-10">
+                  <div className="w-6 h-6 border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <AnimatePresence mode="wait">
+                  {activeTab === "followers" ? (
+                    <motion.div key="followers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                      {followers.length === 0 ? (
+                        <div className="text-center py-12 text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                          <UserPlus className="w-10 h-10 mx-auto mb-4 opacity-20" />
+                          <p className="text-xs font-bold uppercase tracking-tighter">No followers yet</p>
+                        </div>
+                      ) : (
+                        followers.map((user) => renderUserCard(user, false))
+                      )}
+                    </motion.div>
+                  ) : (
+                    <motion.div key="following" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                      {following.length === 0 ? (
+                        <div className="text-center py-12 text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                          <Users className="w-10 h-10 mx-auto mb-4 opacity-20" />
+                          <p className="text-xs font-bold uppercase tracking-tighter">No follows yet</p>
+                        </div>
+                      ) : (
+                        following.map((user) => renderUserCard(user, true))
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+      <div className="mt-20 px-4">
+        <Footer />
+      </div>
+    </>
   );
 };
 

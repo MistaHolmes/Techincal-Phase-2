@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Bookmark, BookmarkX } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
-import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -62,37 +61,42 @@ const Bookmarks = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <>
       <Helmet>
         <title>Bookmarks — DraftDock</title>
       </Helmet>
-      <Header2 />
 
-      <main className="max-w-3xl mx-auto px-4 pt-28 pb-16">
-        <div className="flex items-center gap-3 mb-8">
-          <Bookmark className="w-7 h-7 text-gray-700 dark:text-gray-200" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Bookmarks</h1>
-          <span className="ml-auto text-sm text-gray-400 dark:text-gray-500">{blogs.length} saved</span>
+      <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="flex items-center gap-4 mb-12">
+          <div className="p-3 bg-violet-100 dark:bg-violet-900/30 text-violet-600 rounded-2xl">
+             <Bookmark className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-headline font-bold text-gray-900 dark:text-white">Your Bookmarks</h1>
+            <p className="text-sm text-gray-500">{blogs.length} stories saved for later</p>
+          </div>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : blogs.length === 0 ? (
-          <div className="text-center py-20 text-gray-400 dark:text-gray-500">
-            <Bookmark className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p className="text-lg mb-2">No saved blogs yet.</p>
-            <p className="text-sm mb-6">Start bookmarking blogs you want to read later.</p>
+          <div className="text-center py-32 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+            <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6">
+               <Bookmark className="w-10 h-10 text-gray-300 dark:text-gray-600" />
+            </div>
+            <h3 className="text-xl font-headline font-bold text-gray-900 dark:text-white mb-2">No saved blogs yet</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 max-w-xs mx-auto">Start bookmarking stories you want to keep or read later.</p>
             <button
               onClick={() => navigate("/blogs")}
-              className="px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:opacity-80 transition"
+              className="px-8 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold hover:opacity-90 transition shadow-lg"
             >
-              Browse Blogs
+              Discover Stories
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-6">
             {blogs.map((blog, i) => {
               const excerpt = blog.content.replace(/[#*`>\[\]]/g, "").slice(0, 140) + "...";
               const displayName = blog.author?.name || blog.author?.email?.split("@")[0] || "Anonymous";
@@ -102,43 +106,54 @@ const Bookmarks = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm group"
+                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm group hover:shadow-md transition-shadow relative"
                 >
-                  <div className="flex gap-4">
-                    {blog.coverImage && (
-                      <img src={blog.coverImage} alt={blog.title} className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
-                    )}
+                  <div className="flex gap-6">
                     <div className="flex-1 min-w-0">
                       <h3
                         onClick={() => navigate(`/blog/${blog.id}`)}
-                        className="font-semibold text-gray-900 dark:text-white text-lg mb-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition line-clamp-1"
+                        className="font-headline font-bold text-gray-900 dark:text-white text-xl mb-3 cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition line-clamp-2"
                       >
                         {blog.title}
                       </h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm mb-2 line-clamp-2">{excerpt}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-400 dark:text-gray-500">
-                          By {displayName} · {new Date(blog.updatedAt).toLocaleDateString()}
-                        </span>
+                      <p className="text-gray-500 dark:text-gray-400 font-body text-sm mb-6 line-clamp-2 leading-relaxed">{excerpt}</p>
+                      
+                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50 dark:border-gray-700/50">
+                        <div className="flex items-center gap-2">
+                           <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author?.email}`} alt="" />
+                           </div>
+                           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                             {displayName} · {new Date(blog.updatedAt).toLocaleDateString()}
+                           </span>
+                        </div>
+                        
                         <button
                           onClick={() => handleRemove(blog.id)}
                           disabled={removing === blog.id}
-                          className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600 dark:hover:text-red-300 transition opacity-0 group-hover:opacity-100"
+                          className="flex items-center gap-1.5 text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 dark:bg-red-900/10 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                         >
                           <BookmarkX size={14} />
-                          {removing === blog.id ? "Removing..." : "Remove"}
+                          {removing === blog.id ? "..." : "Remove"}
                         </button>
                       </div>
                     </div>
+                    {blog.coverImage && (
+                      <div className="hidden sm:block w-32 h-32 rounded-2xl overflow-hidden flex-shrink-0">
+                        <img src={blog.coverImage} alt={blog.title} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               );
             })}
           </div>
         )}
-      </main>
-      <Footer />
-    </div>
+      </div>
+      <div className="mt-20 px-4">
+        <Footer />
+      </div>
+    </>
   );
 };
 
