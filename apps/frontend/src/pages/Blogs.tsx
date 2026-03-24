@@ -80,13 +80,13 @@ const Blogs: React.FC = () => {
   }, [searchTerm, allBlogs]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100/30 ">
+    <div className="flex h-screen overflow-hidden bg-gray-100/30 dark:bg-slate-950 transition-colors duration-300">
       {/* Main content */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Header */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} />          
-          <main className="flex-1 overflow-y-auto bg-muted/20 p-4 md:p-6">
+          <main className="flex-1 overflow-y-auto bg-muted/20 dark:bg-gray-950/20 p-4 md:p-6">
             <div className="max-w-6xl mx-auto">                    
               {loading ? (
                 <div className="space-y-4">

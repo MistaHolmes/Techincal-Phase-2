@@ -111,15 +111,15 @@ const UserContentSection = () => {
 
   return (
     <div>
-        <div className="mt-10 bg-white rounded-xl shadow-md border border-gray-300 p-6 max-w-7xl mx-auto">
+        <div className="mt-10 bg-white dark:bg-gray-900/60 rounded-xl shadow-md border border-gray-300 dark:border-gray-800 p-6 max-w-7xl mx-auto transition-colors">
         {/* Buttons */}
-        <div className="flex border border-gray-300 rounded-lg overflow-hidden w-fit">
+        <div className="flex border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden w-fit">
             <button
             onClick={() => setActiveTab("blogs")}
             className={`px-6 py-3 font-semibold transition ${
                 activeTab === "blogs"
                 ? "bg-indigo-600 text-white"
-                : "bg-white text-gray-700 hover:bg-indigo-50"
+                : "bg-white text-gray-700 hover:bg-indigo-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-900/20"
             }`}
             >
             Blogs
@@ -130,7 +130,7 @@ const UserContentSection = () => {
             className={`px-6 py-3 font-semibold transition ${
                 activeTab === "drafts"
                 ? "bg-yellow-500 text-white"
-                : "bg-white text-gray-700 hover:bg-yellow-50"
+                : "bg-white text-gray-700 hover:bg-yellow-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-yellow-900/20"
             }`}
             >
             Drafts
@@ -167,19 +167,19 @@ const UserContentSection = () => {
                 publishedBlogs.map(blog => (
                     <div 
                     key={blog.id} 
-                    className="mb-4 border-b pb-4 last:border-none cursor-pointer hover:bg-gray-50 transition-colors duration-200 rounded-lg p-4 -m-4 group"
+                    className="mb-4 border-b border-gray-100 dark:border-gray-800 pb-4 last:border-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200 rounded-lg p-4 -m-4 group"
                     onClick={() => handleBlogClick(blog)}
                     >
                     <div className="flex justify-between items-start">
                         <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                             {blog.title}
                         </h3>
-                        <p className="text-gray-700 mt-2 leading-relaxed">
+                        <p className="text-gray-700 dark:text-gray-300 mt-2 leading-relaxed">
                             {stripHtmlTags(blog.content).slice(0, 100)}
                             {stripHtmlTags(blog.content).length > 100 ? "..." : ""}
                         </p>
-                        <p className="text-sm text-gray-500 mt-2">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                             Published on {new Date(blog.createdAt).toLocaleDateString()}
                         </p>
                         </div>
@@ -218,18 +218,18 @@ const UserContentSection = () => {
                     <div className="flex justify-between items-start">
                         <div className="flex-1">
                         <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold text-gray-900 group-hover:text-yellow-600 transition-colors">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">
                             {blog.title}
                             </h3>
-                            <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                            <span className="px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded-full">
                             Draft
                             </span>
                         </div>
-                        <p className="text-gray-700 mt-2 leading-relaxed">
+                        <p className="text-gray-700 dark:text-gray-300 mt-2 leading-relaxed">
                             {stripHtmlTags(blog.content).slice(0, 100)}
                             {stripHtmlTags(blog.content).length > 100 ? "..." : ""}
                         </p>
-                        <p className="text-sm text-gray-500 mt-2">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                             Last edited on {new Date(blog.updatedAt).toLocaleDateString()}
                         </p>
                         </div>
@@ -261,26 +261,26 @@ const UserContentSection = () => {
 
         {/* Modal Overlay */}
         {isModalOpen && selectedBlog && (
-            <div className="fixed inset-0 bg-white/10 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-800">
                 {/* Modal Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950/50">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                     {selectedBlog.title}
                     </h2>
                     {!selectedBlog.published && (
-                    <span className="px-3 py-1 text-sm font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                    <span className="px-3 py-1 text-sm font-medium bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-400 rounded-full">
                         Draft
                     </span>
                     )}
                 </div>
                 <button
                     onClick={closeModal}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors duration-200"
+                    className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors duration-200"
                     title="Close"
                 >
-                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
@@ -288,14 +288,14 @@ const UserContentSection = () => {
 
                 {/* Modal Content */}
                 <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-                <div className="mb-4 text-sm text-gray-500">
+                <div className="mb-4 text-sm text-gray-500 dark:text-gray-400">
                     {selectedBlog.published 
                     ? `Published on ${new Date(selectedBlog.createdAt).toLocaleDateString()}`
                     : `Last edited on ${new Date(selectedBlog.updatedAt).toLocaleDateString()}`
                     }
                 </div>
                 <div 
-                    className="prose prose-lg max-w-none text-gray-800 leading-relaxed"
+                    className="prose prose-lg dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
                 />
                 </div>

@@ -86,8 +86,8 @@ const BlogCardLikeButton = ({ blogId }: { blogId: string }) => {
         group flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-medium text-sm
         transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400
         ${liked
-          ? "bg-rose-50 border-rose-300 text-rose-600 shadow-sm"
-          : "bg-white border-gray-300 text-gray-600 hover:border-rose-300 hover:text-rose-500 hover:bg-rose-50"
+          ? "bg-rose-50 border-rose-300 text-rose-600 shadow-sm dark:bg-rose-950/30 dark:border-rose-800 dark:text-rose-400"
+          : "bg-white border-gray-300 text-gray-600 hover:border-rose-300 hover:text-rose-500 hover:bg-rose-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400 dark:hover:border-rose-500 dark:hover:text-rose-400 dark:hover:bg-rose-950/20"
         }
       `}
     >
@@ -180,21 +180,21 @@ const BlogList: React.FC<BlogListProps> = ({ posts }) => {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
               whileHover={{ y: -5, boxShadow: "0 16px 32px rgba(0,0,0,0.10)" }}
-              className="w-full max-w-3xl border rounded-lg px-6 py-4 shadow-sm bg-white/70 backdrop-blur-sm cursor-pointer transition-colors hover:text-gray-500"
+              className="w-full max-w-3xl border border-gray-200 dark:border-gray-800 rounded-lg px-6 py-4 shadow-sm bg-white/70 dark:bg-gray-900/40 backdrop-blur-sm cursor-pointer transition-colors hover:text-gray-500 dark:hover:text-gray-400"
             >
-              <div className="flex justify-between text-sm text-gray-500 mb-2">
+              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
                 <span>{post.published}</span>
-                <span className="text-gray-400">By {post.author}</span>
+                <span className="text-gray-400 dark:text-gray-500">By {post.author}</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2">{stripHtmlTags(post.title)}</h3>
-              <p className="text-gray-700 text-sm mb-4">{stripHtmlTags(post.summary)}</p>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">{stripHtmlTags(post.title)}</h3>
+              <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">{stripHtmlTags(post.summary)}</p>
               
               <div className="mt-4 flex items-end justify-end flex-col gap-3">
                 <BlogCardLikeButton blogId={post.id} />
                 
                 <ShareButton
                   variant="link"
-                  className="flex items-center gap-1 text-gray-700 hover:bg-gray-100 rounded-full px-3 py-1.5 transition-colors"
+                  className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full px-3 py-1.5 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     const postUrl = `${window.location.origin}/blog/${post.id}`;
@@ -205,8 +205,8 @@ const BlogList: React.FC<BlogListProps> = ({ posts }) => {
                       });
                   }}
                 >
-                  <Share className="opacity-60" size={16} strokeWidth={2} aria-hidden="true" />
-                  <span className="text-gray-700 text-sm">{copiedId === post.id ? "Copied!" : "Share"}</span>
+                  <Share className="opacity-60 dark:opacity-80" size={16} strokeWidth={2} aria-hidden="true" />
+                  <span className="text-gray-700 dark:text-gray-300 text-sm">{copiedId === post.id ? "Copied!" : "Share"}</span>
                 </ShareButton>
               </div>
             </motion.div>
