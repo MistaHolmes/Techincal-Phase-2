@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
 import { Footer } from "./Footer";
 import { BlogSkeleton, DraftBlogSkeleton } from "./ui/blogSkeleton";
 import { Pencil } from "lucide-react";
@@ -15,14 +15,7 @@ interface Blog {
   updatedAt: string;
 }
 
-// Configure axios defaults
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+const API_URL = import.meta.env.VITE_API_URL;
 
 const UserContentSection = () => {
   const [activeTab, setActiveTab] = useState<"blogs" | "drafts">("blogs");
@@ -32,6 +25,7 @@ const UserContentSection = () => {
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { getToken } = useAuth();
 
   const stripHtmlTags = (html: string) => {
     const tempDiv = document.createElement("div");
@@ -56,7 +50,11 @@ const UserContentSection = () => {
     if (!confirmed) return;
 
     try {
-      await api.delete(`/api/blogs/${blogId}`);
+      const token = await getToken();
+      await fetch(`${API_URL}/api/blogs/${blogId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setBlogs((prev) => prev.filter((blog) => blog.id !== blogId));
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || err.message || "Failed to delete blog";
@@ -71,7 +69,11 @@ const UserContentSection = () => {
     if (!confirmed) return;
 
     try {
-      await api.patch(`/api/blogs/${blogId}/publish`);
+      const token = await getToken();
+      await fetch(`${API_URL}/api/blogs/${blogId}/publish`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` },
+      });
       
       // Update state: move blog from drafts to published
       setBlogs((prev) =>
@@ -91,8 +93,12 @@ const UserContentSection = () => {
       setError(null);
 
       try {
-        const response = await api.get('/api/user/blogs/all');
-        setBlogs(response.data.blogs || []);
+        const token = await getToken();
+        const response = await fetch(`${API_URL}/api/user/blogs/all`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setBlogs(data.blogs || []);
       } catch (err: any) {
         const errorMessage = err.response?.data?.error || err.message || "Failed to fetch blogs";
         setError(errorMessage);
