@@ -41,7 +41,7 @@ app.use(cors({
   credentials: true,
 }));
 // Use only express.json() — bodyParser.json() is redundant (express wraps it internally)
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // ── Rate Limiting ────────────────────────────────────────────────────────────
 // Global limiter: 200 req / 15 min per IP (generous for public read traffic)
@@ -581,7 +581,7 @@ app.patch('/api/blogs/:id/publish', requireAuth(), writeLimiter, async (req, res
 // POST /api/blogs - Create a new blog (NEW AXIOS ROUTE)
 app.post('/api/blogs', requireAuth(), writeLimiter, async (req, res: any) => {
   try {
-    const { title, content, published = false } = req.body;
+    const { title, content, published = false, coverImage } = req.body;
     const user = await syncUser(req);
     if (!user) {
       return res.status(401).json({ error: "User Not Authenticated" });
@@ -596,6 +596,7 @@ app.post('/api/blogs', requireAuth(), writeLimiter, async (req, res: any) => {
         title,
         content,
         published,
+        coverImage,
         authorId: user.id,
       },
       select: {
@@ -708,7 +709,7 @@ app.put('/api/blogs/:id', requireAuth(), async (req, res: any) => {
 app.post('/api/create-blog', requireAuth(), async (req, res: any) => {
   try {
     const user = await syncUser(req);
-    const { title, content, published } = req.body;
+    const { title, content, published, coverImage } = req.body;
 
     if (!title || !content || typeof published !== "boolean") {
       return res.status(400).json({ message: "Missing or invalid fields" });
@@ -719,6 +720,7 @@ app.post('/api/create-blog', requireAuth(), async (req, res: any) => {
         title,
         content,
         published,
+        coverImage,
         authorId: user.id,
       },
     });

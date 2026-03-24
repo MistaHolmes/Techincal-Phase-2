@@ -8,10 +8,11 @@ import axios from "axios";
 import BlogSkeleton from "@/components/BlogSkeleton";
 import { Footer } from "@/components/Footer";
 import Header2 from "@/components/ui/header2";
-import { Image } from "lucide-react";
+import { Image, Upload } from "lucide-react";
 
 export function BlogForm() {
   const titleRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const { blogId } = useParams<{ blogId?: string }>();
@@ -90,7 +91,7 @@ export function BlogForm() {
         });
         if (response.status === 200) navigate(`/blog/${blogId}`);
       } else {
-        response = await axios.post(`${API_URL}/api/create-blog`, payload, {
+        response = await axios.post(`${API_URL}/api/blogs`, payload, {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           withCredentials: true,
         });
@@ -166,26 +167,67 @@ export function BlogForm() {
                   {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title}</p>}
                 </div>
 
-                {/* Cover Image URL */}
+                {/* Cover Image */}
                 <div className="mb-6" style={getAnimationStyle(350)}>
                   <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
                     <Image size={14} />
-                    <span>Cover Image URL (optional)</span>
+                    <span>Cover Image (optional)</span>
                   </div>
-                  <input
-                    type="url"
-                    value={formData.coverImage}
-                    onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition"
-                  />
-                  {formData.coverImage && (
-                    <img
-                      src={formData.coverImage}
-                      alt="Cover preview"
-                      className="mt-2 h-28 w-full object-cover rounded-lg border border-gray-200 dark:border-gray-700"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="url"
+                      value={formData.coverImage.startsWith('data:') ? '' : formData.coverImage}
+                      onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
+                      placeholder="https://example.com/image.jpg"
+                      className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition"
                     />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 5 * 1024 * 1024) {
+                          setErrors({ server: 'Image must be under 5MB' });
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setFormData({ ...formData, coverImage: reader.result as string });
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition"
+                    >
+                      <Upload size={14} />
+                      Upload
+                    </button>
+                  </div>
+                  {formData.coverImage && (
+                    <div className="relative">
+                      <img
+                        src={formData.coverImage}
+                        alt="Cover preview"
+                        className="mt-2 h-28 w-full object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, coverImage: "" });
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                        className="absolute top-4 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   )}
                 </div>
 
