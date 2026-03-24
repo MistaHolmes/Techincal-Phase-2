@@ -8,6 +8,7 @@ import axios from "axios";
 import { BarChart2, Heart, FileText, Trophy, MessageCircle } from "lucide-react";
 import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
+import BackgroundGlow from "@/components/ui/BackgroundGlow";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -22,14 +23,16 @@ interface Stats {
 }
 
 const StatCard = ({
-  label, value, icon, color
+  label, value, icon, color, delay = 0
 }: {
-  label: string; value: number | string; icon: React.ReactNode; color: string;
+  label: string; value: number | string; icon: React.ReactNode; color: string; delay?: number;
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm`}
+    initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+    transition={{ duration: 0.6, delay, ease: "easeOut" }}
+    whileHover={{ y: -4, boxShadow: "0 12px 24px rgba(0,0,0,0.08)" }}
+    className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm cursor-default transition-colors`}
   >
     <div className={`inline-flex p-2.5 rounded-lg mb-3 ${color}`}>{icon}</div>
     <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
@@ -75,12 +78,18 @@ const Dashboard = () => {
         <title>Dashboard — DraftDock</title>
       </Helmet>
       <Header2 />
+      <BackgroundGlow />
 
-      <main className="max-w-5xl mx-auto px-4 pt-28 pb-16">
-        <div className="flex items-center gap-3 mb-8">
+      <main className="max-w-5xl mx-auto px-4 pt-28 pb-16 relative z-[1]">
+        <motion.div
+          className="flex items-center gap-3 mb-8"
+          initial={{ opacity: 0, x: -20, filter: "blur(6px)" }}
+          animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+          transition={{ duration: 0.5 }}
+        >
           <BarChart2 className="w-7 h-7 text-gray-700 dark:text-gray-200" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        </div>
+        </motion.div>
 
         {loading ? (
           <div className="flex justify-center py-20">
@@ -92,10 +101,10 @@ const Dashboard = () => {
           <>
             {/* Stat Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-              <StatCard label="Published Blogs" value={stats.publishedCount} icon={<FileText size={18} />} color="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" />
-              <StatCard label="Drafts" value={stats.draftCount} icon={<FileText size={18} />} color="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400" />
-              <StatCard label="Total Likes" value={stats.totalLikes} icon={<Heart size={18} />} color="bg-rose-50 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400" />
-              <StatCard label="Comments Received" value={stats.commentCount} icon={<MessageCircle size={18} />} color="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400" />
+              <StatCard label="Published Blogs" value={stats.publishedCount} icon={<FileText size={18} />} color="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" delay={0.1} />
+              <StatCard label="Drafts" value={stats.draftCount} icon={<FileText size={18} />} color="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400" delay={0.2} />
+              <StatCard label="Total Likes" value={stats.totalLikes} icon={<Heart size={18} />} color="bg-rose-50 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400" delay={0.3} />
+              <StatCard label="Comments Received" value={stats.commentCount} icon={<MessageCircle size={18} />} color="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400" delay={0.4} />
             </div>
 
             {/* Top Blog */}

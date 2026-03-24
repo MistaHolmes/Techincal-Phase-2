@@ -37,7 +37,7 @@ const Header2 = () => {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-10 border-b bg-gray-50 p-4 md:px-6 flex items-center justify-between">
+    <header className="sticky top-0 z-10 border-b border-gray-200/50 bg-white/70 backdrop-blur-md p-4 md:px-6 flex items-center justify-between transition-all duration-300">
       {/* Left: Logo */}
       <div className="flex items-center gap-2 max-w-md flex-shrink-0">
         <Button
