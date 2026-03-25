@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Search, Clock, Heart, X, Tag } from "lucide-react";
-import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -54,15 +53,14 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <>
       <Helmet>
         <title>Search — DraftDock</title>
       </Helmet>
-      <Header2 />
 
-      <main className="max-w-3xl mx-auto px-4 pt-28 pb-16">
+      <div className="max-w-3xl mx-auto px-4 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Search Blogs</h1>
+          <h1 className="text-3xl font-headline font-bold text-gray-900 dark:text-white mb-2">Search Blogs</h1>
           <p className="text-gray-500 dark:text-gray-400 mb-8">Find articles by title, content, or topic</p>
 
           {/* Search Bar */}
@@ -74,7 +72,7 @@ const SearchPage = () => {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search for blogs..."
               autoFocus
-              className="w-full pl-12 pr-12 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-lg placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition shadow-sm"
+              className="w-full pl-12 pr-12 py-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white text-lg placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 transition shadow-sm"
             />
             {query && (
               <button type="button" onClick={() => { setQuery(""); setResults([]); setSearched(false); setSearchParams({}); }}
@@ -87,7 +85,7 @@ const SearchPage = () => {
           {/* Results */}
           {loading ? (
             <div className="flex justify-center py-16">
-              <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : searched && results.length === 0 ? (
             <div className="text-center py-16 text-gray-400 dark:text-gray-500">
@@ -112,21 +110,21 @@ const SearchPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
                     onClick={() => navigate(`/blog/${blog.id}`)}
-                    className="cursor-pointer bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-all group"
+                    className="cursor-pointer bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-all group"
                   >
                     <div className="flex gap-4">
                       {blog.coverImage && (
-                        <img src={blog.coverImage} alt={blog.title} className="w-20 h-16 object-cover rounded-lg flex-shrink-0" />
+                        <img src={blog.coverImage} alt={blog.title} className="w-20 h-16 object-cover rounded-xl flex-shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">{blog.title}</h3>
+                        <h3 className="font-headline font-bold text-gray-900 dark:text-white text-lg mb-1 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition truncate">{blog.title}</h3>
                         <p className="text-gray-500 dark:text-gray-400 text-sm mb-2 line-clamp-2">{excerpt}</p>
                         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
                           <span>{authorName}</span>
                           <span className="flex items-center gap-1"><Clock size={11} />{readingTime} min</span>
                           <span className="flex items-center gap-1"><Heart size={11} />{blog.likes}</span>
                           {blog.tags?.slice(0, 3).map((tag) => (
-                            <span key={tag.id} className="flex items-center gap-0.5 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-full">
+                            <span key={tag.id} className="flex items-center gap-0.5 px-2 py-0.5 bg-gray-50 dark:bg-gray-800 rounded-full">
                               <Tag size={9} />{tag.name}
                             </span>
                           ))}
@@ -139,10 +137,13 @@ const SearchPage = () => {
             </div>
           )}
         </motion.div>
-      </main>
-      <Footer />
-    </div>
+      </div>
+      <div className="mt-12 px-4">
+        <Footer />
+      </div>
+    </>
   );
 };
 
 export default SearchPage;
+
