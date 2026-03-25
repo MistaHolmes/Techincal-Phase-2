@@ -1,13 +1,32 @@
-import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import BlogSkeleton from "@/components/BlogSkeleton";
-import Header2 from "@/components/ui/header2";
+import { AppShell } from "@/components/layout/AppShell";
 import { Footer } from "@/components/Footer";
 import { BackButton } from "@/components/ui/backButton";
-import { ChevronLeft, Heart, Share } from "lucide-react";
-import { ShareButton } from "@/components/ui/shareButton";
+import { 
+  ChevronLeft, 
+  Heart, 
+  MessageCircle, 
+  Trash2, 
+  Link2, 
+  Headphones, 
+  Play, 
+  Pause, 
+  Maximize2, 
+  Minimize2, 
+  Flame, 
+  Highlighter,
+  Twitter,
+  Linkedin,
+  Share2
+} from "lucide-react";
+import ReadingProgressBar from "@/components/ui/ReadingProgressBar";
 import 'highlight.js/styles/atom-one-dark.css';
 import MDEditor from '@uiw/react-md-editor';
+import { motion, AnimatePresence } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 
 interface Blog {
   id: string;
@@ -15,19 +34,63 @@ interface Blog {
   content: string;
   createdAt: string;
   likes: number;
+  views?: number;
+  coverImage?: string;
+  authorId?: string;
   author: {
     email: string;
+    name?: string;
   };
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: { email: string; name?: string };
+  authorId?: string;
+}
+
+interface RelatedBlog {
+  id: string;
+  title: string;
+  content: string;
+  likes: number;
+  coverImage?: string;
+  author: { email: string; name?: string };
+  tags: { id: string; name: string }[];
+}
+
+interface TocItem {
+  id: string;
+  text: string;
+  level: number;
 }
 
 const BlogView = () => {
   const { blogId } = useParams();
+  const navigate = useNavigate();
+  const { getToken, isSignedIn } = useAuth();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [copied, setCopied] = useState(false);
   const [likes, setLikes] = useState(0);
   const [liked, setLiked] = useState(false);
-  const [likeQueue, setLikeQueue] = useState(0); // Tracks pending likes (+ or -)
+  const [likeQueue, setLikeQueue] = useState(0);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [relatedBlogs, setRelatedBlogs] = useState<RelatedBlog[]>([]);
+  const [highlights, setHighlights] = useState<any[]>([]);
+  const [selection, setSelection] = useState<{ text: string, x: number, y: number } | null>(null);
+  const [showHighlightNote, setShowHighlightNote] = useState(false);
+  const [highlightNote, setHighlightNote] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const shareRef = useRef<HTMLDivElement>(null);
+  const [isFocusMode, setIsFocusMode] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [streak, setStreak] = useState<number | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const API_URL = import.meta.env.VITE_API_URL;
 
   // Fetch blog data
@@ -39,476 +102,557 @@ const BlogView = () => {
         const data = await res.json();
         setBlog(data);
         setLikes(data.likes ?? 0);
+        // Increment view count (fire-and-forget)
+        fetch(`${API_URL}/api/blogs/${blogId}/view`, { method: 'POST' }).catch(() => {});
+        // Fetch comments
+        const commentsRes = await fetch(`${API_URL}/api/blogs/${blogId}/comments`);
+        if (commentsRes.ok) setComments(await commentsRes.json());
+        // Fetch highlights
+        const highlightsRes = await fetch(`${API_URL}/api/highlights/blog/${blogId}`);
+        if (highlightsRes.ok) setHighlights(await highlightsRes.json());
+        // Fetch related blogs
+        fetch(`${API_URL}/api/blogs/${blogId}/related`).then(r => r.ok ? r.json() : []).then(setRelatedBlogs).catch(() => {});
+        // Record reading history if signed in
+        if (isSignedIn) {
+          const token = await getToken();
+          fetch(`${API_URL}/api/user/history`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ blogId }),
+          }).then(r => r.json()).then(d => {
+            if (d.streak) setStreak(d.streak);
+          }).catch(() => {});
+        }
       } catch (err) {
         console.error("Failed to fetch blog", err);
       }
     };
     fetchBlog();
-  }, [blogId, API_URL]);
+  }, [blogId, API_URL, isSignedIn]);
 
   // WebSocket for real-time likes
   useEffect(() => {
     if (!blogId) return;
-
     const wsUrl = API_URL.replace(/^http/, "ws");
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
-
-    ws.onopen = () => {
-      // Request current like count immediately on connect
-      ws.send(`getLikes:${blogId}`);
-    };
-
+    ws.onopen = () => { ws.send(`getLikes:${blogId}`); };
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === "likes_update" && data.blogId === blogId) {
-          setLikes(data.likes);
-        }
-      } catch {
-        // ignore non-JSON messages (pong, etc.)
-      }
+        if (data.type === "likes_update" && data.blogId === blogId) setLikes(data.likes);
+      } catch {}
     };
-
     ws.onerror = (err) => console.warn("Likes WS error:", err);
-
-    return () => {
-      ws.close();
-    };
+    return () => { ws.close(); };
   }, [blogId, API_URL]);
 
-  // Cleanup copy timer
   useEffect(() => {
-    if (copied) {
-      const timer = setTimeout(() => setCopied(false), 1000);
-      return () => clearTimeout(timer);
-    }
+    if (copied) { const timer = setTimeout(() => setCopied(false), 1000); return () => clearTimeout(timer); }
   }, [copied]);
 
-  // Debounced queue for sending likes to WebSocket
+  // Debounced like queue
   useEffect(() => {
     if (likeQueue === 0 || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || !blogId) return;
-
     const timeoutPath = setTimeout(() => {
-      // Send the net result over WebSocket
-      if (likeQueue > 0) {
-        wsRef.current?.send(`like:${blogId}`);
-      } else if (likeQueue < 0) {
-        wsRef.current?.send(`unlike:${blogId}`);
-      }
-      // Reset the queue after sending
+      if (likeQueue > 0) wsRef.current?.send(`like:${blogId}`);
+      else if (likeQueue < 0) wsRef.current?.send(`unlike:${blogId}`);
       setLikeQueue(0);
-    }, 1000); // 1-second debounce delay
-
+    }, 1000);
     return () => clearTimeout(timeoutPath);
   }, [likeQueue, blogId]);
 
+  // Close share dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) setShareOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   const handleLike = () => {
-    // Optimistically update UI immediately
-    if (liked) {
-      setLikes((prev) => Math.max(0, prev - 1));
-      setLikeQueue((prev) => prev - 1); // Add "unlike" action to queue
-    } else {
-      setLikes((prev) => prev + 1);
-      setLikeQueue((prev) => prev + 1); // Add "like" action to queue
-    }
+    if (liked) { setLikes((prev) => Math.max(0, prev - 1)); setLikeQueue((prev) => prev - 1); }
+    else { setLikes((prev) => prev + 1); setLikeQueue((prev) => prev + 1); }
     setLiked((prev) => !prev);
   };
 
+  const toggleTTS = () => {
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+    } else {
+      const rawContent = blog?.content || '';
+      const cleanContent = rawContent
+        .replace(/!\[.*?\]\(.*?\)/g, '')           // Strip markdown images
+        .replace(/\[(.*?)\]\(.*?\)/g, '$1')        // Strip markdown links, keep text
+        .replace(/<[^>]*>?/gm, '')                 // Strip HTML tags
+        .replace(/https?:\/\/[^\s)]+/g, '')        // Strip any remaining URLs
+        .replace(/[#*`>\[\]]/g, '')                // Strip markdown symbols
+        .replace(/\n{2,}/g, '. ')                  // Convert paragraph breaks to pauses
+        .replace(/\s{2,}/g, ' ')                   // Collapse whitespace
+        .trim();
+      const text = `${blog?.title}. . . ${cleanContent}`;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.onend = () => setIsPlaying(false);
+      utteranceRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+      setIsPlaying(true);
+    }
+  };
+
+  const handleSelection = () => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+      setSelection(null);
+      setShowHighlightNote(false);
+      return;
+    }
+
+    const range = sel.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    const text = sel.toString().trim();
+
+    if (text.length > 0) {
+      setSelection({
+        text,
+        x: rect.left + window.scrollX + rect.width / 2,
+        y: rect.top + window.scrollY - 10
+      });
+    }
+  };
+
+  const saveHighlight = async () => {
+    if (!selection || !isSignedIn) return;
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_URL}/api/highlights`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          blogId,
+          text: selection.text,
+          note: highlightNote
+        }),
+      });
+      if (res.ok) {
+        const newH = await res.json();
+        setHighlights([newH, ...highlights]);
+        setSelection(null);
+        setHighlightNote("");
+        setShowHighlightNote(false);
+      }
+    } catch (err) {
+      console.error("Failed to save highlight", err);
+    }
+  };
+
+  useEffect(() => {
+    return () => window.speechSynthesis.cancel();
+  }, []);
+
+  // Generate Table of Contents from markdown headings
+  const tocItems = useMemo<TocItem[]>(() => {
+    if (!blog?.content) return [];
+    const headingRegex = /^(#{1,3})\s+(.+)$/gm;
+    const items: TocItem[] = [];
+    let match;
+    while ((match = headingRegex.exec(blog.content)) !== null) {
+      const text = match[2].replace(/[#*`\[\]]/g, "").trim();
+      items.push({
+        id: text.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, ""),
+        text,
+        level: match[1].length,
+      });
+    }
+    return items;
+  }, [blog?.content]);
+
   if (!blog) {
     return (
-      <div className="bg-gray-100/30 min-h-screen">
-        <main className="max-w-3xl mx-auto p-6 bg-gray-100/30">
-          <BlogSkeleton variant="large" />
-        </main>
-      </div>
+      <AppShell>
+        <div className="max-w-3xl mx-auto py-12">
+           <BlogSkeleton variant="large" />
+        </div>
+      </AppShell>
     );
   }
 
-  const formattedDate = new Date(blog.createdAt).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const wordCount = (blog.content || "").split(/\s+/).filter(Boolean).length;
+  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+  const postUrl = `${window.location.origin}/blog/${blog.id}`;
+  const authorName = blog.author?.name || blog.author?.email?.split("@")[0] || "Anonymous";
 
+  const RightPanelContent = (
+    <div className="space-y-10">
+      {/* TOC Widget */}
+      {tocItems.length > 2 && (
+        <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-8 shadow-sm">
+          <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6">Outline</h3>
+          <nav className="space-y-4">
+            {tocItems.map((item) => (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                className={`block text-sm font-bold transition-all truncate ${
+                  item.level === 1 
+                    ? "text-gray-900 dark:text-gray-100" 
+                    : item.level === 2 
+                      ? "pl-4 text-gray-500 hover:text-blue-500" 
+                      : "pl-8 text-xs text-gray-400"
+                }`}
+              >
+                {item.text}
+              </a>
+            ))}
+          </nav>
+        </div>
+      )}
 
-  return (
-    <div className="flex-1 flex flex-col min-h-screen bg-gray-100/30">
-      {/* Sticky Header */}
-      <div className="fixed top-0 left-0 w-full z-50 bg-gray-100/30">
-        <Header2 />
+      {/* Author & Stats Widget */}
+      <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-8 shadow-sm">
+         <div className="flex items-center gap-4 mb-6">
+            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author.email}`} className="w-12 h-12 rounded-2xl" alt="" />
+            <div>
+               <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Writen By</p>
+               <h4 className="font-bold text-gray-900 dark:text-white group-hover:underline cursor-pointer" onClick={() => navigate(`/author/${blog.authorId}`)}>{authorName}</h4>
+            </div>
+         </div>
+         <div className="grid grid-cols-2 gap-4">
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl">
+               <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Views</p>
+               <p className="text-xl font-headline font-bold text-gray-900 dark:text-white">{blog.views || 0}</p>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl">
+               <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Time</p>
+               <p className="text-xl font-headline font-bold text-gray-900 dark:text-white">{readingTime}m</p>
+            </div>
+         </div>
+         {streak && (
+           <div className="mt-4 flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-900/10 rounded-2xl border border-orange-100 dark:border-orange-900/30">
+              <Flame size={16} className="text-orange-500 fill-orange-500" />
+              <span className="text-xs font-bold text-orange-600 italic">On a {streak} day reading streak!</span>
+           </div>
+         )}
       </div>
 
-      {/* Blog Content */}
-      <main className="max-w-4xl mx-auto px-6 pt-28 pb-16">
-        {/* Back Button */}
-        <div className="px-0 mb-6">
-          <BackButton variant="link" onClick={() => window.history.back()}>
-            <ChevronLeft
-              className="me-1 opacity-60"
-              size={16}
-              strokeWidth={2}
-              aria-hidden="true"
-            />
-            Back To Blogs
+      {/* Community Highlights Widget */}
+      {highlights.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-8 shadow-sm">
+           <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6">Top Highlights</h3>
+           <div className="space-y-4">
+              {highlights.slice(0, 3).map((h) => (
+                <div key={h.id} className="group">
+                   <p className="text-xs font-medium text-gray-600 dark:text-gray-400 line-clamp-2 italic mb-2">"{h.text}"</p>
+                   <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                      <span className="text-[10px] font-black uppercase text-gray-400">{h.user.name || h.user.email.split('@')[0]}</span>
+                   </div>
+                </div>
+              ))}
+           </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <AppShell 
+      hideSidebar={isFocusMode} 
+      hideRightPanel={isFocusMode} 
+      rightPanelContent={RightPanelContent}
+      showSearch={!isFocusMode}
+    >
+      <Helmet>
+        <title>{blog.title} — DraftDock</title>
+      </Helmet>
+      <ReadingProgressBar />
+
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-10 lg:hidden">
+          <BackButton variant="link" onClick={() => navigate(-1)}>
+            <ChevronLeft className="me-1" size={16} /> Back
           </BackButton>
         </div>
 
-        <div className="px-6">
-          {/* Title */}
-          <h1 className="font-serif text-4xl sm:text-5xl font-bold leading-tight text-gray-900 mb-6">
+        <motion.article 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 sm:p-12 shadow-sm"
+        >
+          {/* Cover Image */}
+          {blog.coverImage && (
+            <div className="relative aspect-video rounded-3xl overflow-hidden mb-12 shadow-2xl">
+               <img src={blog.coverImage} alt={blog.title} className="w-full h-full object-cover" />
+               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+            </div>
+          )}
+
+          {/* Title and Meta */}
+          <h1 className="text-4xl sm:text-5xl font-headline font-bold text-gray-900 dark:text-white mb-8 leading-tight">
             {blog.title}
           </h1>
 
-          {/* Meta Info */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm sm:text-base text-gray-700 font-sans mb-8">
-            {/* Left: Author and Date */}
-            <div className="flex items-center gap-2">
-              <span>By <span className="font-medium">{blog.author.email}</span></span>
-              <span className="text-gray-400">•</span>
-              <span>{formattedDate}</span>
-            </div>
-
-            {/* Right: Like and Share Buttons */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <button
-                  id={`like-btn-${blog.id}`}
+          <div className="flex flex-wrap items-center gap-6 mb-12 pb-12 border-b border-gray-100 dark:border-gray-700">
+             <div className="flex items-center gap-3">
+               <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author.email}`} className="w-10 h-10 rounded-xl" alt="" />
+               <div className="text-sm">
+                 <p className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer" onClick={() => navigate(`/author/${blog.authorId}`)}>{authorName}</p>
+                 <p className="text-xs text-gray-500">{new Date(blog.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+               </div>
+             </div>
+             
+             <div className="flex items-center gap-4 ml-auto">
+                <button 
                   onClick={handleLike}
-                  aria-pressed={liked}
-                  aria-label={liked ? "Unlike this post" : "Like this post"}
-                  className={`
-                    group flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-medium text-sm
-                    transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400
-                    ${liked
-                      ? "bg-rose-50 border-rose-300 text-rose-600 shadow-sm"
-                      : "bg-white border-gray-300 text-gray-600 hover:border-rose-300 hover:text-rose-500 hover:bg-rose-50"
-                    }
-                  `}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                    liked ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-500 border border-rose-100 dark:border-rose-900/30 shadow-md' : 'bg-gray-50 dark:bg-gray-900 text-gray-500 border border-transparent hover:bg-rose-50 hover:text-rose-500'
+                  }`}
                 >
-                  <Heart
-                    size={16}
-                    strokeWidth={2}
-                    className={`transition-all duration-200 ${liked ? "fill-rose-500 text-rose-500 scale-110" : "group-hover:scale-110"}`}
-                  />
-                  <span className="tabular-nums">{likes}</span>
-                  <span className="sr-only">{liked ? "Unlike" : "Like"}</span>
+                  <Heart size={18} className={liked ? "fill-current" : ""} />
+                  {likes}
                 </button>
-              </div>
-
-              <ShareButton
-                variant="link"
-                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors px-3 py-1.5 border border-transparent rounded-full hover:bg-gray-100"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const postUrl = `${window.location.origin}/blog/${blog.id}`;
-                  navigator.clipboard
-                    .writeText(postUrl)
-                    .then(() => setCopied(true))
-                    .catch(() => alert("Failed to copy the link."));
-                }}
-              >
-                <Share
-                  className="opacity-60"
-                  size={16}
-                  strokeWidth={2}
-                  aria-hidden="true"
-                />
-                <span>{copied ? "Copied!" : "Share"}</span>
-              </ShareButton>
-            </div>
+                <div className="w-px h-6 bg-gray-100 dark:bg-gray-700" />
+                <div ref={shareRef} className="relative">
+                  <button 
+                    onClick={() => setShareOpen(!shareOpen)}
+                    className="p-2 bg-gray-50 dark:bg-gray-900 rounded-xl border border-transparent hover:bg-blue-50 hover:text-blue-500 transition-all text-gray-500"
+                  >
+                    <Share2 size={18} />
+                  </button>
+                  <AnimatePresence>
+                    {shareOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        className="absolute right-0 mt-4 w-52 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-2xl p-2 z-50 overflow-hidden"
+                      >
+                         <button onClick={() => { navigator.clipboard.writeText(postUrl); setCopied(true); setShareOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-xs font-bold text-gray-700 dark:text-gray-300 transition flex items-center gap-3">
+                            <Link2 size={14} /> {copied ? "Copied Link!" : "Copy Link"}
+                         </button>
+                         <div className="h-px bg-gray-50 dark:bg-gray-700 my-1 mx-2" />
+                         <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(blog.title)}&url=${encodeURIComponent(postUrl)}`} target="_blank" className="w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-xs font-bold text-gray-700 dark:text-gray-300 transition flex items-center gap-3">
+                            <Twitter size={14} className="text-blue-400" /> Twitter / X
+                         </a>
+                         <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`} target="_blank" className="w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-xs font-bold text-gray-700 dark:text-gray-300 transition flex items-center gap-3">
+                            <Linkedin size={14} className="text-blue-600" /> LinkedIn
+                         </a>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+             </div>
           </div>
 
-          <hr className="border-gray-300 mb-10" />
+          {/* Reading Controls Sticky Wrapper */}
+          <div className={`sticky ${isFocusMode ? 'top-10' : 'top-20'} z-[49] mb-12 flex items-center justify-between p-2 rounded-2xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-100 dark:border-gray-700 shadow-xl transition-all duration-500`}>
+             <div className="flex items-center gap-4 px-3">
+                <div className="p-2 bg-violet-600 rounded-xl text-white">
+                   <Headphones size={16} />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Reading Mode</p>
+             </div>
+             <div className="flex items-center gap-2">
+                <button 
+                  onClick={toggleTTS}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    isPlaying ? 'bg-rose-500 text-white shadow-rose-200' : 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+                  {isPlaying ? "Stop" : "Listen"}
+                </button>
+                <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
+                <button 
+                  onClick={() => setIsFocusMode(!isFocusMode)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    isFocusMode ? 'bg-violet-600 text-white shadow-violet-200' : 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  {isFocusMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                  {isFocusMode ? "Exit Focus" : "Focus"}
+                </button>
+             </div>
+          </div>
 
-          {/* Blog Content - Now renders HTML with proper styling */}
-          <div data-color-mode="light" className="blog-content w-full">
-            <MDEditor.Markdown 
-              source={blog.content} 
-              className="prose prose-lg max-w-none !bg-transparent !text-gray-800"
-              style={{ backgroundColor: 'transparent' }}
+          {/* Markdown Content */}
+          <div 
+            className="prose prose-lg dark:prose-invert max-w-none font-body leading-relaxed selection:bg-yellow-200 selection:text-black relative"
+            onMouseUp={handleSelection}
+          >
+            <MDEditor.Markdown
+              source={blog.content}
+              className="!bg-transparent !text-gray-800 dark:!text-gray-200"
             />
+
+            {/* Selection Popover */}
+            <AnimatePresence>
+              {selection && !showHighlightNote && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                  className="absolute z-50 bg-black text-white px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase shadow-2xl cursor-pointer flex items-center gap-2"
+                  style={{ top: selection.y, left: selection.x, transform: 'translate(-50%, -100%)' }}
+                  onClick={() => setShowHighlightNote(true)}
+                >
+                  <Highlighter size={14} className="text-yellow-400" />
+                  Highlight
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Note Popover */}
+            <AnimatePresence>
+              {selection && showHighlightNote && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                  className="absolute z-50 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-4 rounded-3xl shadow-2xl w-72"
+                  style={{ top: selection.y, left: selection.x, transform: 'translate(-50%, -100%)' }}
+                >
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Add private note</h4>
+                  <textarea
+                    autoFocus
+                    placeholder="Reflect on this passage..."
+                    value={highlightNote}
+                    onChange={(e) => setHighlightNote(e.target.value)}
+                    className="w-full p-4 text-sm bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-0 mb-4 resize-none h-24"
+                  />
+                  <div className="flex justify-end gap-3">
+                    <button onClick={() => setShowHighlightNote(false)} className="text-[10px] text-gray-400 font-black uppercase hover:text-gray-600 transition">Cancel</button>
+                    <button onClick={saveHighlight} className="bg-violet-600 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase transition hover:opacity-90 shadow-md">Save Note</button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* ────────────────────────────────────────────────────── */}
-        </div>
-      </main>
+          <hr className="my-16 border-gray-100 dark:border-gray-700" />
 
-      {/* Footer */}
-      <div className="bg-gray-100/30 mt-auto">
+          {/* Comments Section */}
+          <section className="space-y-10">
+             <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-headline font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                   <MessageCircle size={24} className="text-blue-500" /> Discussions
+                </h2>
+                <span className="bg-gray-100 dark:bg-gray-900 text-gray-500 font-bold px-3 py-1 rounded-full text-xs">{comments.length}</span>
+             </div>
+
+             <div className="flex gap-4 p-6 bg-gray-50 dark:bg-gray-900/50 rounded-3xl group transition-all focus-within:ring-2 focus-within:ring-violet-500/20">
+                <div className="hidden sm:block">
+                   <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${authorName}`} className="w-10 h-10 rounded-xl" alt="" />
+                </div>
+                <div className="flex-1 flex flex-col sm:flex-row gap-4">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Join the conversation..."
+                    rows={2}
+                    className="flex-1 bg-transparent border-none focus:ring-0 text-sm p-0 resize-none font-body leading-relaxed"
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!newComment.trim() || submittingComment) return;
+                      setSubmittingComment(true);
+                      try {
+                        const token = await getToken();
+                        const res = await fetch(`${API_URL}/api/blogs/${blogId}/comments`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                          body: JSON.stringify({ content: newComment.trim() }),
+                        });
+                        if (res.ok) { const comment = await res.json(); setComments((prev) => [...prev, comment]); setNewComment(""); }
+                      } catch (err) { console.error("Failed to post comment", err); }
+                      finally { setSubmittingComment(false); }
+                    }}
+                    disabled={!newComment.trim() || submittingComment}
+                    className="h-fit px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-2xl text-xs font-black uppercase tracking-widest transition-all hover:opacity-90 disabled:opacity-30"
+                  >
+                    {submittingComment ? "..." : "Post"}
+                  </button>
+                </div>
+             </div>
+
+             <div className="space-y-8">
+                {comments.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50/30 dark:bg-gray-900/10 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
+                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">No thoughts yet. Lead the way!</p>
+                  </div>
+                ) : (
+                  comments.map((c) => (
+                    <motion.div 
+                      key={c.id} 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex gap-4 group"
+                    >
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.author.email}`} className="w-10 h-10 rounded-xl bg-gray-100" alt="" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                           <span className="text-sm font-bold text-gray-900 dark:text-white">{c.author.name || c.author.email.split("@")[0]}</span>
+                           <span className="text-[10px] font-bold text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 font-body leading-relaxed">{c.content}</p>
+                      </div>
+                      {c.authorId === (useAuth as any)?.userId && (
+                        <button
+                          onClick={async () => {
+                            const token = await getToken();
+                            await fetch(`${API_URL}/api/comments/${c.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+                            setComments((prev) => prev.filter((x) => x.id !== c.id));
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-red-500 transition-all rounded-xl hover:bg-red-50"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </motion.div>
+                  ))
+                )}
+             </div>
+          </section>
+        </motion.article>
+
+        {/* Related Posts Section inside main content for mobile, or below for desktop */}
+        {relatedBlogs.length > 0 && (
+          <section className="mt-16 pt-12 border-t border-gray-100 dark:border-gray-700">
+             <h2 className="text-2xl font-headline font-bold text-gray-900 dark:text-white mb-8 italic">More from DraftDock</h2>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {relatedBlogs.map((rb) => {
+                  const excerpt = rb.content.replace(/[#*`>\[\]]/g, "").slice(0, 100) + "...";
+                  return (
+                    <div 
+                      key={rb.id}
+                      onClick={() => navigate(`/blog/${rb.id}`)}
+                      className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                    >
+                       <div className="aspect-video relative overflow-hidden">
+                          <img src={rb.coverImage || "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" />
+                       </div>
+                       <div className="p-5">
+                          <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-500 transition line-clamp-2 mb-2 leading-tight">{rb.title}</h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 font-body">{excerpt}</p>
+                       </div>
+                    </div>
+                  );
+                })}
+             </div>
+          </section>
+        )}
+
+        {/* Footer info inside main content */}
+        <div className="mt-20 text-center text-gray-400 text-[10px] font-black uppercase tracking-[0.3em] border-t border-gray-100 dark:border-gray-700 pt-16">
+           Fin. DraftDock V2
+        </div>
+      </div>
+      
+      <div className="mt-20 px-4">
         <Footer />
       </div>
-
-      {/* Enhanced custom styles for blog content */}
-      <style>{`
-        .blog-content {
-          font-family: Georgia, 'Times New Roman', serif;
-          font-size: 1.125rem;
-          line-height: 1.8;
-          color: #1f2937;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-        }
-        
-        .blog-content p {
-          margin-bottom: 1.5rem;
-          line-height: 1.8;
-        }
-        
-        .blog-content h1 {
-          font-size: 2.5rem;
-          font-weight: 700;
-          margin: 2rem 0 1.5rem 0;
-          line-height: 1.2;
-          color: #111827;
-          font-family: Georgia, serif;
-        }
-        
-        .blog-content h2 {
-          font-size: 2rem;
-          font-weight: 600;
-          margin: 1.75rem 0 1rem 0;
-          line-height: 1.3;
-          color: #111827;
-          font-family: Georgia, serif;
-        }
-        
-        .blog-content h3 {
-          font-size: 1.5rem;
-          font-weight: 600;
-          margin: 1.5rem 0 0.75rem 0;
-          line-height: 1.4;
-          color: #111827;
-          font-family: Georgia, serif;
-        }
-        
-        .blog-content h4 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          margin: 1.25rem 0 0.5rem 0;
-          line-height: 1.4;
-          color: #111827;
-        }
-        
-        .blog-content h5, .blog-content h6 {
-          font-size: 1.125rem;
-          font-weight: 600;
-          margin: 1rem 0 0.5rem 0;
-          line-height: 1.4;
-          color: #111827;
-        }
-        
-        .blog-content strong, .blog-content b {
-          font-weight: 700;
-          color: #111827;
-        }
-        
-        .blog-content em, .blog-content i {
-          font-style: italic;
-        }
-        
-        .blog-content u {
-          text-decoration: underline;
-          text-decoration-thickness: 1px;
-          text-underline-offset: 2px;
-        }
-        
-        .blog-content strike, .blog-content s {
-          text-decoration: line-through;
-          text-decoration-thickness: 1px;
-        }
-        
-        .blog-content pre {
-          background-color: #1e1e1e;
-          color: #ffffff;
-          padding: 1.5rem;
-          border-radius: 0.5rem;
-          margin: 2rem 0;
-          overflow-x: auto;
-          font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
-          font-size: 0.875rem;
-          line-height: 1.6;
-          border: 1px solid #374151;
-        }
-        
-        .blog-content code {
-          background-color: #f3f4f6;
-          color: #1f2937;
-          padding: 0.25rem 0.5rem;
-          border-radius: 0.25rem;
-          font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
-          font-size: 0.9em;
-          border: 1px solid #e5e7eb;
-        }
-        
-        .blog-content pre code {
-          background-color: transparent;
-          color: inherit;
-          padding: 0;
-          border: none;
-          border-radius: 0;
-        }
-        
-        .blog-content blockquote {
-          border-left: 4px solid #3b82f6;
-          padding-left: 1.5rem;
-          margin: 2rem 0;
-          font-style: italic;
-          color: #4b5563;
-          background-color: #f8fafc;
-          padding: 1rem 1.5rem;
-          border-radius: 0 0.375rem 0.375rem 0;
-        }
-        
-        .blog-content ul {
-          list-style-type: disc;
-          margin-left: 2rem;
-          margin-bottom: 1.5rem;
-          padding-left: 0;
-        }
-        
-        .blog-content ol {
-          list-style-type: decimal;
-          margin-left: 2rem;
-          margin-bottom: 1.5rem;
-          padding-left: 0;
-        }
-        
-        .blog-content li {
-          margin-bottom: 0.5rem;
-          line-height: 1.7;
-          padding-left: 0.5rem;
-        }
-        
-        .blog-content li > ul,
-        .blog-content li > ol {
-          margin-top: 0.5rem;
-          margin-bottom: 0.5rem;
-        }
-        
-        .blog-content a {
-          color: #3b82f6;
-          text-decoration: underline;
-          text-decoration-thickness: 1px;
-          text-underline-offset: 2px;
-          transition: color 0.2s ease;
-        }
-        
-        .blog-content a:hover {
-          color: #1d4ed8;
-          text-decoration-thickness: 2px;
-        }
-        
-        /* Handle custom font sizes from rich text editor */
-        .blog-content [style*="font-size: 12px"] {
-          font-size: 0.75rem !important;
-          line-height: 1.6;
-        }
-        
-        .blog-content [style*="font-size: 14px"] {
-          font-size: 0.875rem !important;
-          line-height: 1.6;
-        }
-        
-        .blog-content [style*="font-size: 16px"] {
-          font-size: 1rem !important;
-          line-height: 1.7;
-        }
-        
-        .blog-content [style*="font-size: 18px"] {
-          font-size: 1.125rem !important;
-          line-height: 1.7;
-        }
-        
-        .blog-content [style*="font-size: 24px"] {
-          font-size: 1.5rem !important;
-          line-height: 1.5;
-        }
-        
-        .blog-content [style*="font-size: 36px"] {
-          font-size: 2.25rem !important;
-          line-height: 1.3;
-        }
-        
-        /* Handle custom font families */
-        .blog-content [style*="font-family"] {
-          line-height: inherit;
-        }
-        
-        /* Handle custom colors */
-        .blog-content [style*="color"] {
-          /* Colors are preserved from inline styles */
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 640px) {
-          .blog-content {
-            font-size: 1rem;
-            line-height: 1.7;
-          }
-          
-          .blog-content h1 {
-            font-size: 2rem;
-          }
-          
-          .blog-content h2 {
-            font-size: 1.75rem;
-          }
-          
-          .blog-content h3 {
-            font-size: 1.375rem;
-          }
-          
-          .blog-content pre {
-            padding: 1rem;
-            margin: 1.5rem 0;
-            font-size: 0.8rem;
-          }
-          
-          .blog-content ul, .blog-content ol {
-            margin-left: 1.5rem;
-          }
-        }
-        
-        /* Preserve spacing and formatting */
-        .blog-content br {
-          margin-bottom: 0.5rem;
-        }
-        
-        .blog-content hr {
-          border: none;
-          border-top: 1px solid #e5e7eb;
-          margin: 2rem 0;
-        }
-        
-        /* Table styling if tables are used */
-        .blog-content table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 1.5rem 0;
-        }
-        
-        .blog-content th, .blog-content td {
-          border: 1px solid #e5e7eb;
-          padding: 0.75rem;
-          text-align: left;
-        }
-        
-        .blog-content th {
-          background-color: #f9fafb;
-          font-weight: 600;
-        }
-        
-        /* Image styling */
-        .blog-content img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 0.5rem;
-          margin: 1.5rem 0;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-      `}</style>
-    </div>
+    </AppShell>
   );
 };
 
