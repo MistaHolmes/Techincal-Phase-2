@@ -7,84 +7,72 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ── Core Models ──────────────────────────────────────────────────────────────
-
 model User {
-  id             String       @id @default(cuid())
-  email          String       @unique
-  name           String?
-  bio            String?
-  profilePicture String?
-  isVerified     Boolean      @default(false)
-  role           UserRole     @default(AUTHOR)
-  writerLevel    Int          @default(1)
-  writerXP       Int          @default(0)
-  readingStreak  Int          @default(0)
-  longestStreak  Int          @default(0)
-  lastReadDate   DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  // Relations
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  bio                String?
+  isVerified         Boolean             @default(false)
+  lastReadDate       DateTime?
+  longestStreak      Int                 @default(0)
+  name               String?
+  profilePicture     String?
+  readingStreak      Int                 @default(0)
+  role               UserRole            @default(AUTHOR)
+  writerLevel        Int                 @default(1)
+  writerXP           Int                 @default(0)
   blogs              Blog[]
-  comments           Comment[]
   bookmarks          Bookmark[]
+  coAuthoredBlogs    CoAuthor[]
+  comments           Comment[]
+  conversations1     Conversation[]      @relation("Participant1")
+  conversations2     Conversation[]      @relation("Participant2")
+  following          Follow[]            @relation("Followers")
+  followers          Follow[]            @relation("Following")
+  followerSnapshots  FollowerSnapshot[]
+  highlights         Highlight[]
+  receivedMessages   Message[]           @relation("Receiver")
+  sentMessages       Message[]           @relation("Sender")
   notifications      Notification[]
-  followers          Follow[]           @relation("Following")
-  following          Follow[]           @relation("Followers")
+  personalizedScores PersonalizedScore[]
+  subscribedTo       PremiumAccess[]
   readingHistory     ReadingHistory[]
   series             Series[]
-  coAuthoredBlogs    CoAuthor[]
-  sentMessages       Message[]          @relation("Sender")
-  receivedMessages   Message[]          @relation("Receiver")
-  conversations1     Conversation[]     @relation("Participant1")
-  conversations2     Conversation[]     @relation("Participant2")
+  subscriptions      Subscription[]      @relation("Creator")
+  tipsReceived       Tip[]               @relation("TipReceiver")
+  tipsSent           Tip[]               @relation("Tipper")
   achievements       UserAchievement[]
-  highlights         Highlight[]
-  followerSnapshots  FollowerSnapshot[]
-  subscriptions      Subscription[]     @relation("Creator")
-  subscribedTo       PremiumAccess[]
-  tipsSent           Tip[]              @relation("Tipper")
-  tipsReceived       Tip[]              @relation("TipReceiver")
-  personalizedScores PersonalizedScore[]
-}
-
-enum UserRole {
-  AUTHOR
-  ADMIN
-  CONTRIBUTOR
 }
 
 model Blog {
-  id                 String          @id @default(cuid())
+  id                 String           @id @default(cuid())
   title              String
   content            String
-  summary            String?
-  coverImage         String?
-  published          Boolean         @default(false)
-  featured           Boolean         @default(false)
-  isPremium          Boolean         @default(false)
-  readabilityScore   Float?
+  published          Boolean          @default(false)
   authorId           String
-  likes              Int             @default(0)
-  views              Int             @default(0)
-  readingCompletions Int             @default(0)
+  likes              Int              @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  coverImage         String?
+  featured           Boolean          @default(false)
+  isPremium          Boolean          @default(false)
+  readabilityScore   Float?
+  readingCompletions Int              @default(0)
+  scheduledAt        DateTime?
   seriesId           String?
   seriesOrder        Int?
-  scheduledAt        DateTime?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-
-  // Relations
-  author         User              @relation(fields: [authorId], references: [id])
-  tags           Tag[]
-  comments       Comment[]
-  bookmarks      Bookmark[]
-  series         Series?           @relation(fields: [seriesId], references: [id])
-  readingHistory ReadingHistory[]
-  coAuthors      CoAuthor[]
-  versions       BlogVersion[]
-  highlights     Highlight[]
+  summary            String?
+  views              Int              @default(0)
+  author             User             @relation(fields: [authorId], references: [id])
+  series             Series?          @relation(fields: [seriesId], references: [id])
+  versions           BlogVersion[]
+  bookmarks          Bookmark[]
+  coAuthors          CoAuthor[]
+  comments           Comment[]
+  highlights         Highlight[]
+  readingHistory     ReadingHistory[]
+  tags               Tag[]            @relation("BlogToTag")
 
   @@index([seriesId])
   @@index([authorId])
@@ -94,7 +82,7 @@ model Blog {
 model Tag {
   id    String @id @default(cuid())
   name  String @unique
-  blogs Blog[]
+  blogs Blog[] @relation("BlogToTag")
 }
 
 model Comment {
@@ -103,8 +91,8 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
   blogId    String
+  author    User     @relation(fields: [authorId], references: [id])
   blog      Blog     @relation(fields: [blogId], references: [id])
 
   @@index([authorId])
@@ -114,10 +102,10 @@ model Comment {
 model Bookmark {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
   blogId    String
-  blog      Blog     @relation(fields: [blogId], references: [id])
   createdAt DateTime @default(now())
+  blog      Blog     @relation(fields: [blogId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, blogId])
   @@index([userId])
@@ -153,8 +141,8 @@ model ReadingHistory {
   userId String
   blogId String
   readAt DateTime @default(now())
-  user   User     @relation(fields: [userId], references: [id])
   blog   Blog     @relation(fields: [blogId], references: [id])
+  user   User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, blogId])
   @@index([userId])
@@ -168,13 +156,11 @@ model Series {
   authorId    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  author      User     @relation(fields: [authorId], references: [id])
   blogs       Blog[]
+  author      User     @relation(fields: [authorId], references: [id])
 
   @@index([authorId])
 }
-
-// ── V2: Creator Workflow Models ──────────────────────────────────────────────
 
 model BlogVersion {
   id        String   @id @default(cuid())
@@ -185,36 +171,23 @@ model BlogVersion {
   createdAt DateTime @default(now())
   blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
 
-  @@index([blogId])
   @@unique([blogId, version])
+  @@index([blogId])
 }
 
 model CoAuthor {
-  id     String       @id @default(cuid())
-  blogId String
-  userId String
-  role   CoAuthorRole @default(CONTRIBUTOR)
-  status InviteStatus @default(PENDING)
-  createdAt DateTime  @default(now())
-  blog   Blog         @relation(fields: [blogId], references: [id], onDelete: Cascade)
-  user   User         @relation(fields: [userId], references: [id])
+  id        String       @id @default(cuid())
+  blogId    String
+  userId    String
+  role      CoAuthorRole @default(CONTRIBUTOR)
+  status    InviteStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  blog      Blog         @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id])
 
   @@unique([blogId, userId])
   @@index([userId])
 }
-
-enum CoAuthorRole {
-  CO_AUTHOR
-  CONTRIBUTOR
-}
-
-enum InviteStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
-}
-
-// ── V2: Social & Community Models ────────────────────────────────────────────
 
 model Conversation {
   id             String    @id @default(cuid())
@@ -239,9 +212,9 @@ model Message {
   conversationId String
   read           Boolean      @default(false)
   createdAt      DateTime     @default(now())
-  sender         User         @relation("Sender", fields: [senderId], references: [id])
-  receiver       User         @relation("Receiver", fields: [receiverId], references: [id])
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  receiver       User         @relation("Receiver", fields: [receiverId], references: [id])
+  sender         User         @relation("Sender", fields: [senderId], references: [id])
 
   @@index([conversationId])
   @@index([senderId])
@@ -254,7 +227,7 @@ model Achievement {
   description String
   icon        String            @default("🏆")
   xpReward    Int               @default(0)
-  criteria    String            // JSON with conditions
+  criteria    String
   createdAt   DateTime          @default(now())
   users       UserAchievement[]
 }
@@ -264,30 +237,28 @@ model UserAchievement {
   userId        String
   achievementId String
   awardedAt     DateTime    @default(now())
-  user          User        @relation(fields: [userId], references: [id])
   achievement   Achievement @relation(fields: [achievementId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
 
   @@unique([userId, achievementId])
   @@index([userId])
 }
 
 model Highlight {
-  id        String   @id @default(cuid())
-  userId    String
-  blogId    String
-  text      String
+  id          String   @id @default(cuid())
+  userId      String
+  blogId      String
+  text        String
   startOffset Int
   endOffset   Int
-  note      String?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  note        String?
+  createdAt   DateTime @default(now())
+  blog        Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([blogId])
 }
-
-// ── V2: Analytics Models ─────────────────────────────────────────────────────
 
 model DailyViewStat {
   id     String   @id @default(cuid())
@@ -300,28 +271,26 @@ model DailyViewStat {
 }
 
 model FollowerSnapshot {
-  id       String   @id @default(cuid())
-  userId   String
-  date     DateTime @db.Date
-  count    Int      @default(0)
-  user     User     @relation(fields: [userId], references: [id])
+  id     String   @id @default(cuid())
+  userId String
+  date   DateTime @db.Date
+  count  Int      @default(0)
+  user   User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
   @@index([userId])
 }
 
-// ── V2: Monetization Structure (No Payment Yet) ─────────────────────────────
-
 model Subscription {
-  id          String   @id @default(cuid())
-  creatorId   String
-  tierName    String
-  description String?
-  priceInCents Int     @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  creator     User     @relation("Creator", fields: [creatorId], references: [id])
-  access      PremiumAccess[]
+  id           String          @id @default(cuid())
+  creatorId    String
+  tierName     String
+  description  String?
+  priceInCents Int             @default(0)
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  access       PremiumAccess[]
+  creator      User            @relation("Creator", fields: [creatorId], references: [id])
 
   @@index([creatorId])
 }
@@ -333,28 +302,26 @@ model PremiumAccess {
   startsAt       DateTime     @default(now())
   expiresAt      DateTime?
   isActive       Boolean      @default(true)
-  user           User         @relation(fields: [userId], references: [id])
   subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
 
   @@unique([userId, subscriptionId])
   @@index([userId])
 }
 
 model Tip {
-  id          String   @id @default(cuid())
-  tipperId    String
-  receiverId  String
+  id            String   @id @default(cuid())
+  tipperId      String
+  receiverId    String
   amountInCents Int
-  message     String?
-  createdAt   DateTime @default(now())
-  tipper      User     @relation("Tipper", fields: [tipperId], references: [id])
-  receiver    User     @relation("TipReceiver", fields: [receiverId], references: [id])
+  message       String?
+  createdAt     DateTime @default(now())
+  receiver      User     @relation("TipReceiver", fields: [receiverId], references: [id])
+  tipper        User     @relation("Tipper", fields: [tipperId], references: [id])
 
   @@index([tipperId])
   @@index([receiverId])
 }
-
-// ── V2: Discovery / Personalization ──────────────────────────────────────────
 
 model PersonalizedScore {
   id     String @id @default(cuid())
@@ -365,4 +332,21 @@ model PersonalizedScore {
 
   @@unique([userId, tagId])
   @@index([userId])
+}
+
+enum UserRole {
+  AUTHOR
+  ADMIN
+  CONTRIBUTOR
+}
+
+enum CoAuthorRole {
+  CO_AUTHOR
+  CONTRIBUTOR
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
 }
