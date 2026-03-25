@@ -106,7 +106,7 @@ const ProfileComponent = () => {
     <>
       <div className="max-w-7xl mx-auto py-8 px-4">
         {/* Account Management Box */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 flex flex-col md:flex-row items-center justify-between transition-all mb-10 overflow-hidden relative group">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 flex flex-col md:flex-row items-center justify-between transition-all mb-10 overflow-hidden relative group">
            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
               <Users size={160} />
            </div>
@@ -117,7 +117,7 @@ const ProfileComponent = () => {
             </p>
           </div>
           <div className="md:w-1/4 flex justify-center md:justify-end mt-8 md:mt-0 relative z-10">
-            <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-inner">
+            <div className="p-2 bg-gray-50 dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-inner">
                <UserButton
                  afterSignOutUrl="/"
                  appearance={{
@@ -133,14 +133,14 @@ const ProfileComponent = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2">
              {/* Manage Your Blogs Section */}
-             <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
                 <UserContentSection />
              </div>
           </div>
 
           <div className="space-y-10">
             {/* Followers / Following Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 transition-all">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 transition-all">
               <div className="flex items-center gap-4 mb-8">
                 <div className="p-2 bg-violet-100 dark:bg-violet-900/30 text-violet-600 rounded-xl">
                    <Users className="w-5 h-5" />
@@ -149,7 +149,7 @@ const ProfileComponent = () => {
               </div>
 
               {/* Tab toggles */}
-              <div className="flex bg-gray-50 dark:bg-gray-900 p-1 rounded-2xl mb-8">
+              <div className="flex bg-gray-50 dark:bg-gray-950 p-1 rounded-2xl mb-8">
                 <button
                   onClick={() => setActiveTab("followers")}
                   className={`flex-1 py-3 font-bold text-xs uppercase tracking-widest rounded-xl transition-all ${

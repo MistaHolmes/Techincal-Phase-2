@@ -24,7 +24,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   showSearch = true
 }) => {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
       {/* Global Header */}
       <AppHeader 
         searchTerm={searchTerm} 
@@ -32,44 +32,45 @@ export const AppShell: React.FC<AppShellProps> = ({
         showSearch={showSearch} 
       />
 
-      <div className="flex flex-1 pt-16 max-w-[1600px] mx-auto w-full group">
-        {/* Left Sidebar - Navigation */}
+      <div className="flex flex-1 pt-16 max-w-[1600px] mx-auto w-full">
+        {/* Left Sidebar */}
         {!hideSidebar && (
-          <aside className="hidden md:block w-64 flex-shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-gray-200 dark:border-gray-800 p-4 transition-all duration-300">
-             <Sidebar activePage={activePage} />
-          </aside>
+          <div className="hidden md:block flex-shrink-0">
+            <Sidebar activePage={activePage} />
+          </div>
         )}
 
         {/* Main Content Area */}
-        <main className={`flex-1 min-w-0 p-6 transition-all duration-300 ${!hideSidebar ? 'md:px-8' : 'px-4'}`}>
+        <main className={`flex-1 min-w-0 p-4 md:p-6 transition-all duration-300 pb-20 md:pb-6 ${!hideSidebar ? 'md:px-8' : 'px-4'}`}>
           {children}
         </main>
 
-        {/* Right Sidebar - Contextual Widgets */}
+        {/* Right Sidebar */}
         {!hideRightPanel && (
-          <aside className="hidden lg:block w-80 flex-shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-l border-gray-200 dark:border-gray-800 p-6">
+          <aside className="hidden lg:block w-80 flex-shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-l border-gray-200/80 dark:border-gray-800/80 p-6">
             {rightPanelContent || (
               <div className="space-y-8">
-                {/* Default widgets could go here if none provided */}
-                <div className="p-6 bg-violet-600 rounded-2xl text-white shadow-xl">
-                    <h4 className="font-headline text-xl font-bold mb-2">Upgrade to Dock Elite</h4>
-                    <p className="font-body text-xs opacity-90 mb-6 leading-relaxed">Early access to premium drafts, and help build the future of the Dock.</p>
-                    <button className="w-full py-3 bg-white text-violet-600 font-label font-bold text-xs uppercase rounded-lg shadow-sm hover:bg-gray-100 transition">Get Started</button>
+                <div className="p-6 bg-gradient-to-br from-violet-600 to-violet-700 rounded-2xl text-white shadow-xl shadow-violet-200/30 dark:shadow-none">
+                  <h4 className="font-headline text-xl font-bold mb-2">Upgrade to Dock Elite</h4>
+                  <p className="font-body text-xs opacity-90 mb-6 leading-relaxed">Early access to premium drafts, and help build the future of the Dock.</p>
+                  <button className="w-full py-3 bg-white text-violet-600 font-label font-bold text-xs uppercase tracking-widest rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
+                    Get Started
+                  </button>
                 </div>
                 
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm">
-                   <h5 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Trending on DraftDock</h5>
-                   <div className="space-y-4">
-                      {[1, 2, 3].map(i => (
-                        <div key={i} className="flex gap-3">
-                           <span className="text-2xl font-bold text-gray-200">0{i}</span>
-                           <div>
-                              <h6 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-2">How AI is changing the landscape of decentralized blogging in 2026.</h6>
-                              <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold">5 min read</p>
-                           </div>
+                <div className="bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 rounded-2xl p-5 shadow-sm">
+                  <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-4">Trending on DraftDock</h5>
+                  <div className="space-y-4">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="flex gap-3">
+                        <span className="text-2xl font-bold text-gray-200 dark:text-gray-700">0{i}</span>
+                        <div>
+                          <h6 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-2">How AI is changing the landscape of decentralized blogging in 2026.</h6>
+                          <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold">5 min read</p>
                         </div>
-                      ))}
-                   </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -77,10 +78,12 @@ export const AppShell: React.FC<AppShellProps> = ({
         )}
       </div>
 
-      {/* Mobile Sidebar Overlay (managed by Sidebar component usually, but fixed here for structure) */}
-      <div className="md:hidden">
-         {/* The Sidebar component already handles its mobile trigger/overlay */}
-      </div>
+      {/* Mobile Sidebar (drawer handled internally by Sidebar component) */}
+      {!hideSidebar && (
+        <div className="md:hidden">
+          <Sidebar activePage={activePage} />
+        </div>
+      )}
     </div>
   );
 };

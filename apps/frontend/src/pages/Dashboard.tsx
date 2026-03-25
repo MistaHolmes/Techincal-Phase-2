@@ -110,6 +110,7 @@ const Dashboard = () => {
              icon={<BarChart2 size={20} />} 
              trend="+12%" 
              color="violet"
+             index={0}
            />
            <MetricCard 
              title="Engagement Rate" 
@@ -118,6 +119,7 @@ const Dashboard = () => {
              icon={<Heart size={20} />} 
              trend="+4.5%" 
              color="rose"
+             index={1}
            />
            <MetricCard 
              title="Active Followers" 
@@ -126,6 +128,7 @@ const Dashboard = () => {
              icon={<Users size={20} />} 
              trend="+8" 
              color="blue"
+             index={2}
            />
            <MetricCard 
              title="Published Stories" 
@@ -133,6 +136,7 @@ const Dashboard = () => {
              subtitle="Creator consistency"
              icon={<FileText size={20} />} 
              color="emerald"
+             index={3}
            />
         </div>
 
@@ -270,7 +274,7 @@ const Dashboard = () => {
   );
 };
 
-function MetricCard({ title, value, subtitle, icon, trend, color }: any) {
+function MetricCard({ title, value, subtitle, icon, trend, color, index = 0 }: any) {
   const colorMap: any = {
     violet: "bg-violet-50 text-violet-600 dark:bg-violet-900/20 dark:text-violet-400",
     rose: "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400",
@@ -278,26 +282,39 @@ function MetricCard({ title, value, subtitle, icon, trend, color }: any) {
     emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400",
   };
 
+  const isPositive = trend?.startsWith("+");
+
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
+      className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow group"
     >
       <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-xl ${colorMap[color]}`}>
+        <div className={`p-3 rounded-xl ${colorMap[color]} transition-transform group-hover:scale-105`}>
           {icon}
         </div>
         {trend && (
-          <span className="text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded-full">
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 ${
+            isPositive 
+              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
+              : "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+          }`}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+              {isPositive 
+                ? <path d="M5 2L8 6H2L5 2Z" />
+                : <path d="M5 8L2 4H8L5 8Z" />
+              }
+            </svg>
             {trend}
           </span>
         )}
       </div>
       <div>
-        <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-1">{value}</h3>
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{title}</p>
-        <p className="text-[10px] text-gray-400 mt-1">{subtitle}</p>
+        <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-1 tracking-tight">{value}</h3>
+        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">{title}</p>
+        <p className="text-[10px] text-gray-400 mt-0.5">{subtitle}</p>
       </div>
     </motion.div>
   );
@@ -307,10 +324,10 @@ export default Dashboard;
 
 function ChartContainer({ title, subtitle, children }: any) {
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+    <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
       <div className="mb-6">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
-        <p className="text-xs text-gray-500">{subtitle}</p>
+        <h3 className="text-lg font-headline font-bold text-gray-900 dark:text-white">{title}</h3>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] mt-1">{subtitle}</p>
       </div>
       {children}
     </div>

@@ -134,3 +134,37 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
+
+/* Reduced motion: disable all animations for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus-visible: keyboard-only focus ring */
+*:focus-visible {
+  outline: 2px solid oklch(0.541 0.281 293.54); /* violet-600 */
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Custom scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 6px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.269 0 0);
+  border-radius: 3px;
+}
+
+/* Safe area for mobile bottom nav */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

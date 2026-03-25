@@ -181,8 +181,8 @@ export function BlogForm() {
 
   if (loadingExisting) {
     return (
-      <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 items-center justify-center">
-        <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 items-center justify-center">
+        <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -207,7 +207,7 @@ export function BlogForm() {
       />
 
       {/* Summary Box */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
         <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
           <FileDiff size={14} /> SEO Summary
         </h3>
@@ -233,7 +233,7 @@ export function BlogForm() {
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 sm:p-12 shadow-sm"
+            className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 sm:p-12 shadow-sm"
           >
             {/* Meta & Status */}
             <div className="mb-10 flex items-center justify-between">
@@ -242,8 +242,11 @@ export function BlogForm() {
                   {isEditMode ? "Editing Mode" : "Creative Mode"}
                 </span>
                 {autoSaved && (
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase text-green-500 tracking-widest">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping" />
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase text-emerald-500 tracking-widest">
+                    <span className="relative flex w-2 h-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full w-2 h-2 bg-emerald-500" />
+                    </span>
                     Auto-saved
                   </div>
                 )}
