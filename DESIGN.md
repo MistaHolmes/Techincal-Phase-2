@@ -7,7 +7,7 @@ DraftDock exudes a **modern editorial elegance** — clean, spacious, and delibe
 
 - **Density:** Airy and spacious — content breathes with generous padding (`p-6` to `p-12`)
 - **Mood:** Confident, editorial, quietly luxurious
-- **Motion:** Subtle fade-and-rise entrance animations (Framer Motion `opacity: 0, y: 10 → 1, 0`)
+- **Motioni8:** Subtle fade-and-rise entrance animations (Framer Motion `opacity: 0, y: 10 → 1, 0`)
 - **Dark Mode:** Class-based toggle (`.dark`), full oklch color inversion
 
 ## 2. Color Palette & Roles
