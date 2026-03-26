@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { Sparkles, Tag, FileText, BookOpen, X, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Tag, FileText, BookOpen, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 

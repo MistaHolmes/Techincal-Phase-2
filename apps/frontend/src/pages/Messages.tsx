@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@clerk/clerk-react";
+import { usePageCache } from "@/context/PageCacheContext";
 import { MessageCircle, Send, ArrowLeft, Loader2 } from "lucide-react";
 
 
@@ -22,6 +23,7 @@ interface Message {
 
 const Messages = () => {
   const { getToken } = useAuth();
+  const cache = usePageCache();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,17 +45,40 @@ const Messages = () => {
   };
 
   const fetchConversations = async () => {
+    const cacheKey = "messages:conversations";
     try {
+      const cached = cache.get(cacheKey);
+      if (cached) {
+        setConversations(cached);
+        setLoading(false);
+        return;
+      }
+
       const res = await authFetch("/api/messaging/conversations");
-      if (res.ok) setConversations(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data);
+        cache.set(cacheKey, data);
+      }
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
 
   const fetchMessages = async (convId: string) => {
+    const cacheKey = `messages:conv:${convId}`;
     try {
+      const cached = cache.get(cacheKey);
+      if (cached) {
+        setMessages(cached);
+        return;
+      }
+
       const res = await authFetch(`/api/messaging/conversations/${convId}/messages`);
-      if (res.ok) setMessages(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data);
+        cache.set(cacheKey, data);
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -67,7 +92,12 @@ const Messages = () => {
       });
       if (res.ok) {
         const msg = await res.json();
-        setMessages((prev) => [...prev, msg]);
+        setMessages((prev) => {
+          const next = [...prev, msg];
+          if (activeConv) cache.set(`messages:conv:${activeConv}`, next);
+          cache.invalidate("messages:conversations");
+          return next;
+        });
         setNewMessage("");
       }
     } catch (err) { console.error(err); }

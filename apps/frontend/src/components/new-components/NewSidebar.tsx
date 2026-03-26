@@ -8,7 +8,6 @@ import {
   Bookmark,
   LayoutDashboard,
   History,
-  Search,
   Trophy,
   MessageSquare,
   Settings,

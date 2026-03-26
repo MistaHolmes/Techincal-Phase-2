@@ -3,7 +3,6 @@ import RequireAuth from "./components/RequireAuth";
 import RequireAdmin from "./components/RequireAdmin";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./pages/Landing";
-import UserBlogs from "./pages/Blogs";
 import { BlogForm } from "./pages/BlogForm";
 import BlogView from "./pages/BlogView";
 import HomeRedirector from "./components/HomeRedirector";
@@ -24,11 +23,9 @@ import {
 const TagBlogs = lazy(() => import("./pages/TagBlogs"));
 const AuthorProfile = lazy(() => import("./pages/AuthorProfile"));
 const Settings = lazy(() => import("./pages/Settings"));
-// SearchPage removed — searches forward to the revamped Explore page
 const SeriesPage = lazy(() => import("./pages/SeriesPage"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Messages = lazy(() => import("./pages/Messages"));
-const Drafts = lazy(() => import("./pages/Drafts"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUserDetails = lazy(() => import("./pages/admin/UserDetails"));
 
