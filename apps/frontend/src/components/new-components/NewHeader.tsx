@@ -31,7 +31,7 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && localSearch.trim()) {
-      navigate(`/search?q=${encodeURIComponent(localSearch.trim())}`);
+      navigate(`/explore?q=${encodeURIComponent(localSearch.trim())}`);
     }
   };
 
@@ -45,7 +45,7 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
 
   return (
     <nav className="fixed top-0 w-full z-[100] bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50">
-      <div className="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center px-6 py-4 w-full">
         {/* Left: Brand + Nav */}
         <div className="flex items-center gap-12">
           <button

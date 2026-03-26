@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { UserButton, useAuth, useUser } from "@clerk/clerk-react";
 import { Users, UserPlus, UserMinus, Edit, Coffee } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,6 +20,7 @@ const NewProfilePage = () => {
   const { getToken } = useAuth();
   const { user } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<"blogs" | "drafts">("blogs");
   const [networkTab, setNetworkTab] = useState<"followers" | "following">("followers");
   const [followers, setFollowers] = useState<FollowUser[]>([]);
@@ -29,6 +30,11 @@ const NewProfilePage = () => {
   const cache = usePageCache();
 
   useEffect(() => {
+    // Initialize tab from query param if present
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab === "drafts") setActiveTab("drafts");
+
     const cached = cache.get("profile:follows", PAGE_TTL.profile);
     if (cached) {
       setFollowers(cached.followers);
@@ -73,6 +79,14 @@ const NewProfilePage = () => {
     } finally {
       setUnfollowingId(null);
     }
+  };
+
+  // update active tab and push param so /profile?tab=drafts works
+  const updateActiveTab = (s: "blogs" | "drafts") => {
+    setActiveTab(s);
+    const params = new URLSearchParams(location.search);
+    params.set("tab", s);
+    navigate({ pathname: "/profile", search: params.toString() }, { replace: true });
   };
 
   const displayName =
@@ -175,7 +189,7 @@ const NewProfilePage = () => {
           {/* Tabs */}
           <div className="flex gap-12 border-b border-gray-200 dark:border-gray-800 mb-10">
             <button
-              onClick={() => setActiveTab("blogs")}
+              onClick={() => updateActiveTab("blogs")}
               className={`pb-4 text-lg font-headline font-bold transition-colors ${
                 activeTab === "blogs"
                   ? "border-b-2 border-black dark:border-white text-black dark:text-white"
@@ -185,7 +199,7 @@ const NewProfilePage = () => {
               My Blogs
             </button>
             <button
-              onClick={() => setActiveTab("drafts")}
+              onClick={() => updateActiveTab("drafts")}
               className={`pb-4 text-lg font-headline font-bold transition-colors ${
                 activeTab === "drafts"
                   ? "border-b-2 border-black dark:border-white text-black dark:text-white"
@@ -196,9 +210,12 @@ const NewProfilePage = () => {
             </button>
           </div>
 
-          {/* Blog/Draft Content */}
+          {/* Blog/Draft Content — outer tabs drive the section */}
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
-            <UserContentSection />
+            <UserContentSection
+              activeSection={activeTab}
+              onSectionChange={updateActiveTab}
+            />
           </div>
         </div>
 

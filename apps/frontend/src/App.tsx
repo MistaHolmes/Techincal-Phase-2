@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from "react";
 import RequireAuth from "./components/RequireAuth";
 import RequireAdmin from "./components/RequireAdmin";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./pages/Landing";
 import UserBlogs from "./pages/Blogs";
 import { BlogForm } from "./pages/BlogForm";
@@ -24,7 +24,7 @@ import {
 const TagBlogs = lazy(() => import("./pages/TagBlogs"));
 const AuthorProfile = lazy(() => import("./pages/AuthorProfile"));
 const Settings = lazy(() => import("./pages/Settings"));
-const SearchPage = lazy(() => import("./pages/SearchPage"));
+// SearchPage removed — searches forward to the revamped Explore page
 const SeriesPage = lazy(() => import("./pages/SeriesPage"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Messages = lazy(() => import("./pages/Messages"));
@@ -56,7 +56,8 @@ const App: React.FC = () => {
           <Route path="/landing" element={<RequireAuth><AppShell hideSidebar hideRightPanel><LandingPage /></AppShell></RequireAuth>} />
 
           {/* Revamped pages with NewAppShell */}
-          <Route path="/blogs" element={<RequireAuth><UserBlogs /></RequireAuth>} />
+          {/* Legacy route: redirect to revamped explore page */}
+          <Route path="/blogs" element={<RequireAuth><Navigate to="/explore" replace /></RequireAuth>} />
           <Route path="/explore" element={<NewAppShell activePage="explore"><NewExplorePage /></NewAppShell>} />
           <Route path="/bookmarks" element={<RequireAuth><NewAppShell activePage="bookmarks"><NewBookmarksPage /></NewAppShell></RequireAuth>} />
           <Route path="/dashboard" element={<RequireAuth><NewAppShell activePage="dashboard"><NewDashboardPage /></NewAppShell></RequireAuth>} />
@@ -64,11 +65,12 @@ const App: React.FC = () => {
           <Route path="/profile" element={<RequireAuth><NewAppShell activePage="profile" hideRightPanel><NewProfilePage /></NewAppShell></RequireAuth>} />
 
           {/* Other pages using NewAppShell */}
-          <Route path="/search" element={<NewAppShell activePage="search"><SearchPage /></NewAppShell>} />
+          {/* Search page removed; searches now land on /explore */}
           <Route path="/leaderboard" element={<NewAppShell activePage="leaderboard"><Leaderboard /></NewAppShell>} />
           <Route path="/messages" element={<RequireAuth><NewAppShell activePage="messages"><Messages /></NewAppShell></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><NewAppShell activePage="settings"><Settings /></NewAppShell></RequireAuth>} />
-          <Route path="/drafts" element={<RequireAuth><Drafts /></RequireAuth>} />
+          {/* Drafts moved into profile page; redirect legacy /drafts to profile with tab */}
+          <Route path="/drafts" element={<RequireAuth><Navigate to="/profile?tab=drafts" replace /></RequireAuth>} />
 
           {/* Workflow Routes */}
           <Route path="/create-blog" element={<RequireAuth><BlogForm /></RequireAuth>} />

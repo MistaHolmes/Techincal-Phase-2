@@ -32,7 +32,6 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/drafts", icon: FileEdit, label: "Drafts" },
   { href: "/bookmarks", icon: Bookmark, label: "Bookmarks" },
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/search", icon: Search, label: "Search" },
   { href: "/history", icon: History, label: "History" },
   { href: "/leaderboard", icon: Trophy, label: "Leaderboard" },
   { href: "/messages", icon: MessageSquare, label: "Messages" },
