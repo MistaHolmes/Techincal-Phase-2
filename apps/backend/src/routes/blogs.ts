@@ -192,9 +192,11 @@ router.post('/:blogId/view', async (req, res: any) => {
       data: { views: { increment: 1 } },
       select: { views: true },
     });
-    await redisClient.del(`blog:${blogId}`);
+    try { await redisClient.del(`blog:${blogId}`); } catch { /* non-fatal */ }
     return res.json({ views: blog.views });
-  } catch (err) {
+  } catch (err: any) {
+    // P2025 = record not found — blog may have been deleted or DB was reset
+    if (err?.code === 'P2025') return res.status(404).json({ error: 'Blog not found' });
     console.error('Error incrementing views:', err);
     return res.status(500).json({ error: 'Failed to increment views' });
   }

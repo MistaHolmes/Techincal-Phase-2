@@ -189,6 +189,10 @@ router.post('/history', requireAuth(), async (req, res: any) => {
     const { blogId } = req.body;
     if (!blogId) return res.status(400).json({ error: 'blogId is required' });
 
+    // Guard: make sure the blog actually exists before creating the FK reference
+    const blogExists = await prisma.blog.findUnique({ where: { id: blogId }, select: { id: true } });
+    if (!blogExists) return res.status(404).json({ error: 'Blog not found' });
+
     await (prisma as any).readingHistory.upsert({
       where: { userId_blogId: { userId: user.id, blogId } },
       update: { readAt: new Date() },
