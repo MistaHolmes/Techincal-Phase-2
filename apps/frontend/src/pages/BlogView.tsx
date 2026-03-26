@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { usePageCache } from "@/context/PageCacheContext";
 import BlogSkeleton from "@/components/BlogSkeleton";
-import { AppShell } from "@/components/layout/AppShell";
+import { NewAppShell } from "@/components/new-components";
 import { Footer } from "@/components/Footer";
 import { BackButton } from "@/components/ui/backButton";
 import {
@@ -252,11 +252,11 @@ const BlogView = () => {
 
   if (!blog) {
     return (
-      <AppShell>
+      <NewAppShell>
         <div className="max-w-3xl mx-auto py-12">
            <BlogSkeleton variant="large" />
         </div>
-      </AppShell>
+      </NewAppShell>
     );
   }
 
@@ -339,7 +339,7 @@ const BlogView = () => {
   );
 
   return (
-    <AppShell
+    <NewAppShell
       hideSidebar={isFocusMode}
       hideRightPanel={isFocusMode}
       rightPanelContent={RightPanelContent}
@@ -624,7 +624,7 @@ const BlogView = () => {
       <div className="mt-20 px-4">
         <Footer />
       </div>
-    </AppShell>
+    </NewAppShell>
   );
 };
 

@@ -44,7 +44,7 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
   const isActive = (href: string) => location.pathname === href;
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50">
+    <nav className="fixed top-0 w-full z-[100] bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50">
       <div className="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
         {/* Left: Brand + Nav */}
         <div className="flex items-center gap-12">

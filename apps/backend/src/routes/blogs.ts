@@ -10,20 +10,48 @@ import { checkAndAwardAchievements } from '../services/achievement.service';
 
 const router = Router();
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+/** Select clause shared by all list endpoints — excludes heavy `content` column */
+const BLOG_LIST_SELECT = {
+  id: true,
+  title: true,
+  summary: true,
+  coverImage: true,
+  published: true,
+  likes: true,
+  views: true,
+  createdAt: true,
+  updatedAt: true,
+  authorId: true,
+  author: { select: { email: true, name: true, profilePicture: true } },
+  tags: true,
+} as const;
+
+/** Safe Redis get — returns null on any error so requests still work if Redis is down */
+async function safeRedisGet(key: string): Promise<string | null> {
+  try { return await redisClient.get(key); } catch { return null; }
+}
+
+/** Safe Redis set — fire-and-forget, never blocks the response */
+function safeRedisSet(key: string, ttl: number, data: string): void {
+  redisClient.setEx(key, ttl, data).catch(() => {});
+}
+
 // GET /api/blogs — public, all published blogs
 router.get('/', async (req, res: any) => {
   try {
     const cacheKey = 'blogs:all';
-    const cached = await redisClient.get(cacheKey);
+    const cached = await safeRedisGet(cacheKey);
     if (cached) return res.json(JSON.parse(cached));
 
     const blogs = await prisma.blog.findMany({
       where: { published: true },
-      include: { author: { select: { email: true } } },
+      select: BLOG_LIST_SELECT,
       orderBy: { updatedAt: 'desc' },
     });
 
-    await redisClient.setEx(cacheKey, 600, JSON.stringify(blogs));
+    safeRedisSet(cacheKey, 600, JSON.stringify(blogs));
     return res.json(blogs);
   } catch (err) {
     console.error('Error fetching blogs:', err);
@@ -35,18 +63,18 @@ router.get('/', async (req, res: any) => {
 router.get('/trending', async (req, res: any) => {
   try {
     const cacheKey = 'blogs:trending';
-    const cached = await redisClient.get(cacheKey);
+    const cached = await safeRedisGet(cacheKey);
     if (cached) return res.json(JSON.parse(cached));
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const blogs = await prisma.blog.findMany({
       where: { published: true, updatedAt: { gte: sevenDaysAgo } },
-      include: { author: { select: { email: true, name: true } }, tags: true },
+      select: BLOG_LIST_SELECT,
       orderBy: { views: 'desc' },
       take: 6,
     });
 
-    await redisClient.setEx(cacheKey, 120, JSON.stringify(blogs));
+    safeRedisSet(cacheKey, 120, JSON.stringify(blogs));
     return res.json(blogs);
   } catch (err) {
     console.error('Error fetching trending:', err);
@@ -58,17 +86,17 @@ router.get('/trending', async (req, res: any) => {
 router.get('/featured', async (req, res: any) => {
   try {
     const cacheKey = 'blogs:featured';
-    const cached = await redisClient.get(cacheKey);
+    const cached = await safeRedisGet(cacheKey);
     if (cached) return res.json(JSON.parse(cached));
 
     const blogs = await prisma.blog.findMany({
       where: { published: true, featured: true },
-      include: { author: { select: { email: true, name: true } }, tags: true },
+      select: BLOG_LIST_SELECT,
       orderBy: { updatedAt: 'desc' },
       take: 6,
     });
 
-    await redisClient.setEx(cacheKey, 300, JSON.stringify(blogs));
+    safeRedisSet(cacheKey, 300, JSON.stringify(blogs));
     return res.json(blogs);
   } catch (err) {
     console.error('Error fetching featured:', err);
@@ -83,7 +111,7 @@ router.get('/search', async (req, res: any) => {
     if (!q) return res.json([]);
 
     const cacheKey = `search:${q.toLowerCase().slice(0, 100)}`;
-    const cached = await redisClient.get(cacheKey);
+    const cached = await safeRedisGet(cacheKey);
     if (cached) return res.json(JSON.parse(cached));
 
     const blogs = await prisma.blog.findMany({
@@ -94,12 +122,12 @@ router.get('/search', async (req, res: any) => {
           { content: { contains: q, mode: 'insensitive' } },
         ],
       },
-      include: { author: { select: { email: true, name: true } }, tags: true },
+      select: BLOG_LIST_SELECT,
       orderBy: { updatedAt: 'desc' },
       take: 20,
     });
 
-    await redisClient.setEx(cacheKey, 120, JSON.stringify(blogs));
+    safeRedisSet(cacheKey, 120, JSON.stringify(blogs));
     return res.json(blogs);
   } catch (err) {
     console.error('Error searching blogs:', err);
@@ -112,16 +140,16 @@ router.get('/by-tag/:tag', async (req, res: any) => {
   try {
     const { tag } = req.params;
     const cacheKey = `blogs:tag:${tag}`;
-    const cached = await redisClient.get(cacheKey);
+    const cached = await safeRedisGet(cacheKey);
     if (cached) return res.json(JSON.parse(cached));
 
     const blogs = await prisma.blog.findMany({
       where: { published: true, tags: { some: { name: { equals: tag, mode: 'insensitive' } } } },
-      include: { author: { select: { email: true, name: true } }, tags: true },
+      select: BLOG_LIST_SELECT,
       orderBy: { updatedAt: 'desc' },
     });
 
-    await redisClient.setEx(cacheKey, 300, JSON.stringify(blogs));
+    safeRedisSet(cacheKey, 300, JSON.stringify(blogs));
     return res.json(blogs);
   } catch (err) {
     console.error('Error fetching blogs by tag:', err);
@@ -134,7 +162,7 @@ router.get('/:blogId', async (req, res: any) => {
   try {
     const { blogId } = req.params;
     const cacheKey = `blog:${blogId}`;
-    const cached = await redisClient.get(cacheKey);
+    const cached = await safeRedisGet(cacheKey);
     if (cached) return res.json(JSON.parse(cached));
 
     const blog = await prisma.blog.findUnique({
@@ -147,7 +175,7 @@ router.get('/:blogId', async (req, res: any) => {
     });
 
     if (!blog) return res.status(404).json({ error: 'Blog not found' });
-    await redisClient.setEx(cacheKey, 600, JSON.stringify(blog));
+    safeRedisSet(cacheKey, 600, JSON.stringify(blog));
     return res.json(blog);
   } catch (err) {
     console.error('Error fetching blog:', err);

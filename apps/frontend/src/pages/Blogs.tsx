@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
 import { usePageCache } from "@/context/PageCacheContext";
-import { AppShell } from "@/components/layout/AppShell";
+import { NewAppShell } from "@/components/new-components";
 import BlogList from "@/components/BlogList";
 import BlogSkeleton from "@/components/BlogSkeleton";
 
@@ -50,28 +50,17 @@ const Blogs: React.FC = () => {
         const fetchedBlogs = res.data
           .filter((b: any) => b.published === true)
           .map((b: any) => {
-            // Robustly strip both HTML and Markdown (like images/links) to get clean text for summary
-            const content = b.content || '';
-            const cleanContent = content
-              .replace(/!\[.*?\]\(.*?\)/g, '') // Strip markdown images
-              .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Strip markdown links but keep text
-              .replace(/[#*`>]/g, '') // Strip common markdown symbols
-              .replace(/<[^>]*>?/gm, ''); // Strip remaining HTML tags
-
-            const plainText = cleanContent.trim();
-
-            // Extract first image from markdown as fallback if coverImage is empty
-            const mdImageRegex = /!\[.*?\]\((.*?)\)/;
-            const fallbackImage = content.match(mdImageRegex)?.[1] || "";
+            const summary = b.summary || b.title || '';
 
             return {
               id: b.id,
               title: b.title,
-              summary: plainText.slice(0, 150) + (plainText.length > 150 ? "..." : ""),
-              coverImage: b.coverImage || fallbackImage,
-              author: b.author?.email
-                ? b.author.email.split("@")[0].replace(/^./, (c: any) => c.toUpperCase())
-                : "Anonymous",
+              summary: summary.slice(0, 150) + (summary.length > 150 ? "..." : ""),
+              coverImage: b.coverImage || "",
+              author: b.author?.name
+                || (b.author?.email
+                  ? b.author.email.split("@")[0].replace(/^./, (c: any) => c.toUpperCase())
+                  : "Anonymous"),
               authorId: b.authorId,
               updatedAt: new Date(b.updatedAt),
               published: new Date(b.updatedAt).toLocaleDateString(),
@@ -108,7 +97,7 @@ const Blogs: React.FC = () => {
   }, [searchTerm, allBlogs]);
 
   return (
-    <AppShell
+    <NewAppShell
       activePage="dock"
       searchTerm={searchTerm}
       setSearchTerm={setSearchTerm}
@@ -130,7 +119,7 @@ const Blogs: React.FC = () => {
           </div>
         )}
       </div>
-    </AppShell>
+    </NewAppShell>
   );
 };
 

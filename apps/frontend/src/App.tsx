@@ -9,17 +9,22 @@ import BlogView from "./pages/BlogView";
 import HomeRedirector from "./components/HomeRedirector";
 import { MyStory } from "./components/MyStory";
 import { Contact } from "./components/Contact";
-import ProfileComponent from "./pages/Profile";
 
-// Lazy-loaded pages
-const Explore = lazy(() => import("./pages/Explore"));
+// New revamped components
+import {
+  NewAppShell,
+  NewProfilePage,
+  NewDashboardPage,
+  NewExplorePage,
+  NewBookmarksPage,
+  NewHistoryPage,
+} from "./components/new-components";
+
+// Lazy-loaded pages (kept for non-revamped routes)
 const TagBlogs = lazy(() => import("./pages/TagBlogs"));
-const Bookmarks = lazy(() => import("./pages/Bookmarks"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AuthorProfile = lazy(() => import("./pages/AuthorProfile"));
 const Settings = lazy(() => import("./pages/Settings"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
-const ReadingHistory = lazy(() => import("./pages/ReadingHistory"));
 const SeriesPage = lazy(() => import("./pages/SeriesPage"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Messages = lazy(() => import("./pages/Messages"));
@@ -50,17 +55,19 @@ const App: React.FC = () => {
           <Route path="/" element={<HomeRedirector />} />
           <Route path="/landing" element={<RequireAuth><AppShell hideSidebar hideRightPanel><LandingPage /></AppShell></RequireAuth>} />
 
-          {/* Main AppShell Routes */}
+          {/* Revamped pages with NewAppShell */}
           <Route path="/blogs" element={<RequireAuth><UserBlogs /></RequireAuth>} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/bookmarks" element={<RequireAuth><AppShell activePage="bookmarks"><Bookmarks /></AppShell></RequireAuth>} />
-          <Route path="/dashboard" element={<RequireAuth><AppShell activePage="dashboard"><Dashboard /></AppShell></RequireAuth>} />
-          <Route path="/search" element={<AppShell activePage="search"><SearchPage /></AppShell>} />
-          <Route path="/history" element={<RequireAuth><AppShell activePage="history"><ReadingHistory /></AppShell></RequireAuth>} />
-          <Route path="/leaderboard" element={<AppShell activePage="leaderboard"><Leaderboard /></AppShell>} />
-          <Route path="/messages" element={<RequireAuth><AppShell activePage="messages"><Messages /></AppShell></RequireAuth>} />
-          <Route path="/settings" element={<RequireAuth><AppShell activePage="settings"><Settings /></AppShell></RequireAuth>} />
-          <Route path="/profile" element={<RequireAuth><AppShell activePage="profile" hideRightPanel><ProfileComponent /></AppShell></RequireAuth>} />
+          <Route path="/explore" element={<NewAppShell activePage="explore"><NewExplorePage /></NewAppShell>} />
+          <Route path="/bookmarks" element={<RequireAuth><NewAppShell activePage="bookmarks"><NewBookmarksPage /></NewAppShell></RequireAuth>} />
+          <Route path="/dashboard" element={<RequireAuth><NewAppShell activePage="dashboard"><NewDashboardPage /></NewAppShell></RequireAuth>} />
+          <Route path="/history" element={<RequireAuth><NewAppShell activePage="history"><NewHistoryPage /></NewAppShell></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><NewAppShell activePage="profile" hideRightPanel><NewProfilePage /></NewAppShell></RequireAuth>} />
+
+          {/* Other pages using NewAppShell */}
+          <Route path="/search" element={<NewAppShell activePage="search"><SearchPage /></NewAppShell>} />
+          <Route path="/leaderboard" element={<NewAppShell activePage="leaderboard"><Leaderboard /></NewAppShell>} />
+          <Route path="/messages" element={<RequireAuth><NewAppShell activePage="messages"><Messages /></NewAppShell></RequireAuth>} />
+          <Route path="/settings" element={<RequireAuth><NewAppShell activePage="settings"><Settings /></NewAppShell></RequireAuth>} />
           <Route path="/drafts" element={<RequireAuth><Drafts /></RequireAuth>} />
 
           {/* Workflow Routes */}
@@ -69,9 +76,9 @@ const App: React.FC = () => {
 
           {/* Public Views */}
           <Route path="/blog/:blogId" element={<BlogView />} />
-          <Route path="/author/:userId" element={<AppShell hideRightPanel><AuthorProfile /></AppShell>} />
-          <Route path="/tags/:tagName" element={<AppShell activePage="explore"><TagBlogs /></AppShell>} />
-          <Route path="/series/:id" element={<AppShell activePage="explore"><SeriesPage /></AppShell>} />
+          <Route path="/author/:userId" element={<NewAppShell hideRightPanel><AuthorProfile /></NewAppShell>} />
+          <Route path="/tags/:tagName" element={<NewAppShell activePage="explore"><TagBlogs /></NewAppShell>} />
+          <Route path="/series/:id" element={<NewAppShell activePage="explore"><SeriesPage /></NewAppShell>} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />

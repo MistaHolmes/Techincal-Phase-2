@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import {
@@ -14,7 +14,6 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  User,
 } from "lucide-react";
 
 interface NavItem {
@@ -101,7 +100,7 @@ export const NewSidebar: React.FC<NewSidebarProps> = ({ activePage }) => {
     <>
       {/* Mobile hamburger */}
       <button
-        className="md:hidden fixed top-20 left-4 z-[70] p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
+        className="md:hidden fixed top-20 left-4 z-[80] p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
         onClick={() => setMobileOpen(true)}
       >
         <Menu className="w-5 h-5 text-gray-700 dark:text-gray-200" />
@@ -110,14 +109,14 @@ export const NewSidebar: React.FC<NewSidebarProps> = ({ activePage }) => {
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[65] md:hidden"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[75] md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`bg-slate-100 dark:bg-slate-900 h-[calc(100vh-4.5rem)] fixed left-0 top-[4.5rem] flex flex-col py-6 px-3 z-50 transition-all duration-300 overflow-y-auto ${
+        className={`bg-slate-100 dark:bg-slate-900 h-[calc(100vh-4.5rem)] fixed left-0 top-[4.5rem] flex flex-col py-6 px-3 z-[60] transition-all duration-300 overflow-y-auto ${
           collapsed ? "w-[72px]" : "w-60"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:sticky md:top-[4.5rem]`}
       >
@@ -199,7 +198,7 @@ export const NewSidebar: React.FC<NewSidebarProps> = ({ activePage }) => {
       </aside>
 
       {/* Mobile Bottom Tab Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[70] bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-around h-16 px-2">
           {NAV_ITEMS.slice(0, 5).map((item) => {
             const active = isActive(item.href);

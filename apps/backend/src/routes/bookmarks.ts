@@ -14,7 +14,11 @@ router.get('/', requireAuth(), async (req, res: any) => {
 
     const bookmarks = await prisma.bookmark.findMany({
       where: { userId: user.id },
-      include: { blog: { include: { author: { select: { email: true, name: true } }, tags: true } } },
+      include: { blog: { select: {
+        id: true, title: true, summary: true, coverImage: true, published: true,
+        likes: true, views: true, createdAt: true, updatedAt: true, authorId: true,
+        author: { select: { email: true, name: true, profilePicture: true } }, tags: true,
+      } } },
       orderBy: { createdAt: 'desc' },
     });
 

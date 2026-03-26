@@ -53,7 +53,7 @@ router.get('/blogs', requireAuth(), async (req: any, res: any) => {
     const blogs = await prisma.blog.findMany({
       where: { authorId: user.id },
       orderBy: { updatedAt: 'desc' },
-      select: { id: true, title: true, content: true, published: true, createdAt: true, updatedAt: true, coverImage: true },
+      select: { id: true, title: true, summary: true, content: true, published: true, createdAt: true, updatedAt: true, coverImage: true, tags: true },
     });
 
     await redisClient.setEx(cacheKey, 120, JSON.stringify(blogs));
@@ -77,7 +77,7 @@ router.get('/blogs/published', requireAuth(), async (req, res: any) => {
     const blogs = await prisma.blog.findMany({
       where: { authorId: user.id, published: true },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, title: true, content: true, published: true, createdAt: true, updatedAt: true },
+      select: { id: true, title: true, summary: true, content: true, published: true, createdAt: true, updatedAt: true, coverImage: true, tags: true },
     });
 
     await redisClient.setEx(cacheKey, 600, JSON.stringify(blogs));
@@ -164,7 +164,11 @@ router.get('/history', requireAuth(), async (req, res: any) => {
 
     const history = await prisma.readingHistory.findMany({
       where: { userId: user.id },
-      include: { blog: { include: { author: { select: { email: true, name: true } }, tags: true } } },
+      include: { blog: { select: {
+        id: true, title: true, summary: true, coverImage: true, published: true,
+        likes: true, views: true, createdAt: true, updatedAt: true, authorId: true,
+        author: { select: { email: true, name: true, profilePicture: true } }, tags: true,
+      } } },
       orderBy: { readAt: 'desc' },
       take: 50,
     });

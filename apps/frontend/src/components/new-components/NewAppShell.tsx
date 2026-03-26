@@ -1,7 +1,7 @@
 import React from "react";
 import { NewHeader } from "./NewHeader";
 import { NewSidebar } from "./NewSidebar";
-import { NewFooter } from "./NewFooter";
+import { Footer } from "../Footer";
 
 interface NewAppShellProps {
   children: React.ReactNode;
@@ -111,7 +111,7 @@ export const NewAppShell: React.FC<NewAppShellProps> = ({
       )}
 
       {/* Footer */}
-      <NewFooter />
+      <Footer />
     </div>
   );
 };
