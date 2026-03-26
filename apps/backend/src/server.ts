@@ -31,6 +31,7 @@ import achievementsRouter from './routes/achievements';
 import highlightRoutes from './routes/highlights';
 import coauthorRoutes from './routes/coauthors';
 import likeRoutes from './routes/likes';
+import adminRoutes from './routes/admin';
 
 // Team member routes
 import abinashRouter from './routes/abinash';
@@ -80,6 +81,7 @@ app.use('/api/achievements', achievementsRouter);
 app.use('/api/highlights', highlightRoutes);
 app.use('/api/coauthors', coauthorRoutes);
 app.use('/api/likes', likeRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ── Legacy Routes (backward compat) ─────────────────────────────────────────
 import { requireAuth } from '@clerk/express';

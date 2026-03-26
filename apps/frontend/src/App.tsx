@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from "react";
 import RequireAuth from "./components/RequireAuth";
+import RequireAdmin from "./components/RequireAdmin";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/Landing";
 import UserBlogs from "./pages/Blogs";
@@ -23,6 +24,8 @@ const SeriesPage = lazy(() => import("./pages/SeriesPage"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Messages = lazy(() => import("./pages/Messages"));
 const Drafts = lazy(() => import("./pages/Drafts"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUserDetails = lazy(() => import("./pages/admin/UserDetails"));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -69,6 +72,10 @@ const App: React.FC = () => {
           <Route path="/author/:userId" element={<AppShell hideRightPanel><AuthorProfile /></AppShell>} />
           <Route path="/tags/:tagName" element={<AppShell activePage="explore"><TagBlogs /></AppShell>} />
           <Route path="/series/:id" element={<AppShell activePage="explore"><SeriesPage /></AppShell>} />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+          <Route path="/admin/users/:id" element={<RequireAdmin><AdminUserDetails /></RequireAdmin>} />
 
           {/* static */}
           <Route path="/my-story" element={<MyStory />} />
