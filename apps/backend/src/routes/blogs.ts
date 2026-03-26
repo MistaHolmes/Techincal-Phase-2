@@ -24,7 +24,7 @@ const BLOG_LIST_SELECT = {
   createdAt: true,
   updatedAt: true,
   authorId: true,
-  author: { select: { email: true, name: true, profilePicture: true } },
+  author: { select: { id: true, email: true, name: true, profilePicture: true } },
   tags: true,
 } as const;
 
@@ -168,7 +168,7 @@ router.get('/:blogId', async (req, res: any) => {
     const blog = await prisma.blog.findUnique({
       where: { id: blogId },
       include: {
-        author: { select: { email: true, name: true, profilePicture: true } },
+        author: { select: { id: true, email: true, name: true, profilePicture: true } },
         tags: true,
         series: true
       },
@@ -344,7 +344,7 @@ router.get('/:id/related', async (req, res: any) => {
 
     const related = await prisma.blog.findMany({
       where: { published: true, id: { not: id }, tags: { some: { id: { in: tagIds } } } },
-      include: { author: { select: { email: true, name: true } }, tags: true },
+      include: { author: { select: { id: true, email: true, name: true, profilePicture: true } }, tags: true },
       orderBy: { views: 'desc' },
       take: 4,
     });

@@ -85,7 +85,6 @@ const AdminDashboard: React.FC = () => {
   const handleAddAdmin = async () => {
     if (!addAdminEmail.trim()) return;
     try {
-      // First find user by email
       const res = await axios.get(`${API_URL}/api/admin/users`, {
         withCredentials: true,
         params: { search: addAdminEmail, limit: 1 },
@@ -138,10 +137,10 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0e131f]">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0e131f]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>
+          <p className="text-sm text-gray-500 dark:text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>
             Loading admin dashboard...
           </p>
         </div>
@@ -152,7 +151,7 @@ const AdminDashboard: React.FC = () => {
   const maxViews = topBlogs.length > 0 ? topBlogs[0].views : 1;
 
   return (
-    <div className="min-h-screen bg-[#0e131f] text-[#dee2f3]" style={{ fontFamily: "Manrope, sans-serif" }}>
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0e131f] text-gray-800 dark:text-[#dee2f3]" style={{ fontFamily: "Manrope, sans-serif" }}>
       {/* Import fonts */}
       <link
         href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap"
@@ -171,21 +170,21 @@ const AdminDashboard: React.FC = () => {
       `}</style>
 
       {/* Top Nav */}
-      <header className="bg-slate-900/70 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(124,58,237,0.08)] sticky top-0 z-50 flex items-center justify-between w-full px-8 h-20">
+      <header className="bg-white/80 dark:bg-slate-900/70 backdrop-blur-2xl shadow-sm dark:shadow-[0_8px_32px_0_rgba(124,58,237,0.08)] border-b border-gray-200 dark:border-transparent sticky top-0 z-50 flex items-center justify-between w-full px-8 h-20">
         <div className="flex items-center gap-8">
           <h1
-            className="text-2xl font-bold italic text-slate-100"
+            className="text-2xl font-bold italic text-gray-900 dark:text-slate-100"
             style={{ fontFamily: "Newsreader, serif" }}
           >
             DraftDock Admin
           </h1>
           <nav className="hidden md:flex gap-6 items-center">
-            <span className="text-violet-400 border-b-2 border-violet-500 pb-1 font-semibold cursor-pointer">
+            <span className="text-violet-600 dark:text-violet-400 border-b-2 border-violet-600 dark:border-violet-500 pb-1 font-semibold cursor-pointer">
               Dashboard
             </span>
             <span
               onClick={() => navigate("/blogs")}
-              className="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 transition-colors cursor-pointer"
             >
               Back to App
             </span>
@@ -193,15 +192,15 @@ const AdminDashboard: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-sm font-semibold text-slate-100">
+            <p className="text-sm font-semibold text-gray-900 dark:text-slate-100">
               {user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0]}
             </p>
-            <p className="text-[10px] uppercase tracking-widest text-violet-400">Admin</p>
+            <p className="text-[10px] uppercase tracking-widest text-violet-600 dark:text-violet-400">Admin</p>
           </div>
           <img
             src={user?.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`}
             alt="Admin"
-            className="w-10 h-10 rounded-full object-cover border-2 border-violet-500/20"
+            className="w-10 h-10 rounded-full object-cover border-2 border-violet-200 dark:border-violet-500/20"
           />
         </div>
       </header>
@@ -229,24 +228,24 @@ const AdminDashboard: React.FC = () => {
           ].map((card, i) => (
             <div
               key={i}
-              className="bg-[#1a1f2c] p-8 rounded-3xl relative overflow-hidden group transition-all duration-300 hover:-translate-y-1"
+              className="bg-white dark:bg-[#1a1f2c] border border-gray-200 dark:border-transparent p-8 rounded-3xl relative overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-none"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-transparent opacity-50" />
               <div className="flex justify-between items-start mb-4">
-                <span className="text-[11px] uppercase tracking-widest text-[#ccc3d8]">
+                <span className="text-[11px] uppercase tracking-widest text-gray-500 dark:text-[#ccc3d8]">
                   {card.label}
                 </span>
                 <span className="material-symbols-outlined text-[#7c3aed]">{card.icon}</span>
               </div>
               <div className="flex items-baseline gap-3">
                 <h2
-                  className="text-4xl font-bold text-[#dee2f3]"
+                  className="text-4xl font-bold text-gray-900 dark:text-[#dee2f3]"
                   style={{ fontFamily: "Newsreader, serif" }}
                 >
                   {typeof card.value === "number" ? card.value.toLocaleString() : card.value}
                 </h2>
                 {card.trend && (
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center gap-1">
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                     <span className="material-symbols-outlined text-[12px]">trending_up</span>
                     {card.trend}
                   </span>
@@ -261,13 +260,13 @@ const AdminDashboard: React.FC = () => {
           {/* Left Column */}
           <div className="lg:col-span-3 space-y-8">
             {/* Top Viewed Content */}
-            <div className="bg-[#1a1f2c] rounded-3xl p-8">
+            <div className="bg-white dark:bg-[#1a1f2c] border border-gray-200 dark:border-transparent rounded-3xl p-8">
               <div className="mb-8">
-                <p className="text-[11px] uppercase tracking-widest text-violet-400 mb-1">
+                <p className="text-[11px] uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-1">
                   Performance
                 </p>
                 <h3
-                  className="text-xl italic"
+                  className="text-xl italic text-gray-900 dark:text-[#dee2f3]"
                   style={{ fontFamily: "Newsreader, serif" }}
                 >
                   Top Viewed Content
@@ -275,17 +274,17 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="space-y-6">
                 {topBlogs.length === 0 && (
-                  <p className="text-sm text-[#ccc3d8]">No published blogs yet.</p>
+                  <p className="text-sm text-gray-500 dark:text-[#ccc3d8]">No published blogs yet.</p>
                 )}
                 {topBlogs.map((blog) => (
                   <div key={blog.id} className="group cursor-pointer" onClick={() => navigate(`/blog/${blog.id}`)}>
-                    <div className="flex justify-between text-xs text-[#ccc3d8] mb-2">
+                    <div className="flex justify-between text-xs text-gray-600 dark:text-[#ccc3d8] mb-2">
                       <span className="truncate mr-4">{blog.title}</span>
-                      <span className="group-hover:text-[#d2bbff] transition-colors italic whitespace-nowrap">
+                      <span className="group-hover:text-violet-600 dark:group-hover:text-[#d2bbff] transition-colors italic whitespace-nowrap">
                         {formatNumber(blog.views)} views
                       </span>
                     </div>
-                    <div className="h-2 w-full bg-[#252a37] rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-gray-100 dark:bg-[#252a37] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full premium-gradient"
                         style={{ width: `${Math.max(5, (blog.views / maxViews) * 100)}%` }}
@@ -300,10 +299,10 @@ const AdminDashboard: React.FC = () => {
           {/* Right Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Recent Activity */}
-            <div className="bg-[#1a1f2c] rounded-3xl p-8 max-h-[480px] flex flex-col">
+            <div className="bg-white dark:bg-[#1a1f2c] border border-gray-200 dark:border-transparent rounded-3xl p-8 max-h-[480px] flex flex-col">
               <div className="mb-6 flex justify-between items-center">
                 <h3
-                  className="text-xl italic"
+                  className="text-xl italic text-gray-900 dark:text-[#dee2f3]"
                   style={{ fontFamily: "Newsreader, serif" }}
                 >
                   Recent Activity
@@ -311,7 +310,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="flex-1 overflow-y-auto pr-2 space-y-6">
                 {activity.length === 0 && (
-                  <p className="text-sm text-[#ccc3d8]">No recent activity.</p>
+                  <p className="text-sm text-gray-500 dark:text-[#ccc3d8]">No recent activity.</p>
                 )}
                 {activity.map((item, i) => (
                   <div key={i} className="flex gap-4">
@@ -319,8 +318,8 @@ const AdminDashboard: React.FC = () => {
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center ${
                           item.type === "user_joined"
-                            ? "bg-violet-500/10 text-violet-400"
-                            : "bg-emerald-500/10 text-emerald-400"
+                            ? "bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                            : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                         }`}
                       >
                         <span className="material-symbols-outlined text-lg">
@@ -328,12 +327,12 @@ const AdminDashboard: React.FC = () => {
                         </span>
                       </div>
                       {i < activity.length - 1 && (
-                        <div className="absolute top-8 left-1/2 w-[1px] h-full bg-[#4a4455]/20 -translate-x-1/2" />
+                        <div className="absolute top-8 left-1/2 w-[1px] h-full bg-gray-200 dark:bg-[#4a4455]/20 -translate-x-1/2" />
                       )}
                     </div>
                     <div className="pb-2">
-                      <p className="text-sm text-slate-200">{item.message}</p>
-                      <p className="text-[10px] text-[#ccc3d8] uppercase mt-1">{timeAgo(item.timestamp)}</p>
+                      <p className="text-sm text-gray-800 dark:text-slate-200">{item.message}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-[#ccc3d8] uppercase mt-1">{timeAgo(item.timestamp)}</p>
                     </div>
                   </div>
                 ))}
@@ -343,20 +342,20 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* User Management Table */}
-        <section className="bg-[#1a1f2c] rounded-3xl p-8 space-y-8 overflow-hidden">
+        <section className="bg-white dark:bg-[#1a1f2c] border border-gray-200 dark:border-transparent rounded-3xl p-8 space-y-8 overflow-hidden">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
               <h3
-                className="text-2xl italic mb-1"
+                className="text-2xl italic mb-1 text-gray-900 dark:text-[#dee2f3]"
                 style={{ fontFamily: "Newsreader, serif" }}
               >
                 User Management
               </h3>
-              <p className="text-sm text-[#ccc3d8]">Oversee and manage platform access control.</p>
+              <p className="text-sm text-gray-500 dark:text-[#ccc3d8]">Oversee and manage platform access control.</p>
             </div>
             <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
               <input
-                className="bg-[#252a37] px-4 py-2 rounded-xl border-none text-sm w-full md:w-64 focus:ring-1 focus:ring-violet-500/40 text-[#dee2f3] placeholder:text-[#ccc3d8]/50"
+                className="bg-gray-100 dark:bg-[#252a37] px-4 py-2 rounded-xl border border-gray-200 dark:border-transparent text-sm w-full md:w-64 focus:ring-1 focus:ring-violet-500/40 text-gray-800 dark:text-[#dee2f3] placeholder:text-gray-400 dark:placeholder:text-[#ccc3d8]/50"
                 placeholder="Search by name or email..."
                 value={search}
                 onChange={(e) => {
@@ -370,7 +369,7 @@ const AdminDashboard: React.FC = () => {
                   setRoleFilter(e.target.value);
                   setPage(1);
                 }}
-                className="bg-[#252a37] px-3 py-2 rounded-xl border-none text-sm text-[#dee2f3] focus:ring-1 focus:ring-violet-500/40"
+                className="bg-gray-100 dark:bg-[#252a37] px-3 py-2 rounded-xl border border-gray-200 dark:border-transparent text-sm text-gray-800 dark:text-[#dee2f3] focus:ring-1 focus:ring-violet-500/40"
               >
                 <option value="">All Roles</option>
                 <option value="ADMIN">Admin</option>
@@ -389,15 +388,15 @@ const AdminDashboard: React.FC = () => {
 
           {/* Add Admin Modal */}
           {showAddAdmin && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center">
-              <div className="bg-[#1a1f2c] rounded-3xl p-8 w-full max-w-md mx-4 space-y-6">
+            <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center">
+              <div className="bg-white dark:bg-[#1a1f2c] border border-gray-200 dark:border-transparent rounded-3xl p-8 w-full max-w-md mx-4 space-y-6 shadow-2xl">
                 <h3
-                  className="text-xl italic"
+                  className="text-xl italic text-gray-900 dark:text-[#dee2f3]"
                   style={{ fontFamily: "Newsreader, serif" }}
                 >
                   Add New Admin
                 </h3>
-                <p className="text-sm text-[#ccc3d8]">
+                <p className="text-sm text-gray-500 dark:text-[#ccc3d8]">
                   Enter the email of the user you want to promote to Admin.
                 </p>
                 <input
@@ -405,7 +404,7 @@ const AdminDashboard: React.FC = () => {
                   value={addAdminEmail}
                   onChange={(e) => setAddAdminEmail(e.target.value)}
                   placeholder="user@example.com"
-                  className="w-full bg-[#090e1a] px-4 py-3 rounded-xl border-none text-sm text-[#dee2f3] placeholder:text-[#ccc3d8]/50 focus:ring-1 focus:ring-violet-500/40"
+                  className="w-full bg-gray-50 dark:bg-[#090e1a] px-4 py-3 rounded-xl border border-gray-200 dark:border-transparent text-sm text-gray-800 dark:text-[#dee2f3] placeholder:text-gray-400 dark:placeholder:text-[#ccc3d8]/50 focus:ring-1 focus:ring-violet-500/40"
                 />
                 <div className="flex gap-3">
                   <button
@@ -419,7 +418,7 @@ const AdminDashboard: React.FC = () => {
                       setShowAddAdmin(false);
                       setAddAdminEmail("");
                     }}
-                    className="flex-1 bg-[#252a37] text-[#dee2f3] py-2.5 rounded-xl text-sm font-semibold hover:bg-[#303542] transition-colors"
+                    className="flex-1 bg-gray-100 dark:bg-[#252a37] text-gray-700 dark:text-[#dee2f3] py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-200 dark:hover:bg-[#303542] transition-colors"
                   >
                     Cancel
                   </button>
@@ -431,7 +430,7 @@ const AdminDashboard: React.FC = () => {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-left border-separate" style={{ borderSpacing: "0 0.75rem" }}>
-              <thead className="text-[10px] uppercase tracking-widest text-[#ccc3d8]">
+              <thead className="text-[10px] uppercase tracking-widest text-gray-500 dark:text-[#ccc3d8]">
                 <tr>
                   <th className="px-4 pb-4">User</th>
                   <th className="px-4 pb-4">Role</th>
@@ -442,8 +441,8 @@ const AdminDashboard: React.FC = () => {
               </thead>
               <tbody className="text-sm">
                 {users.map((u) => (
-                  <tr key={u.id} className="group hover:bg-[#252a37] transition-colors">
-                    <td className="bg-[#161b28] px-4 py-4 rounded-l-2xl">
+                  <tr key={u.id} className="group hover:bg-gray-50 dark:hover:bg-[#252a37] transition-colors">
+                    <td className="bg-gray-50/50 dark:bg-[#161b28] px-4 py-4 rounded-l-2xl">
                       <div className="flex items-center gap-3">
                         <img
                           src={
@@ -451,49 +450,52 @@ const AdminDashboard: React.FC = () => {
                             `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id}`
                           }
                           alt={u.name || u.email}
-                          className="w-10 h-10 rounded-xl object-cover"
+                          className="w-10 h-10 rounded-xl object-cover cursor-pointer transition-all duration-300 hover:scale-110 hover:ring-2 hover:ring-violet-500 hover:shadow-lg hover:shadow-violet-500/20"
+                          onClick={() => navigate(`/author/${u.id}`)}
                         />
                         <div>
-                          <p className="font-bold text-slate-100">{u.name || "—"}</p>
-                          <p className="text-xs text-[#ccc3d8]">{u.email}</p>
+                          <p className="font-bold text-gray-900 dark:text-slate-100 cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200" onClick={() => navigate(`/author/${u.id}`)}>
+                            {u.name || "—"}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-[#ccc3d8]">{u.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="bg-[#161b28] px-4 py-4">
+                    <td className="bg-gray-50/50 dark:bg-[#161b28] px-4 py-4">
                       <span
                         className={`text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-tighter ${
                           u.role === "ADMIN"
-                            ? "bg-violet-500/20 text-violet-400"
+                            ? "bg-violet-500/20 text-violet-700 dark:text-violet-400"
                             : u.role === "AUTHOR"
-                            ? "bg-blue-500/10 text-blue-400"
-                            : "bg-slate-500/10 text-slate-400"
+                            ? "bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                            : "bg-slate-500/10 text-slate-600 dark:text-slate-400"
                         }`}
                       >
                         {u.role}
                       </span>
                     </td>
-                    <td className="bg-[#161b28] px-4 py-4 text-slate-200">
+                    <td className="bg-gray-50/50 dark:bg-[#161b28] px-4 py-4 text-gray-700 dark:text-slate-200">
                       {u._count.blogs}
                     </td>
-                    <td className="bg-[#161b28] px-4 py-4 text-[#ccc3d8]">
+                    <td className="bg-gray-50/50 dark:bg-[#161b28] px-4 py-4 text-gray-500 dark:text-[#ccc3d8]">
                       {new Date(u.createdAt).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
                       })}
                     </td>
-                    <td className="bg-[#161b28] px-4 py-4 rounded-r-2xl text-right">
+                    <td className="bg-gray-50/50 dark:bg-[#161b28] px-4 py-4 rounded-r-2xl text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => navigate(`/admin/users/${u.id}`)}
-                          className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
+                          className="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-500 dark:hover:text-violet-300 transition-colors"
                         >
                           View
                         </button>
                         <select
                           value={u.role}
                           onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                          className="bg-[#252a37] text-[10px] px-2 py-1 rounded-lg border-none text-[#dee2f3] focus:ring-1 focus:ring-violet-500/40"
+                          className="bg-gray-100 dark:bg-[#252a37] text-[10px] px-2 py-1 rounded-lg border border-gray-200 dark:border-transparent text-gray-800 dark:text-[#dee2f3] focus:ring-1 focus:ring-violet-500/40"
                         >
                           <option value="ADMIN">Admin</option>
                           <option value="AUTHOR">Author</option>
@@ -509,14 +511,14 @@ const AdminDashboard: React.FC = () => {
 
           {/* Pagination */}
           <div className="flex justify-between items-center text-xs">
-            <span className="text-[#ccc3d8]">
+            <span className="text-gray-500 dark:text-[#ccc3d8]">
               Showing {(page - 1) * 10 + 1}-{Math.min(page * 10, totalUsers)} of {totalUsers} users
             </span>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="w-8 h-8 rounded-xl bg-[#252a37] flex items-center justify-center hover:bg-violet-500/20 transition-colors disabled:opacity-30"
+                className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-[#252a37] flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-500/20 transition-colors disabled:opacity-30"
               >
                 <span className="material-symbols-outlined text-sm">chevron_left</span>
               </button>
@@ -527,7 +529,7 @@ const AdminDashboard: React.FC = () => {
                   className={`w-8 h-8 rounded-xl font-bold flex items-center justify-center transition-colors ${
                     p === page
                       ? "premium-gradient text-white"
-                      : "bg-[#252a37] hover:bg-white/5"
+                      : "bg-gray-100 dark:bg-[#252a37] hover:bg-gray-200 dark:hover:bg-white/5"
                   }`}
                 >
                   {p}
@@ -536,7 +538,7 @@ const AdminDashboard: React.FC = () => {
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className="w-8 h-8 rounded-xl bg-[#252a37] flex items-center justify-center hover:bg-violet-500/20 transition-colors disabled:opacity-30"
+                className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-[#252a37] flex items-center justify-center hover:bg-violet-50 dark:hover:bg-violet-500/20 transition-colors disabled:opacity-30"
               >
                 <span className="material-symbols-outlined text-sm">chevron_right</span>
               </button>
@@ -546,7 +548,7 @@ const AdminDashboard: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="mt-20 border-t border-[#4a4455]/10 bg-[#090e1a]/50 backdrop-blur-md">
+      <footer className="mt-20 border-t border-gray-200 dark:border-[#4a4455]/10 bg-gray-50/50 dark:bg-[#090e1a]/50 backdrop-blur-md">
         <div className="max-w-[1600px] mx-auto px-8 py-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-8">
             <button
@@ -560,7 +562,7 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center gap-10">
             <button
               onClick={() => navigate("/settings")}
-              className="flex items-center gap-2 text-[#ccc3d8] hover:text-violet-400 transition-colors text-sm font-semibold group"
+              className="flex items-center gap-2 text-gray-500 dark:text-[#ccc3d8] hover:text-violet-600 dark:hover:text-violet-400 transition-colors text-sm font-semibold group"
             >
               <span className="material-symbols-outlined text-lg group-hover:rotate-45 transition-transform">
                 settings

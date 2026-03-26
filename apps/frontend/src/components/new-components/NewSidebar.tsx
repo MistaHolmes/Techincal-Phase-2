@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
+import axios from "axios";
 import {
   Compass,
   FileEdit,
   Bookmark,
   LayoutDashboard,
   History,
+  Search,
+  Trophy,
+  MessageSquare,
   Settings,
   HelpCircle,
   Plus,
@@ -14,6 +18,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Shield,
 } from "lucide-react";
 
 interface NavItem {
@@ -27,7 +32,10 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/drafts", icon: FileEdit, label: "Drafts" },
   { href: "/bookmarks", icon: Bookmark, label: "Bookmarks" },
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/search", icon: Search, label: "Search" },
   { href: "/history", icon: History, label: "History" },
+  { href: "/leaderboard", icon: Trophy, label: "Leaderboard" },
+  { href: "/messages", icon: MessageSquare, label: "Messages" },
 ];
 
 const BOTTOM_ITEMS: NavItem[] = [
@@ -42,8 +50,9 @@ interface NewSidebarProps {
 export const NewSidebar: React.FC<NewSidebarProps> = ({ activePage }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebar-v2-collapsed") === "true";
@@ -54,6 +63,16 @@ export const NewSidebar: React.FC<NewSidebarProps> = ({ activePage }) => {
   useEffect(() => {
     localStorage.setItem("sidebar-v2-collapsed", String(collapsed));
   }, [collapsed]);
+
+  // Check admin status
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    const API_URL = import.meta.env.VITE_API_URL;
+    axios
+      .get(`${API_URL}/api/admin/check`, { withCredentials: true })
+      .then(() => setIsAdmin(true))
+      .catch(() => setIsAdmin(false));
+  }, [user, isLoaded]);
 
   const isActive = (href: string) => {
     const page = href.replace("/", "");
@@ -143,6 +162,12 @@ export const NewSidebar: React.FC<NewSidebarProps> = ({ activePage }) => {
         {/* Main Navigation */}
         <nav className="flex-1 flex flex-col gap-1">
           {NAV_ITEMS.map((item) => renderNavItem(item, isActive(item.href)))}
+
+          {/* Admin link — only visible to admins */}
+          {isAdmin && renderNavItem(
+            { href: "/admin", icon: Shield, label: "Admin" },
+            isActive("/admin")
+          )}
         </nav>
 
         {/* Bottom section */}

@@ -102,6 +102,7 @@ interface Blog {
   title: string;
   summary: string;
   author: string;
+  authorId?: string;
   published: string;
   coverImage?: string;
 }
@@ -184,7 +185,12 @@ const BlogList: React.FC<BlogListProps> = ({ posts }) => {
                       <span>{post.published}</span>
                       <span className="flex items-center gap-1"><Clock size={11} className="opacity-60" />{Math.max(1, Math.ceil(stripHtmlTags(post.summary).split(/\s+/).filter(Boolean).length / 200))} min</span>
                     </div>
-                    <span className="text-gray-400 dark:text-gray-500">By {post.author}</span>
+                    <span
+                      className="text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 cursor-pointer transition-colors duration-200"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/author/${post.authorId}`); }}
+                    >
+                      By {post.author}
+                    </span>
                   </div>
                   <h3 className="text-lg font-headline font-bold mb-2 text-gray-900 dark:text-white leading-snug line-clamp-2">{stripHtmlTags(post.title)}</h3>
                   <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed">{stripHtmlTags(post.summary)}</p>
