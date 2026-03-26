@@ -74,7 +74,7 @@ const UserContentSection = () => {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       // Update state: move blog from drafts to published
       setBlogs((prev) =>
         prev.map((blog) =>
@@ -171,8 +171,8 @@ const UserContentSection = () => {
                 <p className="text-gray-500">No published blogs found.</p>
                 ) : (
                 publishedBlogs.map(blog => (
-                    <div 
-                    key={blog.id} 
+                    <div
+                    key={blog.id}
                     className="mb-4 border-b border-gray-100 dark:border-gray-800 pb-4 last:border-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200 rounded-lg p-4 -m-4 group"
                     onClick={() => handleBlogClick(blog)}
                     >
@@ -216,8 +216,8 @@ const UserContentSection = () => {
                 <p className="text-gray-500">No drafts found.</p>
                 ) : (
                 draftBlogs.map(blog => (
-                    <div 
-                    key={blog.id} 
+                    <div
+                    key={blog.id}
                     className="mb-4 border-b pb-4 last:border-none cursor-pointer hover:bg-gray-50 transition-colors duration-200 rounded-lg p-4 -m-4 group"
                     onClick={() => handleBlogClick(blog)}
                     >
@@ -295,12 +295,12 @@ const UserContentSection = () => {
                 {/* Modal Content */}
                 <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
                 <div className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                    {selectedBlog.published 
+                    {selectedBlog.published
                     ? `Published on ${new Date(selectedBlog.createdAt).toLocaleDateString()}`
                     : `Last edited on ${new Date(selectedBlog.updatedAt).toLocaleDateString()}`
                     }
                 </div>
-                <div 
+                <div
                     className="prose prose-lg dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
                 />

@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Compass } from "lucide-react";
+import { usePageCache } from "@/context/PageCacheContext";
 import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -38,8 +39,22 @@ const Explore = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'trending' | 'foryou'>('trending');
   const { getToken, isSignedIn } = useAuth();
+  const cache = usePageCache();
 
   useEffect(() => {
+    const cacheKey = `explore:${isSignedIn}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      setTrending(cached.trending);
+      setFeatured(cached.featured);
+      setRecent(cached.recent);
+      setTags(cached.tags);
+      if (cached.personalized) setPersonalized(cached.personalized);
+      if (cached.recommendedAuthors) setRecommendedAuthors(cached.recommendedAuthors);
+      if (isSignedIn) setActiveTab('foryou');
+      setLoading(false);
+      return;
+    }
     const fetchAll = async () => {
       try {
         const [tRes, fRes, rRes, tagsRes] = await Promise.all([
@@ -56,16 +71,28 @@ const Explore = () => {
         setRecent(Array.isArray(rData) ? rData.slice(0, 9) : []);
         setTags(Array.isArray(tagsData) ? tagsData : []);
 
+        let pData: any[] = [];
+        let aData: any[] = [];
+
         if (isSignedIn) {
           const token = await getToken();
           const [pRes, aRes] = await Promise.all([
             fetch(`${API_URL}/api/discovery/personalized-feed`, { headers: { Authorization: `Bearer ${token}` } }),
             fetch(`${API_URL}/api/discovery/recommended-authors`, { headers: { Authorization: `Bearer ${token}` } })
           ]);
-          if (pRes.ok) setPersonalized(await pRes.json());
-          if (aRes.ok) setRecommendedAuthors(await aRes.json());
+          if (pRes.ok) { pData = await pRes.json(); setPersonalized(pData); }
+          if (aRes.ok) { aData = await aRes.json(); setRecommendedAuthors(aData); }
           setActiveTab('foryou');
         }
+
+        cache.set(cacheKey, {
+          trending: Array.isArray(tData) ? tData : [],
+          featured: Array.isArray(fData) ? fData : [],
+          recent: Array.isArray(rData) ? rData.slice(0, 9) : [],
+          tags: Array.isArray(tagsData) ? tagsData : [],
+          personalized: pData,
+          recommendedAuthors: aData,
+        });
       } catch (err) {
         console.error("Explore fetch error:", err);
       } finally {
@@ -88,7 +115,7 @@ const Explore = () => {
       <section className="mb-20">
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-12 items-end">
           <div className="xl:col-span-12 mb-8 xl:mb-0">
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="font-headline text-6xl md:text-7xl font-medium tracking-tight leading-[0.9] mb-8"
@@ -98,17 +125,17 @@ const Explore = () => {
           </div>
 
           {featuredBlog && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               onClick={() => navigate(`/blog/${featuredBlog.id}`)}
               className="xl:col-span-12 relative group cursor-pointer overflow-hidden rounded-3xl"
             >
               <div className="aspect-[21/9] w-full bg-stitch-surface-container-high overflow-hidden">
-                <img 
-                  alt={featuredBlog.title} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                  src={featuredBlog.coverImage || "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=1000"} 
+                <img
+                  alt={featuredBlog.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  src={featuredBlog.coverImage || "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=1000"}
                 />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12 text-white">
@@ -147,7 +174,7 @@ const Explore = () => {
           </div>
           <div className="flex overflow-x-auto no-scrollbar gap-4 scroll-smooth">
             {tags.map((tag, idx) => (
-              <div 
+              <div
                 key={tag.name}
                 onClick={() => navigate(`/tags/${tag.name}`)}
                 className="flex-none w-64 aspect-square bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl p-8 flex flex-col justify-between hover:bg-black dark:hover:bg-violet-600 group transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl hover:-translate-y-1"
@@ -169,14 +196,14 @@ const Explore = () => {
       <section>
         <div className="flex items-center justify-between mb-12 border-b border-gray-200 dark:border-gray-800 pb-4">
           <div className="flex gap-8">
-             <button 
+             <button
                onClick={() => setActiveTab('trending')}
                className={`font-headline text-3xl font-bold transition-all ${activeTab === 'trending' ? 'text-gray-900 dark:text-white' : 'text-gray-400 opacity-60 hover:opacity-100'}`}
              >
                Trending
              </button>
              {isSignedIn && (
-               <button 
+               <button
                  onClick={() => setActiveTab('foryou')}
                  className={`font-headline text-3xl font-bold transition-all flex items-center gap-2 ${activeTab === 'foryou' ? 'text-gray-900 dark:text-white' : 'text-gray-400 opacity-60 hover:opacity-100'}`}
                >
@@ -186,7 +213,7 @@ const Explore = () => {
              )}
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
           <div className="lg:col-span-3">
              {loading ? (
@@ -196,16 +223,16 @@ const Explore = () => {
              ) : (
                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-16 gap-x-10">
                  {(activeTab === 'foryou' ? personalized : recent).map((blog) => (
-                  <article 
-                    key={blog.id} 
+                  <article
+                    key={blog.id}
                     className="flex flex-col group cursor-pointer"
                     onClick={() => navigate(`/blog/${blog.id}`)}
                   >
                     <div className="aspect-[16/10] bg-gray-200 dark:bg-gray-800 mb-6 overflow-hidden rounded-2xl">
-                      <img 
-                        alt={blog.title} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                        src={blog.coverImage || "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&q=80&w=800"} 
+                      <img
+                        alt={blog.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        src={blog.coverImage || "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&q=80&w=800"}
                       />
                     </div>
                     <div className="flex gap-2 mb-4">
@@ -233,7 +260,7 @@ const Explore = () => {
                  ))}
                </div>
              )}
-             
+
              {recent.length === 0 && !loading && (
                <div className="text-center py-20 text-gray-400">
                   <p className="text-lg">Nothing to explore yet. Start writing!</p>
@@ -257,10 +284,10 @@ const Explore = () => {
                         {recommendedAuthors.map((author) => (
                            <div key={author.id} className="flex gap-4 group cursor-pointer" onClick={() => navigate(`/author/${author.id}`)}>
                               <div className="w-12 h-12 rounded-full border-2 border-transparent group-hover:border-violet-500 overflow-hidden transition-all">
-                                 <img 
-                                   src={author.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.email}`} 
+                                 <img
+                                   src={author.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.email}`}
                                    alt={author.name}
-                                   className="w-full h-full object-cover" 
+                                   className="w-full h-full object-cover"
                                  />
                               </div>
                               <div className="flex-1 min-w-0">
@@ -288,7 +315,7 @@ const Explore = () => {
           </div>
         </div>
       </section>
-      
+
       <div className="mt-32">
         <Footer />
       </div>

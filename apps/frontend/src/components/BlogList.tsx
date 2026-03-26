@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Share, Heart, Clock } from "lucide-react";
@@ -10,73 +11,67 @@ const API_URL = import.meta.env.VITE_API_URL;
 const BlogCardLikeButton = ({ blogId }: { blogId: string }) => {
   const [likes, setLikes] = useState(0);
   const [liked, setLiked] = useState(false);
-  const [likeQueue, setLikeQueue] = useState(0);
-  const wsRef = useRef<WebSocket | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { getToken } = useAuth();
 
-  // Initialize and get current count via HTTP (or just rely on WS broadcast)
+  // Fetch current like count + user status
   useEffect(() => {
     const fetchLikes = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/blogs/${blogId}`);
-        const data = await res.json();
-        setLikes(data.likes ?? 0);
-      } catch (err) {
-        // silently ignore error on lists if individual fail
-      }
+        const token = await getToken();
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(`${API_URL}/api/likes/${blogId}`, { headers });
+        if (res.ok) {
+          const data = await res.json();
+          setLikes(data.likes ?? 0);
+          setLiked(data.liked ?? false);
+        }
+      } catch {}
     };
     fetchLikes();
-  }, [blogId]);
+  }, [blogId, getToken]);
 
-  useEffect(() => {
-    if (!blogId) return;
-    const wsUrl = API_URL.replace(/^http/, "ws");
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
+  const handleLike = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (loading) return;
 
-    ws.onopen = () => {
-      ws.send(`getLikes:${blogId}`);
-    };
+    // Optimistic update
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setLikes(prev => wasLiked ? Math.max(0, prev - 1) : prev + 1);
+    setLoading(true);
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "likes_update" && data.blogId === blogId) {
-          setLikes(data.likes);
-        }
-      } catch {
-        // ignore non-JSON messages (pong, etc.)
+    try {
+      const token = await getToken();
+      if (!token) {
+        // Revert — user not signed in
+        setLiked(wasLiked);
+        setLikes(prev => wasLiked ? prev + 1 : Math.max(0, prev - 1));
+        return;
       }
-    };
 
-    return () => {
-      ws.close();
-    };
-  }, [blogId]);
+      const res = await fetch(`${API_URL}/api/likes/${blogId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
 
-  // Debounced queue
-  useEffect(() => {
-    if (likeQueue === 0 || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-
-    const timeoutPath = setTimeout(() => {
-      if (likeQueue > 0) wsRef.current?.send(`like:${blogId}`);
-      else if (likeQueue < 0) wsRef.current?.send(`unlike:${blogId}`);
-      setLikeQueue(0);
-    }, 1000);
-
-    return () => clearTimeout(timeoutPath);
-  }, [likeQueue, blogId]);
-
-  const handleLike = (e: React.MouseEvent) => {
-    e.stopPropagation(); // prevent clicking the card to navigate
-    if (liked) {
-      setLikes((prev) => Math.max(0, prev - 1));
-      setLikeQueue((prev) => prev - 1);
-    } else {
-      setLikes((prev) => prev + 1);
-      setLikeQueue((prev) => prev + 1);
+      if (res.ok) {
+        const data = await res.json();
+        setLikes(data.likes);
+        setLiked(data.liked);
+      } else {
+        // Revert on failure
+        setLiked(wasLiked);
+        setLikes(prev => wasLiked ? prev + 1 : Math.max(0, prev - 1));
+      }
+    } catch {
+      setLiked(wasLiked);
+      setLikes(prev => wasLiked ? prev + 1 : Math.max(0, prev - 1));
+    } finally {
+      setLoading(false);
     }
-    setLiked((prev) => !prev);
-  };
+  }, [blogId, liked, loading, getToken]);
 
   return (
     <button
@@ -193,10 +188,10 @@ const BlogList: React.FC<BlogListProps> = ({ posts }) => {
                   </div>
                   <h3 className="text-lg font-headline font-bold mb-2 text-gray-900 dark:text-white leading-snug line-clamp-2">{stripHtmlTags(post.title)}</h3>
                   <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed">{stripHtmlTags(post.summary)}</p>
-                  
+
                   <div className="flex items-center justify-between pt-2 border-t border-gray-50 dark:border-gray-800">
                     <BlogCardLikeButton blogId={post.id} />
-                    
+
                     <ShareButton
                       variant="link"
                       className="flex items-center gap-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full px-3 py-1.5 transition-colors text-sm"

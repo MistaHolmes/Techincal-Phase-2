@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { History, Trash2, Clock, Heart } from "lucide-react";
+import { History, Trash2, Clock } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
+import { usePageCache } from "@/context/PageCacheContext";
 import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -12,7 +13,6 @@ interface HistoryBlog {
   id: string;
   title: string;
   content: string;
-  likes: number;
   coverImage?: string;
   readAt: string;
   author: { email: string; name?: string };
@@ -24,15 +24,22 @@ const ReadingHistory = () => {
   const { getToken } = useAuth();
   const [history, setHistory] = useState<HistoryBlog[]>([]);
   const [loading, setLoading] = useState(true);
+  const cache = usePageCache();
 
   useEffect(() => {
     const fetchHistory = async () => {
+      const cached = cache.get('history', 180000);
+      if (cached) { setHistory(cached); setLoading(false); return; }
       try {
         const token = await getToken();
         const res = await fetch(`${API_URL}/api/user/history`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (res.ok) setHistory(await res.json());
+        if (res.ok) {
+          const historyData = await res.json();
+          cache.set('history', historyData);
+          setHistory(historyData);
+        }
       } catch (err) {
         console.error("Failed to fetch history:", err);
       } finally {
@@ -50,6 +57,7 @@ const ReadingHistory = () => {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+      cache.invalidate('history');
       setHistory([]);
     } catch (err) {
       console.error("Failed to clear history:", err);
@@ -144,7 +152,6 @@ const ReadingHistory = () => {
                         <div className="flex items-center gap-4 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                           <span className="flex items-center gap-1.5"><Clock size={12} className="text-blue-500" /> {formatReadAt(blog.readAt)}</span>
                           <span className="flex items-center gap-1.5"><img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author?.email}`} className="w-4 h-4 rounded-full" alt="" /> {authorName}</span>
-                          <span className="flex items-center gap-1.5"><Heart size={12} className="text-rose-500" /> {blog.likes}</span>
                         </div>
                       </div>
                     </div>

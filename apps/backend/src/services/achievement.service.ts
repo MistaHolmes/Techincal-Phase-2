@@ -13,14 +13,12 @@ export async function checkAndAwardAchievements(userId: string) {
             followers: true,
             readingHistory: true
           }
-        },
-        blogs: { select: { likes: true } }
+        }
       }
     });
 
     if (!user) return;
 
-    const totalLikes = (user.blogs as any[]).reduce((sum, b) => sum + b.likes, 0);
     const publishedBlogs = await prisma.blog.count({ where: { authorId: userId, published: true } });
 
     // Define Achievement IDs
@@ -36,26 +34,20 @@ export async function checkAndAwardAchievements(userId: string) {
       toAward.push(firstWord.id);
     }
 
-    // 2. Influencer (100 Likes)
-    const influencer = (achievements as any[]).find(a => a.name === "Influencer");
-    if (influencer && totalLikes >= 100 && !awardedIds.has(influencer.id)) {
-      toAward.push(influencer.id);
-    }
-
-    // 3. Community Pillar (10 comments received)
+    // 2. Community Pillar (10 comments received)
     const receivedComments = await prisma.comment.count({ where: { blog: { authorId: userId } } });
     const communityPillar = (achievements as any[]).find(a => a.name === "Community Pillar");
     if (communityPillar && receivedComments >= 10 && !awardedIds.has(communityPillar.id)) {
       toAward.push(communityPillar.id);
     }
 
-    // 4. Binge Reader (10 Read Blogs)
+    // 3. Binge Reader (10 Read Blogs)
     const bingeReader = (achievements as any[]).find(a => a.name === "Binge Reader");
     if (bingeReader && (user as any)._count.readingHistory >= 10 && !awardedIds.has(bingeReader.id)) {
       toAward.push(bingeReader.id);
     }
 
-    // 5. Rising Star (50 Followers)
+    // 4. Rising Star (50 Followers)
     const risingStar = (achievements as any[]).find(a => a.name === "Rising Star");
     if (risingStar && (user as any)._count.followers >= 50 && !awardedIds.has(risingStar.id)) {
       toAward.push(risingStar.id);
@@ -71,7 +63,7 @@ export async function checkAndAwardAchievements(userId: string) {
       // Update User XP
       await prisma.user.update({
         where: { id: userId },
-        data: { 
+        data: {
           writerXP: { increment: achievement?.xpReward || 50 } as any
         }
       });
@@ -83,7 +75,7 @@ export async function checkAndAwardAchievements(userId: string) {
           message: `🏆 Achievement Unlocked: ${achievement?.name}! You earned ${achievement?.xpReward} XP.`
         }
       });
-      
+
       broadcastNotificationUpdate(userId);
       console.log(`[Achievement] Awarded "${achievement?.name}" to user ${userId}`);
     }

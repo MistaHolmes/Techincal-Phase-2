@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Bookmark, BookmarkX } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
+import { usePageCache } from "@/context/PageCacheContext";
 import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -13,7 +14,6 @@ interface Blog {
   id: string;
   title: string;
   content: string;
-  likes: number;
   coverImage?: string;
   updatedAt: string;
   author: { email: string; name?: string };
@@ -26,15 +26,20 @@ const Bookmarks = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState<string | null>(null);
+  const cache = usePageCache();
 
   const fetchBookmarks = async () => {
+    const cached = cache.get('bookmarks', 180000);
+    if (cached) { setBlogs(cached); setLoading(false); return; }
     try {
       const token = await getToken();
       const res = await axios.get(`${API_URL}/api/user/bookmarks`, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
-      setBlogs(Array.isArray(res.data) ? res.data : []);
+      const bookmarkData = Array.isArray(res.data) ? res.data : [];
+      cache.set('bookmarks', bookmarkData);
+      setBlogs(bookmarkData);
     } catch (err) {
       console.error("Failed to fetch bookmarks:", err);
     } finally {
@@ -52,6 +57,7 @@ const Bookmarks = () => {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
+      cache.invalidate('bookmarks');
       setBlogs((prev) => prev.filter((b) => b.id !== blogId));
     } catch (err) {
       alert("Failed to remove bookmark.");
@@ -117,7 +123,7 @@ const Bookmarks = () => {
                         {blog.title}
                       </h3>
                       <p className="text-gray-500 dark:text-gray-400 font-body text-sm mb-6 line-clamp-2 leading-relaxed">{excerpt}</p>
-                      
+
                       <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50 dark:border-gray-700/50">
                         <div className="flex items-center gap-2">
                            <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
@@ -127,7 +133,7 @@ const Bookmarks = () => {
                              {displayName} · {new Date(blog.updatedAt).toLocaleDateString()}
                            </span>
                         </div>
-                        
+
                         <button
                           onClick={() => handleRemove(blog.id)}
                           disabled={removing === blog.id}

@@ -1,22 +1,22 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
+import { usePageCache } from "@/context/PageCacheContext";
 import BlogSkeleton from "@/components/BlogSkeleton";
 import { AppShell } from "@/components/layout/AppShell";
 import { Footer } from "@/components/Footer";
 import { BackButton } from "@/components/ui/backButton";
-import { 
-  ChevronLeft, 
-  Heart, 
-  MessageCircle, 
-  Trash2, 
-  Link2, 
-  Headphones, 
-  Play, 
-  Pause, 
-  Maximize2, 
-  Minimize2, 
-  Flame, 
+import {
+  ChevronLeft,
+  MessageCircle,
+  Trash2,
+  Link2,
+  Headphones,
+  Play,
+  Pause,
+  Maximize2,
+  Minimize2,
+  Flame,
   Highlighter,
   Twitter,
   Linkedin,
@@ -33,7 +33,6 @@ interface Blog {
   title: string;
   content: string;
   createdAt: string;
-  likes: number;
   views?: number;
   coverImage?: string;
   authorId?: string;
@@ -55,7 +54,6 @@ interface RelatedBlog {
   id: string;
   title: string;
   content: string;
-  likes: number;
   coverImage?: string;
   author: { email: string; name?: string };
   tags: { id: string; name: string }[];
@@ -73,9 +71,6 @@ const BlogView = () => {
   const { getToken, isSignedIn } = useAuth();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [copied, setCopied] = useState(false);
-  const [likes, setLikes] = useState(0);
-  const [liked, setLiked] = useState(false);
-  const [likeQueue, setLikeQueue] = useState(0);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
@@ -85,44 +80,65 @@ const BlogView = () => {
   const [showHighlightNote, setShowHighlightNote] = useState(false);
   const [highlightNote, setHighlightNote] = useState("");
   const [shareOpen, setShareOpen] = useState(false);
-  const wsRef = useRef<WebSocket | null>(null);
   const shareRef = useRef<HTMLDivElement>(null);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [streak, setStreak] = useState<number | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const API_URL = import.meta.env.VITE_API_URL;
+  const cache = usePageCache();
 
   // Fetch blog data
   useEffect(() => {
     if (!blogId) return;
+    const cacheKey = `blogview:${blogId}`;
+
+    // Always fire side-effects (view count + history) regardless of cache
+    fetch(`${API_URL}/api/blogs/${blogId}/view`, { method: 'POST' }).catch(() => {});
+    if (isSignedIn) {
+      getToken().then(token => {
+        fetch(`${API_URL}/api/user/history`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ blogId }),
+        }).then(r => r.json()).then(d => {
+          if (d.streak) setStreak(d.streak);
+        }).catch(() => {});
+      });
+    }
+
+    // Check cache first
+    const cached = cache.get(cacheKey, 300000);
+    if (cached) {
+      setBlog(cached.blog);
+      setComments(cached.comments || []);
+      setHighlights(cached.highlights || []);
+      setRelatedBlogs(cached.relatedBlogs || []);
+      return;
+    }
+
     const fetchBlog = async () => {
       try {
         const res = await fetch(`${API_URL}/api/blogs/${blogId}`);
-        const data = await res.json();
-        setBlog(data);
-        setLikes(data.likes ?? 0);
-        // Increment view count (fire-and-forget)
-        fetch(`${API_URL}/api/blogs/${blogId}/view`, { method: 'POST' }).catch(() => {});
+        const blogData = await res.json();
+        setBlog(blogData);
         // Fetch comments
         const commentsRes = await fetch(`${API_URL}/api/blogs/${blogId}/comments`);
-        if (commentsRes.ok) setComments(await commentsRes.json());
+        const commentsData = commentsRes.ok ? await commentsRes.json() : [];
+        setComments(commentsData);
         // Fetch highlights
         const highlightsRes = await fetch(`${API_URL}/api/highlights/blog/${blogId}`);
-        if (highlightsRes.ok) setHighlights(await highlightsRes.json());
+        const highlightsData = highlightsRes.ok ? await highlightsRes.json() : [];
+        setHighlights(highlightsData);
         // Fetch related blogs
-        fetch(`${API_URL}/api/blogs/${blogId}/related`).then(r => r.ok ? r.json() : []).then(setRelatedBlogs).catch(() => {});
-        // Record reading history if signed in
-        if (isSignedIn) {
-          const token = await getToken();
-          fetch(`${API_URL}/api/user/history`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ blogId }),
-          }).then(r => r.json()).then(d => {
-            if (d.streak) setStreak(d.streak);
-          }).catch(() => {});
-        }
+        let relatedData: RelatedBlog[] = [];
+        try {
+          const relatedRes = await fetch(`${API_URL}/api/blogs/${blogId}/related`);
+          if (relatedRes.ok) relatedData = await relatedRes.json();
+        } catch {}
+        setRelatedBlogs(relatedData);
+
+        cache.set(cacheKey, { blog: blogData, comments: commentsData, highlights: highlightsData, relatedBlogs: relatedData });
       } catch (err) {
         console.error("Failed to fetch blog", err);
       }
@@ -130,37 +146,9 @@ const BlogView = () => {
     fetchBlog();
   }, [blogId, API_URL, isSignedIn]);
 
-  // WebSocket for real-time likes
-  useEffect(() => {
-    if (!blogId) return;
-    const wsUrl = API_URL.replace(/^http/, "ws");
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-    ws.onopen = () => { ws.send(`getLikes:${blogId}`); };
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "likes_update" && data.blogId === blogId) setLikes(data.likes);
-      } catch {}
-    };
-    ws.onerror = (err) => console.warn("Likes WS error:", err);
-    return () => { ws.close(); };
-  }, [blogId, API_URL]);
-
   useEffect(() => {
     if (copied) { const timer = setTimeout(() => setCopied(false), 1000); return () => clearTimeout(timer); }
   }, [copied]);
-
-  // Debounced like queue
-  useEffect(() => {
-    if (likeQueue === 0 || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || !blogId) return;
-    const timeoutPath = setTimeout(() => {
-      if (likeQueue > 0) wsRef.current?.send(`like:${blogId}`);
-      else if (likeQueue < 0) wsRef.current?.send(`unlike:${blogId}`);
-      setLikeQueue(0);
-    }, 1000);
-    return () => clearTimeout(timeoutPath);
-  }, [likeQueue, blogId]);
 
   // Close share dropdown on outside click
   useEffect(() => {
@@ -170,12 +158,6 @@ const BlogView = () => {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  const handleLike = () => {
-    if (liked) { setLikes((prev) => Math.max(0, prev - 1)); setLikeQueue((prev) => prev - 1); }
-    else { setLikes((prev) => prev + 1); setLikeQueue((prev) => prev + 1); }
-    setLiked((prev) => !prev);
-  };
 
   const toggleTTS = () => {
     if (isPlaying) {
@@ -295,10 +277,10 @@ const BlogView = () => {
                 key={item.id}
                 href={`#${item.id}`}
                 className={`block text-sm font-bold transition-all truncate ${
-                  item.level === 1 
-                    ? "text-gray-900 dark:text-gray-100" 
-                    : item.level === 2 
-                      ? "pl-4 text-gray-500 hover:text-blue-500" 
+                  item.level === 1
+                    ? "text-gray-900 dark:text-gray-100"
+                    : item.level === 2
+                      ? "pl-4 text-gray-500 hover:text-blue-500"
                       : "pl-8 text-xs text-gray-400"
                 }`}
               >
@@ -357,9 +339,9 @@ const BlogView = () => {
   );
 
   return (
-    <AppShell 
-      hideSidebar={isFocusMode} 
-      hideRightPanel={isFocusMode} 
+    <AppShell
+      hideSidebar={isFocusMode}
+      hideRightPanel={isFocusMode}
       rightPanelContent={RightPanelContent}
       showSearch={!isFocusMode}
     >
@@ -375,7 +357,7 @@ const BlogView = () => {
           </BackButton>
         </div>
 
-        <motion.article 
+        <motion.article
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 sm:p-12 shadow-sm"
@@ -401,20 +383,10 @@ const BlogView = () => {
                  <p className="text-xs text-gray-500">{new Date(blog.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                </div>
              </div>
-             
+
              <div className="flex items-center gap-4 ml-auto">
-                <button 
-                  onClick={handleLike}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                    liked ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-500 border border-rose-100 dark:border-rose-900/30 shadow-md' : 'bg-gray-50 dark:bg-gray-900 text-gray-500 border border-transparent hover:bg-rose-50 hover:text-rose-500'
-                  }`}
-                >
-                  <Heart size={18} className={liked ? "fill-current" : ""} />
-                  {likes}
-                </button>
-                <div className="w-px h-6 bg-gray-100 dark:bg-gray-700" />
                 <div ref={shareRef} className="relative">
-                  <button 
+                  <button
                     onClick={() => setShareOpen(!shareOpen)}
                     className="p-2 bg-gray-50 dark:bg-gray-900 rounded-xl border border-transparent hover:bg-blue-50 hover:text-blue-500 transition-all text-gray-500"
                   >
@@ -422,7 +394,7 @@ const BlogView = () => {
                   </button>
                   <AnimatePresence>
                     {shareOpen && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -454,7 +426,7 @@ const BlogView = () => {
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Reading Mode</p>
              </div>
              <div className="flex items-center gap-2">
-                <button 
+                <button
                   onClick={toggleTTS}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     isPlaying ? 'bg-rose-500 text-white shadow-rose-200' : 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300'
@@ -464,7 +436,7 @@ const BlogView = () => {
                   {isPlaying ? "Stop" : "Listen"}
                 </button>
                 <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
-                <button 
+                <button
                   onClick={() => setIsFocusMode(!isFocusMode)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     isFocusMode ? 'bg-violet-600 text-white shadow-violet-200' : 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300'
@@ -477,7 +449,7 @@ const BlogView = () => {
           </div>
 
           {/* Markdown Content */}
-          <div 
+          <div
             className="prose prose-lg dark:prose-invert max-w-none font-body leading-relaxed selection:bg-yellow-200 selection:text-black relative"
             onMouseUp={handleSelection}
           >
@@ -489,7 +461,7 @@ const BlogView = () => {
             {/* Selection Popover */}
             <AnimatePresence>
               {selection && !showHighlightNote && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, scale: 0.9, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 10 }}
@@ -506,7 +478,7 @@ const BlogView = () => {
             {/* Note Popover */}
             <AnimatePresence>
               {selection && showHighlightNote && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, scale: 0.9, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 10 }}
@@ -583,8 +555,8 @@ const BlogView = () => {
                   </div>
                 ) : (
                   comments.map((c) => (
-                    <motion.div 
-                      key={c.id} 
+                    <motion.div
+                      key={c.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       className="flex gap-4 group"
@@ -624,7 +596,7 @@ const BlogView = () => {
                 {relatedBlogs.map((rb) => {
                   const excerpt = rb.content.replace(/[#*`>\[\]]/g, "").slice(0, 100) + "...";
                   return (
-                    <div 
+                    <div
                       key={rb.id}
                       onClick={() => navigate(`/blog/${rb.id}`)}
                       className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md transition-all group cursor-pointer"
@@ -648,7 +620,7 @@ const BlogView = () => {
            Fin. DraftDock V2
         </div>
       </div>
-      
+
       <div className="mt-20 px-4">
         <Footer />
       </div>

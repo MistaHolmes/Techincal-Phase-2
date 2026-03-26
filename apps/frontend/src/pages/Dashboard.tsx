@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -5,9 +6,9 @@ import { motion } from "framer-motion";
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, AreaChart, Area, Cell, PieChart, Pie } from "recharts";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
-import { BarChart2, Heart, FileText, Trophy, Users, TrendingUp, CheckCircle, Zap, Award } from "lucide-react";
+import { BarChart2, FileText, Trophy, Users, TrendingUp, CheckCircle, Zap, Award } from "lucide-react";
+import { usePageCache } from "@/context/PageCacheContext";
 import { Footer } from "@/components/Footer";
-import BackgroundGlow from "@/components/ui/BackgroundGlow";
 import { AchievementGrid } from "@/components/social/AchievementGrid";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -19,7 +20,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 const Dashboard = () => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
-  
+
   // States for different analytics modules
   const [basicStats, setBasicStats] = useState<any>(null);
   const [viewHistory, setViewHistory] = useState<any[]>([]);
@@ -29,13 +30,26 @@ const Dashboard = () => {
   const [userAchievements, setUserAchievements] = useState<any[]>([]);
   const [allAchievements, setAllAchievements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const cache = usePageCache();
 
   useEffect(() => {
+    const cached = cache.get('dashboard');
+    if (cached) {
+      setBasicStats(cached.basicStats);
+      setViewHistory(cached.viewHistory);
+      setEngagement(cached.engagement);
+      setGrowth(cached.growth);
+      setCompletion(cached.completion);
+      setUserAchievements(cached.userAchievements);
+      setAllAchievements(cached.allAchievements);
+      setLoading(false);
+      return;
+    }
     const fetchAllData = async () => {
       try {
         const token = await getToken();
         const headers = { Authorization: `Bearer ${token}` };
-        
+
         const [statsRes, viewsRes, engageRes, growthRes, completionRes, userAchRes, allAchRes] = await Promise.all([
           axios.get(`${API_URL}/api/user/stats`, { headers }),
           axios.get(`${API_URL}/api/analytics/views`, { headers }),
@@ -53,6 +67,16 @@ const Dashboard = () => {
         setCompletion(completionRes.data);
         setUserAchievements(userAchRes.data);
         setAllAchievements(allAchRes.data);
+
+        cache.set('dashboard', {
+          basicStats: statsRes.data,
+          viewHistory: viewsRes.data.daily,
+          engagement: engageRes.data,
+          growth: growthRes.data.history,
+          completion: completionRes.data,
+          userAchievements: userAchRes.data,
+          allAchievements: allAchRes.data,
+        });
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err);
       } finally {
@@ -62,12 +86,12 @@ const Dashboard = () => {
     fetchAllData();
   }, []);
 
-  const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'];
+  const COLORS = ['#000000', '#785900', '#3b3b3b', '#777777', '#474747'];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-violet-600 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -75,191 +99,151 @@ const Dashboard = () => {
   return (
     <>
       <Helmet>
-        <title>Creator Dashboard — DraftDock</title>
+        <title>Dashboard — DraftDock</title>
       </Helmet>
-      <BackgroundGlow />
 
       <div className="max-w-7xl mx-auto py-8 px-4 relative z-[1]">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-          <div>
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-2 text-violet-600 dark:text-violet-400 font-bold tracking-tight mb-2"
-            >
-              <TrendingUp size={18} />
-              <span className="uppercase text-xs tracking-widest font-headline">Analytics Overview</span>
-            </motion.div>
-            <h1 className="text-4xl font-headline font-bold text-gray-900 dark:text-white tracking-tight">
-              Creator Insights
-            </h1>
+        {/* Hero Header — DraftDock style */}
+        <header className="mb-16">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-on-surface-variant font-bold tracking-tight mb-3">
+            <TrendingUp size={16} />
+            <span className="uppercase text-[10px] tracking-widest font-label">Analytics Overview</span>
+          </motion.div>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <h1 className="text-6xl font-bold font-headline tracking-tighter text-primary">Dashboard</h1>
+            <button onClick={() => navigate('/create-blog')} className="px-6 py-3 bg-primary text-on-primary rounded-md font-headline font-bold transition-all hover:opacity-90 active:scale-95 flex items-center gap-2 w-fit">
+              <Zap size={16} /> New Story
+            </button>
           </div>
-          <div className="flex gap-3">
-             <button onClick={() => navigate('/create-blog')} className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold shadow-lg shadow-violet-200 dark:shadow-none transition-all flex items-center gap-2">
-               <Zap size={18} /> New Story
-             </button>
-          </div>
+          <p className="text-on-surface-variant text-lg tracking-tight mt-2">Manage your technical drafts and published insights.</p>
+        </header>
+
+        {/* Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+           <MetricCard title="Total Views" value={engagement?.totalViews || 0} icon={<BarChart2 size={18} />} index={0} />
+           <MetricCard title="Engagement" value={`${engagement?.engagementRate || 0}%`} icon={<TrendingUp size={18} />} index={1} />
+           <MetricCard title="Followers" value={basicStats?.totalFollowers || 0} icon={<Users size={18} />} index={2} />
+           <MetricCard title="Published" value={basicStats?.publishedCount || 0} icon={<FileText size={18} />} index={3} />
         </div>
 
-        {/* Global Key Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-           <MetricCard 
-             title="Total Views" 
-             value={engagement?.totalViews || 0} 
-             subtitle="Lifetime reach"
-             icon={<BarChart2 size={20} />} 
-             trend="+12%" 
-             color="violet"
-             index={0}
-           />
-           <MetricCard 
-             title="Engagement Rate" 
-             value={`${engagement?.engagementRate || 0}%`} 
-             subtitle="Reader interaction"
-             icon={<Heart size={20} />} 
-             trend="+4.5%" 
-             color="rose"
-             index={1}
-           />
-           <MetricCard 
-             title="Active Followers" 
-             value={basicStats?.totalFollowers || 0} 
-             subtitle="Community size"
-             icon={<Users size={20} />} 
-             trend="+8" 
-             color="blue"
-             index={2}
-           />
-           <MetricCard 
-             title="Published Stories" 
-             value={basicStats?.publishedCount || 0} 
-             subtitle="Creator consistency"
-             icon={<FileText size={20} />} 
-             color="emerald"
-             index={3}
-           />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Main Chart: Views History */}
-          <div className="lg:col-span-2 space-y-10">
-            <ChartContainer title="Audience Reach" subtitle="Daily views over the last 30 days">
-              <ResponsiveContainer width="100%" height={300}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* Left: Charts */}
+          <div className="lg:col-span-8 space-y-12">
+            {/* Views Chart */}
+            <SectionCard title="Audience Reach" subtitle="Daily views — last 30 days">
+              <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={viewHistory}>
                   <defs>
-                    <linearGradient id="viewGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    <linearGradient id="viewGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#000000" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#000000" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e1e3e4" />
                   <XAxis dataKey="date" hide />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                  />
-                  <Area type="monotone" dataKey="views" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#viewGradient)" />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#777777' }} />
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e1e3e4', boxShadow: 'none', fontFamily: 'Inter', fontSize: '12px' }} />
+                  <Area type="monotone" dataKey="views" stroke="#000000" strokeWidth={2} fillOpacity={1} fill="url(#viewGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
-            </ChartContainer>
+            </SectionCard>
 
-            {/* Reading Completion Breakdown */}
-            <ChartContainer title="Retention Analysis" subtitle="How many readers finish your stories">
-               <div className="space-y-6 text-gray-900 dark:text-gray-100">
+            {/* Retention */}
+            <SectionCard title="Retention Analysis" subtitle="How many readers finish your stories">
+               <div className="space-y-5 text-on-surface">
                   {completion.map((blog, i) => (
                     <div key={blog.id} className="space-y-2">
                        <div className="flex justify-between text-sm items-end">
-                          <span className="font-semibold text-gray-950 dark:text-gray-200 truncate max-w-[70%]">{blog.title}</span>
-                          <span className="text-violet-600 font-bold">{blog.rate}%</span>
+                          <span className="font-bold truncate max-w-[70%] font-headline tracking-tight">{blog.title}</span>
+                          <span className="text-primary font-bold font-headline">{blog.rate}%</span>
                        </div>
-                       <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                          <motion.div 
+                       <div className="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                          <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${blog.rate}%` }}
                             transition={{ duration: 1, delay: i * 0.1 }}
-                            className="h-full bg-violet-500 rounded-full"
+                            className="h-full bg-primary rounded-full"
                           />
                        </div>
                     </div>
                   ))}
-                  {completion.length === 0 && <p className="text-center py-10 text-gray-400 italic">Start writing to see retention data.</p>}
+                  {completion.length === 0 && <p className="text-center py-10 text-outline italic font-body">Start writing to see retention data.</p>}
                </div>
-            </ChartContainer>
+            </SectionCard>
 
-            {/* Achievements Section */}
+            {/* Achievements */}
             <div className="space-y-6">
                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-lg">
-                    <Award size={20} />
+                  <div className="p-2 bg-secondary-container text-on-secondary-container rounded-lg">
+                    <Award size={18} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-headline font-bold text-gray-900 dark:text-white">Milestones</h2>
-                    <p className="text-xs text-gray-500">Your path to becoming a DraftDock elite</p>
+                    <h2 className="text-xl font-headline font-bold text-primary">Milestones</h2>
+                    <p className="text-xs text-outline font-label">Your path to becoming a DraftDock elite</p>
                   </div>
                </div>
-               <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700">
+               <div className="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/20">
                   <AchievementGrid achievements={userAchievements} allAchievements={allAchievements} />
                </div>
             </div>
           </div>
 
-          {/* Right Sidebar Stats */}
-          <div className="space-y-10">
+          {/* Right Sidebar */}
+          <div className="lg:col-span-4 space-y-10">
              {/* Follower Growth */}
-             <ChartContainer title="Community Growth" subtitle="Followers trend">
-                <ResponsiveContainer width="100%" height={150}>
+             <SectionCard title="Community Growth" subtitle="Followers trend">
+                <ResponsiveContainer width="100%" height={140}>
                   <LineChart data={growth}>
-                    <Line type="stepAfter" dataKey="count" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                    <Tooltip />
+                    <Line type="stepAfter" dataKey="count" stroke="#000000" strokeWidth={2} dot={false} />
+                    <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e1e3e4', boxShadow: 'none', fontSize: '12px' }} />
                   </LineChart>
                 </ResponsiveContainer>
-             </ChartContainer>
+             </SectionCard>
 
              {/* Engagement Mix */}
-             <ChartContainer title="Engagement Mix" subtitle="Action breakdown">
+             <SectionCard title="Engagement Mix" subtitle="Action breakdown">
                 <div className="flex flex-col items-center">
-                  <ResponsiveContainer width="100%" height={200}>
+                  <ResponsiveContainer width="100%" height={180}>
                     <PieChart>
                       <Pie
                         data={[
-                          { name: 'Likes', value: engagement?.totalLikes || 0 },
                           { name: 'Comments', value: engagement?.commentCount || 0 },
                           { name: 'Bookmarks', value: engagement?.bookmarkCount || 0 },
                         ]}
-                        innerRadius={60}
-                        outerRadius={80}
+                        innerRadius={55}
+                        outerRadius={75}
                         paddingAngle={5}
                         dataKey="value"
                       >
-                      {(engagement ? [1,2,3] : []).map((_, i) => (
+                      {(engagement ? [1,2] : []).map((_, i) => (
                         <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
                       ))}
                       </Pie>
                       <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div className="flex gap-4 mt-2">
-                      <LegendItem label="Likes" color="bg-violet-500" />
-                      <LegendItem label="Comments" color="bg-pink-500" />
-                      <LegendItem label="Saves" color="bg-amber-500" />
+                  <div className="flex gap-6 mt-2">
+                      <LegendItem label="Comments" color="bg-primary" />
+                      <LegendItem label="Saves" color="bg-secondary" />
                   </div>
                 </div>
-             </ChartContainer>
+             </SectionCard>
 
-             {/* Top Story Spotlight */}
+             {/* Top Story */}
              {basicStats?.topBlog && (
-                <div className="bg-black dark:bg-violet-600 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden group cursor-pointer" onClick={() => navigate(`/blog/${basicStats.topBlog.id}`)}>
+                <div
+                  className="bg-primary rounded-xl p-8 text-on-primary relative overflow-hidden group cursor-pointer transition-all hover:opacity-95 active:scale-[0.99]"
+                  onClick={() => navigate(`/blog/${basicStats.topBlog.id}`)}
+                >
                    <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-110 transition-transform">
-                      <Trophy size={140} />
+                      <Trophy size={120} />
                    </div>
                    <div className="relative z-10">
-                      <div className="bg-white/20 backdrop-blur-md w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
-                        Star Story
-                      </div>
+                      <span className="text-[10px] uppercase tracking-widest font-bold bg-on-primary/20 backdrop-blur-md w-fit px-3 py-1 rounded-sm mb-6 inline-block">Star Story</span>
                       <h3 className="text-2xl font-headline font-bold mb-4 line-clamp-2 leading-tight">{basicStats.topBlog.title}</h3>
-                      <div className="flex items-center gap-6 text-white/80 text-sm font-bold">
-                         <span className="flex items-center gap-2"><Heart size={16} /> {basicStats.topBlog.likes}</span>
-                         <span className="flex items-center gap-2"><CheckCircle size={16} /> 94% finished</span>
+                      <div className="flex items-center gap-6 text-on-primary/80 text-sm font-bold">
+                         <span className="flex items-center gap-2"><BarChart2 size={14} /> {basicStats.topBlog.views || 0} views</span>
+                         <span className="flex items-center gap-2"><CheckCircle size={14} /> 94% finished</span>
                       </div>
                    </div>
                 </div>
@@ -274,71 +258,47 @@ const Dashboard = () => {
   );
 };
 
-function MetricCard({ title, value, subtitle, icon, trend, color, index = 0 }: any) {
-  const colorMap: any = {
-    violet: "bg-violet-50 text-violet-600 dark:bg-violet-900/20 dark:text-violet-400",
-    rose: "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400",
-    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
-    emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400",
-  };
 
-  const isPositive = trend?.startsWith("+");
-
+function MetricCard({ title, value, icon, index = 0 }: any) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
-      className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow group"
+      transition={{ duration: 0.4, delay: index * 0.08, ease: "easeOut" }}
+      className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/15 hover:bg-surface-container-low transition-all group"
     >
-      <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-xl ${colorMap[color]} transition-transform group-hover:scale-105`}>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2.5 bg-surface-container-high text-on-surface rounded-lg transition-transform group-hover:scale-105">
           {icon}
         </div>
-        {trend && (
-          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 ${
-            isPositive 
-              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
-              : "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-          }`}>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-              {isPositive 
-                ? <path d="M5 2L8 6H2L5 2Z" />
-                : <path d="M5 8L2 4H8L5 8Z" />
-              }
-            </svg>
-            {trend}
-          </span>
-        )}
+        <span className="text-[10px] font-bold uppercase tracking-widest text-outline font-label">{title}</span>
       </div>
-      <div>
-        <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-1 tracking-tight">{value}</h3>
-        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">{title}</p>
-        <p className="text-[10px] text-gray-400 mt-0.5">{subtitle}</p>
-      </div>
+      <h3 className="text-4xl font-black text-primary tracking-tight font-headline">{value}</h3>
     </motion.div>
   );
 }
 
 export default Dashboard;
 
-function ChartContainer({ title, subtitle, children }: any) {
+
+function SectionCard({ title, subtitle, children }: any) {
   return (
-    <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+    <div className="bg-surface-container-lowest p-6 md:p-8 rounded-xl border border-outline-variant/15">
       <div className="mb-6">
-        <h3 className="text-lg font-headline font-bold text-gray-900 dark:text-white">{title}</h3>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] mt-1">{subtitle}</p>
+        <h3 className="text-lg font-headline font-bold text-primary tracking-tight">{title}</h3>
+        <p className="text-[10px] font-bold text-outline uppercase tracking-widest mt-1 font-label">{subtitle}</p>
       </div>
       {children}
     </div>
   );
 }
 
+
 function LegendItem({ label, color }: any) {
   return (
     <div className="flex items-center gap-1.5">
       <div className={`w-2 h-2 rounded-full ${color}`} />
-      <span className="text-[10px] font-medium text-gray-500">{label}</span>
+      <span className="text-[10px] font-medium text-outline font-label">{label}</span>
     </div>
   );
 }

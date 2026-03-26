@@ -4,7 +4,7 @@ import prisma from '../lib/prisma';
 import redisClient from '../lib/redis';
 import { syncUser } from '../sync';
 import { writeLimiter } from '../middleware/rateLimiter';
-import { getNotificationsForUser, broadcastNotificationUpdate } from '../lib/websocket';
+import { getNotificationsForUser, invalidateNotificationCache } from '../lib/websocket';
 
 const router = Router();
 
@@ -15,7 +15,8 @@ router.get('/', requireAuth(), async (req, res: any) => {
     if (!user) return res.status(401).json({ message: 'User Not Authenticated' });
 
     const notifications = await getNotificationsForUser(user.id);
-    return res.json({ notifications });
+    const unreadCount = notifications.filter((n: any) => !n.read).length;
+    return res.json({ notifications, unreadCount });
   } catch (error) {
     console.error('Error fetching notifications:', error);
     return res.status(500).json({ message: 'Failed to fetch notifications' });
@@ -33,12 +34,7 @@ router.patch('/read-all', requireAuth(), async (req, res: any) => {
       data: { read: true },
     });
 
-    const updatedNotifications = await prisma.notification.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-    });
-    await redisClient.set(`user_notifications:${user.id}`, JSON.stringify(updatedNotifications), { EX: 60 * 5 });
-    await broadcastNotificationUpdate(user.id);
+    await invalidateNotificationCache(user.id);
 
     return res.status(200).json({ message: 'All notifications marked as read' });
   } catch (error) {
@@ -58,8 +54,7 @@ router.delete('/:id', requireAuth(), writeLimiter, async (req, res: any) => {
     if (!notif) return res.status(404).json({ message: 'Notification not found' });
 
     await prisma.notification.delete({ where: { id } });
-    await redisClient.del(`user_notifications:${user.id}`);
-    await broadcastNotificationUpdate(user.id);
+    await invalidateNotificationCache(user.id);
 
     return res.json({ success: true, message: 'Notification deleted' });
   } catch (error) {

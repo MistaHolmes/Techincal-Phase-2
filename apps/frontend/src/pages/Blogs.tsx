@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
+import { usePageCache } from "@/context/PageCacheContext";
 import { AppShell } from "@/components/layout/AppShell";
 import BlogList from "@/components/BlogList";
 import BlogSkeleton from "@/components/BlogSkeleton";
@@ -26,12 +27,21 @@ const Blogs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredBlogs, setFilteredBlogs] = useState<Blog[]>([]);
   const [allBlogs, setAllBlogs] = useState<Blog[]>([]);
-  
+
   const hasFetchedAllBlogs = useRef(false);
+  const cache = usePageCache();
 
   useEffect(() => {
     if (!isLoaded || !user || hasFetchedAllBlogs.current) return;
     hasFetchedAllBlogs.current = true;
+
+    const cached = cache.get('blogs:all');
+    if (cached) {
+      setAllBlogs(cached);
+      setFilteredBlogs(cached);
+      setLoading(false);
+      return;
+    }
 
     const API_URL = import.meta.env.VITE_API_URL;
 
@@ -48,9 +58,9 @@ const Blogs: React.FC = () => {
               .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Strip markdown links but keep text
               .replace(/[#*`>]/g, '') // Strip common markdown symbols
               .replace(/<[^>]*>?/gm, ''); // Strip remaining HTML tags
-            
+
             const plainText = cleanContent.trim();
-            
+
             // Extract first image from markdown as fallback if coverImage is empty
             const mdImageRegex = /!\[.*?\]\((.*?)\)/;
             const fallbackImage = content.match(mdImageRegex)?.[1] || "";
@@ -70,7 +80,8 @@ const Blogs: React.FC = () => {
             };
           })
           .sort((a: any, b: any) => b.updatedAt.getTime() - a.updatedAt.getTime());
-        
+
+        cache.set('blogs:all', fetchedBlogs);
         setAllBlogs(fetchedBlogs);
         setFilteredBlogs(fetchedBlogs);
       })
@@ -98,12 +109,12 @@ const Blogs: React.FC = () => {
   }, [searchTerm, allBlogs]);
 
   return (
-    <AppShell 
-      activePage="dock" 
-      searchTerm={searchTerm} 
+    <AppShell
+      activePage="dock"
+      searchTerm={searchTerm}
       setSearchTerm={setSearchTerm}
     >
-      <div className="max-w-4xl mx-auto">                    
+      <div className="max-w-4xl mx-auto">
         {loading ? (
           <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (

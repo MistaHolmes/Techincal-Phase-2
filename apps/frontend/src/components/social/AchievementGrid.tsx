@@ -32,8 +32,8 @@ export const AchievementGrid: React.FC<AchievementGridProps> = ({ achievements, 
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
             className={`relative p-5 rounded-2xl border transition-all overflow-hidden ${
-              isEarned 
-                ? 'bg-white dark:bg-gray-800 border-violet-200 dark:border-violet-900 shadow-sm' 
+              isEarned
+                ? 'bg-white dark:bg-gray-800 border-violet-200 dark:border-violet-900 shadow-sm'
                 : 'bg-gray-50/50 dark:bg-gray-900/50 border-gray-100 dark:border-gray-800 opacity-60 grayscale'
             }`}
           >
@@ -42,14 +42,14 @@ export const AchievementGrid: React.FC<AchievementGridProps> = ({ achievements, 
                 <CheckCircle2 size={16} />
               </div>
             )}
-            
+
             <div className="flex gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-inner ${
                 isEarned ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-600' : 'bg-gray-200 dark:bg-gray-800 text-gray-400'
               }`}>
                 {achievement.icon || '🏆'}
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <h3 className={`font-bold text-sm truncate ${isEarned ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
                   {achievement.name}

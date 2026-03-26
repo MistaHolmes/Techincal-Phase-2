@@ -56,23 +56,21 @@ router.get('/engagement', requireAuth(), async (req, res: any) => {
     const [blogs, commentCount, bookmarkCount] = await Promise.all([
       prisma.blog.findMany({
         where: { authorId: user.id, published: true },
-        select: { id: true, likes: true, views: true, readingCompletions: true },
+        select: { id: true, views: true, readingCompletions: true },
       }),
       prisma.comment.count({ where: { blog: { authorId: user.id } } }),
       prisma.bookmark.count({ where: { blog: { authorId: user.id } } }),
     ]);
 
-    const totalLikes = blogs.reduce((s, b) => s + b.likes, 0);
     const totalViews = blogs.reduce((s, b) => s + b.views, 0);
     const totalCompletions = blogs.reduce((s, b) => s + b.readingCompletions, 0);
 
-    // score = (likes×3 + comments×5 + bookmarks×4 + completions×6) / views × 100
-    const rawScore = (totalLikes * 3) + (commentCount * 5) + (bookmarkCount * 4) + (totalCompletions * 6);
+    // score = (comments×5 + bookmarks×4 + completions×6) / views × 100
+    const rawScore = (commentCount * 5) + (bookmarkCount * 4) + (totalCompletions * 6);
     const engagementRate = totalViews > 0 ? Math.round((rawScore / totalViews) * 100) / 100 : 0;
 
     return res.json({
       engagementRate,
-      totalLikes,
       totalViews,
       commentCount,
       bookmarkCount,

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Hash, ArrowLeft } from "lucide-react";
+import { usePageCache } from "@/context/PageCacheContext";
 import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
 
@@ -25,14 +26,20 @@ const TagBlogs = () => {
   const navigate = useNavigate();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
+  const cache = usePageCache();
 
   useEffect(() => {
     if (!tagName) return;
+    const cacheKey = `tag:${tagName}`;
+    const cached = cache.get(cacheKey);
+    if (cached) { setBlogs(cached); setLoading(false); return; }
     const fetchBlogs = async () => {
       try {
         const res = await fetch(`${API_URL}/api/blogs/by-tag/${encodeURIComponent(tagName)}`);
         const data = await res.json();
-        setBlogs(Array.isArray(data) ? data : []);
+        const blogData = Array.isArray(data) ? data : [];
+        cache.set(cacheKey, blogData);
+        setBlogs(blogData);
       } catch (err) {
         console.error("Failed to fetch tag blogs:", err);
       } finally {

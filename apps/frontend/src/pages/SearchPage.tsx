@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { Search, Clock, Heart, X, Tag } from "lucide-react";
+import { Search, Clock, X, Tag } from "lucide-react";
 import { Footer } from "@/components/Footer";
+import { usePageCache } from "@/context/PageCacheContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -11,7 +12,6 @@ interface Blog {
   id: string;
   title: string;
   content: string;
-  likes: number;
   coverImage?: string;
   updatedAt: string;
   author: { email: string; name?: string };
@@ -25,14 +25,26 @@ const SearchPage = () => {
   const [results, setResults] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const cache = usePageCache();
 
   const performSearch = useCallback(async (q: string) => {
     if (!q.trim()) { setResults([]); setSearched(false); return; }
+    const cacheKey = `search:${q.trim().toLowerCase()}`;
+    const cached = cache.get(cacheKey, 120000);
+    if (cached) {
+      setResults(cached);
+      setSearched(true);
+      return;
+    }
     setLoading(true);
     setSearched(true);
     try {
       const res = await fetch(`${API_URL}/api/blogs/search?q=${encodeURIComponent(q.trim())}`);
-      if (res.ok) setResults(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setResults(data);
+        cache.set(cacheKey, data);
+      }
     } catch (err) {
       console.error("Search failed:", err);
     } finally {
@@ -122,7 +134,6 @@ const SearchPage = () => {
                         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
                           <span>{authorName}</span>
                           <span className="flex items-center gap-1"><Clock size={11} />{readingTime} min</span>
-                          <span className="flex items-center gap-1"><Heart size={11} />{blog.likes}</span>
                           {blog.tags?.slice(0, 3).map((tag) => (
                             <span key={tag.id} className="flex items-center gap-0.5 px-2 py-0.5 bg-gray-50 dark:bg-gray-800 rounded-full">
                               <Tag size={9} />{tag.name}

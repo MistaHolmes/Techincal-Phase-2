@@ -5,7 +5,7 @@ export function Footer() {
     <footer className="border-t border-gray-200 dark:border-gray-800 bg-transparent text-gray-700 dark:text-gray-300 px-6 py-8 text-sm z-10 relative transition-colors duration-300">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start gap-8 md:gap-6">
-          
+
           {/* About Me */}
           <div className="space-y-3">
             <h3 className="font-semibold text-base text-gray-900 dark:text-white">Resources</h3>

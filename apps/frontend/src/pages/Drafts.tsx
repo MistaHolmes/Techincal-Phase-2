@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { FileDiff, Trash2, Send, Pencil } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
+import { usePageCache } from "@/context/PageCacheContext";
 import { AppShell } from "@/components/layout/AppShell";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -30,15 +31,20 @@ const Drafts = () => {
   const [drafts, setDrafts] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
+  const cache = usePageCache();
 
   const fetchDrafts = async () => {
+    const cached = cache.get('drafts', 180000);
+    if (cached) { setDrafts(cached); setLoading(false); return; }
     try {
       const token = await getToken();
       const res = await axios.get(`${API_URL}/api/user/blogs/drafts`, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
-      setDrafts(res.data.blogs || []);
+      const draftData = res.data.blogs || [];
+      cache.set('drafts', draftData);
+      setDrafts(draftData);
     } catch (err) {
       console.error("Failed to fetch drafts:", err);
     } finally {
@@ -57,6 +63,7 @@ const Drafts = () => {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
+      cache.invalidate('drafts', 'blogs:all');
       setDrafts((prev) => prev.filter((b) => b.id !== id));
     } catch (err) {
       alert("Failed to publish.");
@@ -74,6 +81,7 @@ const Drafts = () => {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
+      cache.invalidate('drafts', 'blogs:all');
       setDrafts((prev) => prev.filter((b) => b.id !== id));
     } catch (err) {
       alert("Failed to delete.");

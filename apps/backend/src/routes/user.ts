@@ -139,18 +139,17 @@ router.get('/stats', requireAuth(), async (req, res: any) => {
     const [blogs, commentCount] = await Promise.all([
       prisma.blog.findMany({
         where: { authorId: user.id },
-        select: { id: true, title: true, published: true, likes: true, createdAt: true },
-        orderBy: { likes: 'desc' },
+        select: { id: true, title: true, published: true, views: true, createdAt: true },
+        orderBy: { views: 'desc' },
       }),
       prisma.comment.count({ where: { blog: { authorId: user.id } } }),
     ]);
 
-    const totalLikes = blogs.reduce((sum: number, b: any) => sum + b.likes, 0);
     const publishedCount = blogs.filter((b: any) => b.published).length;
     const draftCount = blogs.filter((b: any) => !b.published).length;
     const topBlog = blogs[0] || null;
 
-    return res.json({ totalBlogs: blogs.length, publishedCount, draftCount, totalLikes, commentCount, topBlog, blogs });
+    return res.json({ totalBlogs: blogs.length, publishedCount, draftCount, commentCount, topBlog, blogs });
   } catch (err) {
     console.error('Error fetching stats:', err);
     return res.status(500).json({ error: 'Failed to fetch stats' });
@@ -201,7 +200,7 @@ router.post('/history', requireAuth(), async (req, res: any) => {
     } else {
       const lastReadDate = new Date(lastRead);
       const isToday = lastReadDate.toDateString() === now.toDateString();
-      
+
       if (!isToday) {
         const yesterday = new Date();
         yesterday.setDate(now.getDate() - 1);

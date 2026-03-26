@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Calendar, ArrowLeft, UserPlus, UserMinus, Users } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
+import { usePageCache } from "@/context/PageCacheContext";
 import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
 
@@ -13,7 +14,6 @@ interface Blog {
   id: string;
   title: string;
   content: string;
-  likes: number;
   coverImage?: string;
   updatedAt: string;
   tags: { id: string; name: string }[];
@@ -39,22 +39,37 @@ const AuthorProfile = () => {
   const [followLoading, setFollowLoading] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const cache = usePageCache();
 
   useEffect(() => {
     if (!userId) return;
+    const cacheKey = `author:${userId}:${isSignedIn}`;
+    const cached = cache.get(cacheKey, 180000);
+    if (cached) {
+      setAuthor(cached.author);
+      setFollowerCount(cached.followerCount);
+      setFollowingCount(cached.followingCount);
+      setIsFollowing(cached.isFollowing);
+      setLoading(false);
+      return;
+    }
     const fetchAuthor = async () => {
+      let authorData: any = null;
+      let fCount = 0, gCount = 0, following = false;
       try {
         const res = await fetch(`${API_URL}/api/authors/${userId}`);
         if (!res.ok) { setNotFound(true); return; }
-        const data = await res.json();
-        setAuthor(data);
+        authorData = await res.json();
+        setAuthor(authorData);
 
         // Fetch follow counts
         const countsRes = await fetch(`${API_URL}/api/authors/${userId}/follow-counts`);
         if (countsRes.ok) {
           const counts = await countsRes.json();
-          setFollowerCount(counts.followerCount);
-          setFollowingCount(counts.followingCount);
+          fCount = counts.followerCount;
+          gCount = counts.followingCount;
+          setFollowerCount(fCount);
+          setFollowingCount(gCount);
         }
 
         // Check if current user follows this author
@@ -65,9 +80,12 @@ const AuthorProfile = () => {
           });
           if (followRes.ok) {
             const followData = await followRes.json();
-            setIsFollowing(followData.isFollowing);
+            following = followData.isFollowing;
+            setIsFollowing(following);
           }
         }
+
+        cache.set(cacheKey, { author: authorData, followerCount: fCount, followingCount: gCount, isFollowing: following });
       } catch {
         setNotFound(true);
       } finally {
@@ -234,7 +252,6 @@ const AuthorProfile = () => {
                           <span>{new Date(blog.updatedAt).toLocaleDateString()}</span>
                           <span>{readingTime} min read</span>
                         </div>
-                        <span>❤️ {blog.likes}</span>
                       </div>
                     </div>
                   </div>

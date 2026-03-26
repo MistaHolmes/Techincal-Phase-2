@@ -19,10 +19,10 @@ export function BlogForm() {
   const { blogId } = useParams<{ blogId?: string }>();
   const isEditMode = !!blogId;
 
-  const [formData, setFormData] = useState({ 
-    title: "", 
-    content: "", 
-    published: true, 
+  const [formData, setFormData] = useState({
+    title: "",
+    content: "",
+    published: true,
     coverImage: "",
     summary: "",
     tags: [] as string[],
@@ -59,10 +59,10 @@ export function BlogForm() {
             headers: { Authorization: `Bearer ${token}` },
             withCredentials: true,
           });
-          setFormData({ 
-            title: data.title || "", 
-            content: data.content || "", 
-            published: data.published ?? true, 
+          setFormData({
+            title: data.title || "",
+            content: data.content || "",
+            published: data.published ?? true,
             coverImage: data.coverImage || "",
             summary: data.summary || "",
             tags: data.tags?.map((t: any) => t.name) || [],
@@ -145,7 +145,7 @@ export function BlogForm() {
           headers: { Authorization: `Bearer ${token}` },
           withCredentials: true
         });
-        
+
         if (response.status === 200) {
           localStorage.removeItem(AUTO_SAVE_KEY);
           navigate(`/blog/${blogId}`);
@@ -199,8 +199,8 @@ export function BlogForm() {
       <ReadabilityMeter content={formData.content} />
 
       {/* AI Assistant */}
-      <AISuggestionPanel 
-        content={formData.content} 
+      <AISuggestionPanel
+        content={formData.content}
         onTitleSelect={(title) => setFormData({ ...formData, title })}
         onTagsSelect={(tags) => setFormData({ ...formData, tags: [...new Set([...formData.tags, ...tags])] })}
         onSummaryGenerated={(summary) => setFormData({ ...formData, summary })}
@@ -211,7 +211,7 @@ export function BlogForm() {
         <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
           <FileDiff size={14} /> SEO Summary
         </h3>
-        <Textarea 
+        <Textarea
           value={formData.summary}
           onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
           placeholder="Brief summary for social sharing..."
@@ -230,7 +230,7 @@ export function BlogForm() {
              <p className="text-sm font-black uppercase tracking-widest text-gray-500 animate-pulse">Cooking your stories...</p>
           </div>
         ) : (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 sm:p-12 shadow-sm"
@@ -295,8 +295,8 @@ export function BlogForm() {
                   </span>
                 ))}
                 <div className="flex items-center gap-2 bg-gray-50/50 dark:bg-gray-900/50 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 transition focus-within:bg-white focus-within:border-violet-400">
-                   <input 
-                    type="text" 
+                   <input
+                    type="text"
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag(newTag))}
@@ -315,18 +315,18 @@ export function BlogForm() {
                   <Image size={14} /> Visual Cover
                 </div>
                 <div className="flex gap-4">
-                  <button 
+                  <button
                     onClick={async () => {
                       if (!formData.title && !formData.content) return alert("Write something first!");
                       setIsSubmitting(true);
                       try {
                         const token = await getToken();
-                        const res = await axios.post(`${API_URL}/api/ai/generate-image`, { 
-                          prompt: formData.title || formData.content.slice(0, 100) 
+                        const res = await axios.post(`${API_URL}/api/ai/generate-image`, {
+                          prompt: formData.title || formData.content.slice(0, 100)
                         }, { headers: { Authorization: `Bearer ${token}` } });
                         setFormData({ ...formData, coverImage: res.data.imageUrl });
                       } finally { setIsSubmitting(false); }
-                    }} 
+                    }}
                     className="text-[10px] font-black uppercase tracking-widest text-violet-600 dark:text-violet-400 flex items-center gap-2 hover:bg-violet-50 dark:hover:bg-violet-900/20 px-3 py-1.5 rounded-lg transition"
                   >
                      <Sparkles size={14} /> Magic Generate
@@ -334,12 +334,12 @@ export function BlogForm() {
                   <button onClick={() => fileInputRef.current?.click()} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-600 transition">Upload</button>
                 </div>
               </div>
-              
+
               {formData.coverImage ? (
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl group ring-4 ring-white dark:ring-gray-700">
                   <img src={formData.coverImage} alt="Cover" className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <button 
+                  <button
                     onClick={() => setFormData({ ...formData, coverImage: "" })}
                     className="absolute top-6 right-6 bg-white/90 dark:bg-gray-800/90 p-3 rounded-2xl text-rose-500 shadow-2xl hover:bg-rose-500 hover:text-white transition-all scale-90 group-hover:scale-100"
                   >
@@ -347,7 +347,7 @@ export function BlogForm() {
                   </button>
                 </div>
               ) : (
-                <div 
+                <div
                   onClick={() => fileInputRef.current?.click()}
                   className="aspect-video border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-3xl flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/50 hover:border-violet-400 transition-all group"
                 >
@@ -386,20 +386,20 @@ export function BlogForm() {
                <div className="space-y-4 w-full md:w-auto">
                   <div className="flex items-center gap-4">
                     {!isEditMode && (
-                        <Button 
-                          onClick={handleDraftSubmit} 
-                          disabled={isSubmitting} 
+                        <Button
+                          onClick={handleDraftSubmit}
+                          disabled={isSubmitting}
                           className="bg-gray-50 dark:bg-gray-900 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-white hover:shadow-md rounded-2xl px-8 h-14"
                         >
                           Save Draft
                         </Button>
                     )}
-                    <Button 
+                    <Button
                       onClick={(e) => {
                         const isScheduled = !!formData.scheduledAt;
-                        handleSubmit(e, isScheduled); 
-                      }} 
-                      disabled={isSubmitting} 
+                        handleSubmit(e, isScheduled);
+                      }}
+                      disabled={isSubmitting}
                       className="bg-black dark:bg-white text-white dark:text-black text-xs font-black uppercase tracking-[0.2em] rounded-2xl px-12 h-14 shadow-xl hover:opacity-90 transition-all flex-1 md:flex-none"
                     >
                       {isSubmitting ? "..." : isEditMode ? "Update" : formData.scheduledAt ? "Schedule" : "Launch Post"}
@@ -410,17 +410,17 @@ export function BlogForm() {
                <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-700 w-full md:w-auto">
                   <div className="flex flex-col gap-1">
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={!!formData.scheduledAt} 
+                      <input
+                        type="checkbox"
+                        checked={!!formData.scheduledAt}
                         onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.checked ? new Date(Date.now() + 86400000).toISOString().slice(0, 16) : "" })}
                         className="w-4 h-4 rounded-md border-gray-300 text-violet-600 focus:ring-violet-500"
                       />
                       <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Scheduled Launch</span>
                     </label>
                     {formData.scheduledAt && (
-                      <input 
-                        type="datetime-local" 
+                      <input
+                        type="datetime-local"
                         value={formData.scheduledAt}
                         onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
                         min={new Date().toISOString().slice(0, 16)}
@@ -485,9 +485,9 @@ function CoAuthorsPanel({ blogId }: { blogId?: string }) {
         ))}
       </div>
       <div className="flex gap-2">
-        <input 
-          type="email" 
-          value={inviteEmail} 
+        <input
+          type="email"
+          value={inviteEmail}
           onChange={(e) => setInviteEmail(e.target.value)}
           placeholder="Peer's email..."
           className="flex-1 text-[10px] font-bold bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-4 py-2"
@@ -580,7 +580,7 @@ function VersionHistoryPanel({ blogId, onRestore }: { blogId?: string, onRestore
                       {new Date(v.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => handleRestore(v.id)}
                     className="opacity-0 group-hover:opacity-100 text-[9px] font-black uppercase bg-violet-600 text-white px-3 py-1.5 rounded-lg transition-all"
                   >

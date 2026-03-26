@@ -30,6 +30,7 @@ import discoveryRoutes from './routes/discovery';
 import achievementsRouter from './routes/achievements';
 import highlightRoutes from './routes/highlights';
 import coauthorRoutes from './routes/coauthors';
+import likeRoutes from './routes/likes';
 
 // Team member routes
 import abinashRouter from './routes/abinash';
@@ -39,6 +40,7 @@ import supritRouter from './routes/suprit';
 
 const app = express();
 const port = parseInt(process.env.PORT || '3000', 10);
+const wsPort = parseInt(process.env.WS_PORT || '3001', 10);
 const server = http.createServer(app);
 
 // ── Middleware ────────────────────────────────────────────────────────────────
@@ -47,8 +49,8 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(globalLimiter);
 
-// ── WebSocket ────────────────────────────────────────────────────────────────
-initWebSocket(server);
+// ── WebSocket on separate port ───────────────────────────────────────────────
+initWebSocket(wsPort);
 initScheduler(60000); // Check once per minute
 
 // ── Mount Routes ─────────────────────────────────────────────────────────────
@@ -77,6 +79,7 @@ app.use('/api/discovery', discoveryRoutes);
 app.use('/api/achievements', achievementsRouter);
 app.use('/api/highlights', highlightRoutes);
 app.use('/api/coauthors', coauthorRoutes);
+app.use('/api/likes', likeRoutes);
 
 // ── Legacy Routes (backward compat) ─────────────────────────────────────────
 import { requireAuth } from '@clerk/express';

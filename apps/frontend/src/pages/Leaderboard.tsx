@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePageCache } from "@/context/PageCacheContext";
 import { Trophy, Medal, Star, TrendingUp, Crown, Users } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -22,16 +23,24 @@ const Leaderboard = () => {
   const [leaders, setLeaders] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("all");
+  const cache = usePageCache();
 
   useEffect(() => {
     fetchLeaderboard();
   }, [period]);
 
   const fetchLeaderboard = async () => {
+    const cacheKey = `leaderboard:${period}`;
+    const cached = cache.get(cacheKey);
+    if (cached) { setLeaders(cached); setLoading(false); return; }
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/analytics/leaderboard?period=${period}`);
-      if (res.ok) setLeaders(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        cache.set(cacheKey, data);
+        setLeaders(data);
+      }
     } catch (err) {
       console.error("Error fetching leaderboard:", err);
     } finally {

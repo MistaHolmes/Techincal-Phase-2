@@ -34,15 +34,19 @@ const PageLoader = () => (
 );
 
 import { AppShell } from "./components/layout/AppShell";
+import { BlogCacheProvider } from "./context/BlogCacheContext";
+import { PageCacheProvider } from "./context/PageCacheContext";
 
 const App: React.FC = () => {
   return (
+    <PageCacheProvider>
+    <BlogCacheProvider>
     <Router>
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<HomeRedirector />} />
           <Route path="/landing" element={<RequireAuth><AppShell hideSidebar hideRightPanel><LandingPage /></AppShell></RequireAuth>} />
-          
+
           {/* Main AppShell Routes */}
           <Route path="/blogs" element={<RequireAuth><UserBlogs /></RequireAuth>} />
           <Route path="/explore" element={<Explore />} />
@@ -59,19 +63,21 @@ const App: React.FC = () => {
           {/* Workflow Routes */}
           <Route path="/create-blog" element={<RequireAuth><BlogForm /></RequireAuth>} />
           <Route path="/edit-blog/:blogId" element={<RequireAuth><BlogForm /></RequireAuth>} />
-          
+
           {/* Public Views */}
           <Route path="/blog/:blogId" element={<BlogView />} />
           <Route path="/author/:userId" element={<AppShell hideRightPanel><AuthorProfile /></AppShell>} />
           <Route path="/tags/:tagName" element={<AppShell activePage="explore"><TagBlogs /></AppShell>} />
           <Route path="/series/:id" element={<AppShell activePage="explore"><SeriesPage /></AppShell>} />
-          
+
           {/* static */}
           <Route path="/my-story" element={<MyStory />} />
           <Route path="/contact" element={<Contact />} />
         </Routes>
       </Suspense>
     </Router>
+    </BlogCacheProvider>
+    </PageCacheProvider>
   );
 };
 

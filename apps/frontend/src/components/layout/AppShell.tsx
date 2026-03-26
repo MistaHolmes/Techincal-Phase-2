@@ -13,9 +13,9 @@ interface AppShellProps {
   showSearch?: boolean;
 }
 
-export const AppShell: React.FC<AppShellProps> = ({ 
-  children, 
-  activePage, 
+export const AppShell: React.FC<AppShellProps> = ({
+  children,
+  activePage,
   hideSidebar = false,
   hideRightPanel = false,
   rightPanelContent,
@@ -26,10 +26,10 @@ export const AppShell: React.FC<AppShellProps> = ({
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
       {/* Global Header */}
-      <AppHeader 
-        searchTerm={searchTerm} 
-        setSearchTerm={setSearchTerm} 
-        showSearch={showSearch} 
+      <AppHeader
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        showSearch={showSearch}
       />
 
       <div className="flex flex-1 pt-16 max-w-[1600px] mx-auto w-full">
@@ -57,7 +57,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                     Get Started
                   </button>
                 </div>
-                
+
                 <div className="bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 rounded-2xl p-5 shadow-sm">
                   <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-4">Trending on DraftDock</h5>
                   <div className="space-y-4">

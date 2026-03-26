@@ -42,7 +42,7 @@ router.get('/trending', async (req, res: any) => {
     const blogs = await prisma.blog.findMany({
       where: { published: true, updatedAt: { gte: sevenDaysAgo } },
       include: { author: { select: { email: true, name: true } }, tags: true },
-      orderBy: { likes: 'desc' },
+      orderBy: { views: 'desc' },
       take: 6,
     });
 
@@ -139,7 +139,7 @@ router.get('/:blogId', async (req, res: any) => {
 
     const blog = await prisma.blog.findUnique({
       where: { id: blogId },
-      include: { 
+      include: {
         author: { select: { email: true, name: true, profilePicture: true } },
         tags: true,
         series: true
@@ -181,15 +181,15 @@ router.post('/', requireAuth(), writeLimiter, async (req, res: any) => {
     if (!title || !content) return res.status(400).json({ error: 'Title and content are required' });
 
     const blog = await prisma.blog.create({
-      data: { 
-        title, 
-        content, 
-        published, 
-        coverImage, 
-        summary, 
+      data: {
+        title,
+        content,
+        published,
+        coverImage,
+        summary,
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
         readabilityScore: readabilityScore ? parseFloat(readabilityScore) : null,
-        authorId: user.id 
+        authorId: user.id
       },
       select: { id: true, title: true, content: true, published: true, createdAt: true, updatedAt: true },
     });
@@ -315,7 +315,7 @@ router.get('/:id/related', async (req, res: any) => {
     const related = await prisma.blog.findMany({
       where: { published: true, id: { not: id }, tags: { some: { id: { in: tagIds } } } },
       include: { author: { select: { email: true, name: true } }, tags: true },
-      orderBy: { likes: 'desc' },
+      orderBy: { views: 'desc' },
       take: 4,
     });
 

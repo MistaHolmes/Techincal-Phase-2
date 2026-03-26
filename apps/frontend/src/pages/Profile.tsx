@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { UserButton, useAuth } from "@clerk/clerk-react";
 import { Users, UserPlus, UserMinus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePageCache } from "@/context/PageCacheContext";
 import UserContentSection from "../components/UserContent";
 import { Footer } from "@/components/Footer";
 
@@ -24,8 +25,16 @@ const ProfileComponent = () => {
   const [following, setFollowing] = useState<FollowUser[]>([]);
   const [loadingFollow, setLoadingFollow] = useState(true);
   const [unfollowingId, setUnfollowingId] = useState<string | null>(null);
+  const cache = usePageCache();
 
   useEffect(() => {
+    const cached = cache.get('profile:follows', 180000);
+    if (cached) {
+      setFollowers(cached.followers);
+      setFollowing(cached.following);
+      setLoadingFollow(false);
+      return;
+    }
     const fetchFollowData = async () => {
       try {
         const token = await getToken();
@@ -34,8 +43,11 @@ const ProfileComponent = () => {
           fetch(`${API_URL}/api/user/followers`, { headers }),
           fetch(`${API_URL}/api/user/following`, { headers }),
         ]);
-        if (followersRes.ok) setFollowers(await followersRes.json());
-        if (followingRes.ok) setFollowing(await followingRes.json());
+        const fData = followersRes.ok ? await followersRes.json() : [];
+        const gData = followingRes.ok ? await followingRes.json() : [];
+        setFollowers(fData);
+        setFollowing(gData);
+        cache.set('profile:follows', { followers: fData, following: gData });
       } catch (err) {
         console.error("Failed to fetch follow data:", err);
       } finally {
@@ -53,6 +65,7 @@ const ProfileComponent = () => {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+      cache.invalidate('profile:follows');
       setFollowing((prev) => prev.filter((u) => u.id !== userId));
     } catch (err) {
       console.error("Unfollow failed:", err);

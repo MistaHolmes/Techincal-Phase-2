@@ -14,7 +14,7 @@ router.get('/user', requireAuth(), async (req, res: any) => {
     const earned = await (prisma.userAchievement as any).findMany({
       where: { userId: user.id },
       include: { achievement: true },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { awardedAt: 'desc' }
     });
 
     return res.json(earned.map((ua: any) => ({

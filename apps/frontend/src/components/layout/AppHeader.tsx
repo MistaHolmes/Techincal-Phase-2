@@ -11,10 +11,10 @@ interface AppHeaderProps {
   showSearch?: boolean;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ 
-  searchTerm, 
+export const AppHeader: React.FC<AppHeaderProps> = ({
+  searchTerm,
   setSearchTerm,
-  showSearch = true 
+  showSearch = true
 }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
@@ -36,7 +36,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     <header className="sticky top-0 z-[60] border-b border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl px-4 h-16 flex items-center justify-between transition-all duration-300">
       {/* Left: Brand */}
       <div className="flex items-center gap-4">
-        <button 
+        <button
           onClick={() => navigate("/blogs")}
           className="flex items-center gap-2 group transition-all"
         >
@@ -82,10 +82,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
         <div className="flex items-center gap-2">
             <Notifications />
-            
-            <ProfileButton 
-              variant="expandIcon" 
-              Icon={() => <Plus size={16} />} 
+
+            <ProfileButton
+              variant="expandIcon"
+              Icon={() => <Plus size={16} />}
               iconPlacement="right"
               onClick={() => navigate("/create-blog")}
               className="hidden sm:flex"
@@ -93,13 +93,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               Draft
             </ProfileButton>
 
-            <button 
+            <button
               onClick={() => navigate("/profile")}
               className="w-10 h-10 rounded-full border-2 border-transparent hover:border-violet-500 transition-all p-0.5 overflow-hidden"
             >
-               <img 
-                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`} 
-                 alt="Profile" 
+               <img
+                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`}
+                 alt="Profile"
                  className="w-full h-full rounded-full object-cover"
                />
             </button>

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { BookOpen, ArrowLeft } from "lucide-react";
+import { usePageCache } from "@/context/PageCacheContext";
 import Header2 from "@/components/ui/header2";
 import { Footer } from "@/components/Footer";
 
@@ -32,13 +33,21 @@ const SeriesPage = () => {
   const navigate = useNavigate();
   const [series, setSeries] = useState<Series | null>(null);
   const [loading, setLoading] = useState(true);
+  const cache = usePageCache();
 
   useEffect(() => {
     if (!id) return;
+    const cacheKey = `series:${id}`;
+    const cached = cache.get(cacheKey);
+    if (cached) { setSeries(cached); setLoading(false); return; }
     const fetchSeries = async () => {
       try {
         const res = await fetch(`${API_URL}/api/series/${id}`);
-        if (res.ok) setSeries(await res.json());
+        if (res.ok) {
+          const data = await res.json();
+          cache.set(cacheKey, data);
+          setSeries(data);
+        }
       } catch (err) {
         console.error("Failed to fetch series:", err);
       } finally {

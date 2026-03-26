@@ -36,7 +36,7 @@ const LandingPage: React.FC = () => {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         delayChildren: 0.3,
         staggerChildren: 0.2,
        },
@@ -168,7 +168,7 @@ const LandingPage: React.FC = () => {
                     Start Reading <ArrowRight className="ml-2 inline h-5 w-5" />
                   </button>
                 </SignInButton>
-              </SignedOut>              
+              </SignedOut>
             </motion.div>
           </motion.section>
         )}
