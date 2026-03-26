@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
-import { Footer } from "./Footer";
 import { BlogSkeleton, DraftBlogSkeleton } from "./ui/blogSkeleton";
 import { Pencil } from "lucide-react";
 
@@ -117,7 +116,7 @@ const UserContentSection = () => {
 
   return (
     <div>
-        <div className="mt-10 bg-white dark:bg-gray-900/60 rounded-xl shadow-md border border-gray-300 dark:border-gray-800 p-6 max-w-7xl mx-auto transition-colors">
+        <div className="p-6">
         {/* Buttons */}
         <div className="flex border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden w-fit">
             <button
@@ -309,7 +308,6 @@ const UserContentSection = () => {
             </div>
         )}
         </div>
-        <Footer/>
     </div>
   );
 };

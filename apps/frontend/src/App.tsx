@@ -57,7 +57,7 @@ const App: React.FC = () => {
           <Route path="/leaderboard" element={<AppShell activePage="leaderboard"><Leaderboard /></AppShell>} />
           <Route path="/messages" element={<RequireAuth><AppShell activePage="messages"><Messages /></AppShell></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><AppShell activePage="settings"><Settings /></AppShell></RequireAuth>} />
-          <Route path="/profile" element={<RequireAuth><AppShell activePage="profile"><ProfileComponent /></AppShell></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><AppShell activePage="profile" hideRightPanel><ProfileComponent /></AppShell></RequireAuth>} />
           <Route path="/drafts" element={<RequireAuth><Drafts /></RequireAuth>} />
 
           {/* Workflow Routes */}

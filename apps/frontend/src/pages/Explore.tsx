@@ -5,7 +5,6 @@ import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Compass } from "lucide-react";
 import { usePageCache } from "@/context/PageCacheContext";
-import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -316,9 +315,6 @@ const Explore = () => {
         </div>
       </section>
 
-      <div className="mt-32">
-        <Footer />
-      </div>
     </AppShell>
   );
 };

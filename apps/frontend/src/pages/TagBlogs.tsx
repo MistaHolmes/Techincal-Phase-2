@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Hash, ArrowLeft } from "lucide-react";
 import { usePageCache } from "@/context/PageCacheContext";
 import Header2 from "@/components/ui/header2";
-import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -119,7 +118,6 @@ const TagBlogs = () => {
           </div>
         )}
       </main>
-      <Footer />
     </div>
   );
 };

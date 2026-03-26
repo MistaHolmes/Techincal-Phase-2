@@ -4,7 +4,6 @@ import { ArrowRight } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth, } from "@clerk/clerk-react";
 import TypeWriter from "../components/TypeWriter";
 import { useNavigate } from "react-router-dom";
-import { Footer } from "@/components/Footer";
 import BackgroundGlow from "@/components/ui/BackgroundGlow";
 
 const LandingPage: React.FC = () => {
@@ -173,7 +172,6 @@ const LandingPage: React.FC = () => {
           </motion.section>
         )}
       </main>
-      <Footer />
     </div>
   );
 };

@@ -161,7 +161,7 @@ const Sidebar: React.FC<{ activePage?: string }> = ({ activePage = "dock" }) => 
           z-[70] flex flex-col transition-all duration-300 ease-in-out
           ${collapsed ? "w-[72px]" : "w-64"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0 md:static
+          md:translate-x-0 md:sticky md:top-16 md:h-[calc(100vh-4rem)] md:overflow-y-auto md:z-auto
         `}
       >
         {/* Header */}

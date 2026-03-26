@@ -1,6 +1,7 @@
 import React from "react";
 import Sidebar from "../SideBar";
 import { AppHeader } from "./AppHeader";
+import { Footer } from "../Footer";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -32,10 +33,10 @@ export const AppShell: React.FC<AppShellProps> = ({
         showSearch={showSearch}
       />
 
-      <div className="flex flex-1 pt-16 max-w-[1600px] mx-auto w-full">
+      <div className="flex flex-1 max-w-[1600px] mx-auto w-full">
         {/* Left Sidebar */}
         {!hideSidebar && (
-          <div className="hidden md:block flex-shrink-0">
+          <div className="hidden md:block flex-shrink-0 self-stretch">
             <Sidebar activePage={activePage} />
           </div>
         )}
@@ -84,6 +85,11 @@ export const AppShell: React.FC<AppShellProps> = ({
           <Sidebar activePage={activePage} />
         </div>
       )}
+
+      {/* Site Footer - always at bottom, full width */}
+      <footer className="w-full">
+        <Footer />
+      </footer>
     </div>
   );
 };

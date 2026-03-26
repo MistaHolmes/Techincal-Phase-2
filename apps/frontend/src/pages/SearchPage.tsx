@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Search, Clock, X, Tag } from "lucide-react";
-import { Footer } from "@/components/Footer";
 import { usePageCache } from "@/context/PageCacheContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -148,9 +147,6 @@ const SearchPage = () => {
             </div>
           )}
         </motion.div>
-      </div>
-      <div className="mt-12 px-4">
-        <Footer />
       </div>
     </>
   );

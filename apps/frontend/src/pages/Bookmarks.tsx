@@ -6,7 +6,6 @@ import { Bookmark, BookmarkX } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { usePageCache } from "@/context/PageCacheContext";
-import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -156,9 +155,7 @@ const Bookmarks = () => {
           </div>
         )}
       </div>
-      <div className="mt-20 px-4">
-        <Footer />
-      </div>
+
     </>
   );
 };

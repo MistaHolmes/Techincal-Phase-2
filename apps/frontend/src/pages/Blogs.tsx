@@ -5,7 +5,6 @@ import { usePageCache } from "@/context/PageCacheContext";
 import { AppShell } from "@/components/layout/AppShell";
 import BlogList from "@/components/BlogList";
 import BlogSkeleton from "@/components/BlogSkeleton";
-import { Footer } from "@/components/Footer";
 
 // Define the Blog type
 interface Blog {
@@ -130,9 +129,6 @@ const Blogs: React.FC = () => {
             <BlogList posts={filteredBlogs} />
           </div>
         )}
-      </div>
-      <div className="mt-20">
-        <Footer />
       </div>
     </AppShell>
   );
