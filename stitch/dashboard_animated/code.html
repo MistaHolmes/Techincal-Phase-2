@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#006f62",
+              "surface": "#f8f9fa",
+              "on-error-container": "#782232",
+              "background": "#f8f9fa",
+              "on-primary": "#f9f6ff",
+              "surface-bright": "#f8f9fa",
+              "on-secondary-container": "#40555f",
+              "surface-dim": "#d1dce0",
+              "on-secondary-fixed": "#2d424c",
+              "error-container": "#ff8b9a",
+              "on-tertiary-fixed": "#005046",
+              "secondary": "#4d626c",
+              "tertiary": "#006b5f",
+              "on-primary-container": "#3f48a1",
+              "primary-dim": "#4049a2",
+              "outline": "#737c7f",
+              "secondary-fixed": "#cfe6f2",
+              "surface-container-lowest": "#ffffff",
+              "on-primary-fixed-variant": "#4953ac",
+              "primary-container": "#e0e0ff",
+              "inverse-surface": "#0c0f10",
+              "tertiary-dim": "#005e53",
+              "primary-fixed-dim": "#ced1ff",
+              "on-secondary": "#f2faff",
+              "on-secondary-fixed-variant": "#495f69",
+              "tertiary-fixed": "#a2ffed",
+              "on-background": "#2b3437",
+              "secondary-dim": "#415660",
+              "secondary-container": "#cfe6f2",
+              "surface-container-high": "#e3e9ec",
+              "error-dim": "#4f0116",
+              "surface-container-highest": "#dbe4e7",
+              "surface-variant": "#dbe4e7",
+              "on-error": "#fff7f7",
+              "surface-container-low": "#f1f4f6",
+              "error": "#9e3f4e",
+              "tertiary-container": "#a2ffed",
+              "on-surface": "#2b3437",
+              "secondary-fixed-dim": "#c1d8e4",
+              "on-tertiary-container": "#006458",
+              "surface-tint": "#4c56af",
+              "inverse-primary": "#929bfa",
+              "primary-fixed": "#e0e0ff",
+              "on-tertiary": "#e3fff7",
+              "inverse-on-surface": "#9b9d9e",
+              "primary": "#4c56af",
+              "outline-variant": "#abb3b7",
+              "tertiary-fixed-dim": "#94f0df",
+              "on-primary-fixed": "#2c358e",
+              "on-surface-variant": "#586064",
+              "surface-container": "#eaeff1"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Manrope"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            animation: {
+              'fade-in': 'fadeIn 0.6s ease-out forwards',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+        .stagger-4 { animation-delay: 0.4s; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- SideNavBar Anchor -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r-0 bg-slate-100 dark:bg-slate-900 flex flex-col py-8 px-4 z-50">
+<div class="mb-10 px-4">
+<h1 class="text-2xl font-bold text-indigo-700 dark:text-indigo-400 tracking-tighter font-['Space_Grotesk']">DraftDock</h1>
+<p class="text-xs font-['Inter'] text-slate-500 uppercase tracking-widest mt-1">The Technical Editorial</p>
+</div>
+<button class="mb-8 mx-4 py-3 bg-black text-white border border-black rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-white hover:text-black transition-all duration-300">
+<span class="material-symbols-outlined text-sm">add</span>
+            New Post
+        </button>
+<nav class="flex-1 space-y-2">
+<!-- Explore -->
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-300 group-hover:scale-110" data-icon="explore">explore</span>
+<span class="font-['Space_Grotesk'] font-bold text-lg tracking-tight">Explore</span>
+</a>
+<!-- Drafts -->
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-300 group-hover:scale-110" data-icon="edit_note">edit_note</span>
+<span class="font-['Space_Grotesk'] font-bold text-lg tracking-tight">Drafts</span>
+</a>
+<!-- Bookmarks -->
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-300 group-hover:scale-110" data-icon="bookmarks">bookmarks</span>
+<span class="font-['Space_Grotesk'] font-bold text-lg tracking-tight">Bookmarks</span>
+</a>
+<!-- Dashboard (Active) -->
+<a class="flex items-center gap-3 text-indigo-700 dark:text-indigo-300 border-l-2 border-indigo-600 dark:border-indigo-400 pl-4 py-2 font-bold bg-slate-200/30 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-['Space_Grotesk'] font-bold text-lg tracking-tight">Dashboard</span>
+</a>
+<!-- History -->
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 transition-colors hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-300 group-hover:scale-110" data-icon="history">history</span>
+<span class="font-['Space_Grotesk'] font-bold text-lg tracking-tight">History</span>
+</a>
+</nav>
+<div class="mt-auto pt-8 border-t border-slate-200/50 dark:border-slate-800/50 space-y-2">
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-300 group-hover:scale-110" data-icon="settings">settings</span>
+<span class="font-['Space_Grotesk'] font-bold text-lg tracking-tight">Settings</span>
+</a>
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-300 group-hover:scale-110" data-icon="help_outline">help_outline</span>
+<span class="font-['Space_Grotesk'] font-bold text-lg tracking-tight">Support</span>
+</a>
+<div class="mt-4 px-4 flex items-center gap-3 opacity-0 animate-fade-in stagger-4">
+<img class="w-10 h-10 rounded-full border-2 border-indigo-100 object-cover" data-alt="Close-up portrait of a professional man with short dark hair and a confident expression against a neutral studio background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBK660SL6UCaiZlxNfj5MTJyAm34wd97czSPZIeoXSOVAh_Bp2Q7i4f6KVGnQZuaDAL6TPPnOdbayy5sposoLSmVzePS8pLTxgc56vw4BvUVzkq3fEQA28w7Dt085EsQv--3CaaMeBtPL3g8Yfh0sBcpisbQOeoxX5PUU55P6p7AdczARtdDXpRT6XxFc05n_Zv_ICqeTj-tlZ2ya8sn6tGTJR6ZJ-EWQW-P6XuBSOkmtSKslsa91xiKo4LUtnzgptzqBasre9eOjFw"/>
+<div>
+<p class="text-sm font-bold leading-tight">Alex Rivera</p>
+<p class="text-xs text-slate-500">Pro Account</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen flex flex-col bg-surface">
+<!-- Header / Top Bar -->
+<header class="px-12 py-8 flex justify-between items-end opacity-0 animate-fade-in">
+<div>
+<h2 class="text-4xl font-headline font-bold text-on-background tracking-tight">Editorial Dashboard</h2>
+<p class="text-on-surface-variant font-body mt-2">Welcome back, Alex. Your technical insights are reaching new heights this week.</p>
+</div>
+<div class="flex gap-4">
+<div class="bg-surface-container-low px-4 py-2 rounded-lg flex items-center gap-3 border border-transparent hover:border-outline-variant transition-all duration-300 cursor-default">
+<span class="material-symbols-outlined text-secondary" data-icon="calendar_today">calendar_today</span>
+<span class="font-label text-sm font-semibold">Oct 1 - Oct 31, 2024</span>
+</div>
+</div>
+</header>
+<!-- Insights Grid (Bento Style) -->
+<section class="px-12 grid grid-cols-12 gap-6 pb-12">
+<!-- Main Metric: Total Views -->
+<div class="col-span-12 md:col-span-8 bg-surface-container-lowest rounded-xl p-8 flex flex-col justify-between group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-surface-bright opacity-0 animate-fade-in stagger-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label text-xs uppercase tracking-widest text-on-surface-variant mb-1">Total Audience Reach</p>
+<h3 class="text-5xl font-headline font-bold text-primary">142.8k</h3>
+</div>
+<div class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 transition-transform group-hover:scale-105 duration-300">
+<span class="material-symbols-outlined text-sm" data-icon="trending_up">trending_up</span>
+                        +12.4%
+                    </div>
+</div>
+<!-- Visual Chart Representation (Simulated with Bars) -->
+<div class="mt-12 flex items-end gap-2 h-32">
+<div class="flex-1 bg-surface-container h-[40%] rounded-t-md transition-all duration-500 group-hover:h-[45%]"></div>
+<div class="flex-1 bg-surface-container h-[55%] rounded-t-md transition-all duration-500 group-hover:h-[60%]"></div>
+<div class="flex-1 bg-primary h-[85%] rounded-t-md opacity-20 transition-all duration-500 group-hover:h-[90%]"></div>
+<div class="flex-1 bg-surface-container h-[60%] rounded-t-md transition-all duration-500 group-hover:h-[65%]"></div>
+<div class="flex-1 bg-surface-container h-[75%] rounded-t-md transition-all duration-500 group-hover:h-[80%]"></div>
+<div class="flex-1 bg-primary h-[95%] rounded-t-md transition-all duration-500 group-hover:scale-y-105"></div>
+<div class="flex-1 bg-surface-container h-[70%] rounded-t-md transition-all duration-500 group-hover:h-[75%]"></div>
+<div class="flex-1 bg-surface-container h-[65%] rounded-t-md transition-all duration-500 group-hover:h-[70%]"></div>
+<div class="flex-1 bg-surface-container h-[80%] rounded-t-md transition-all duration-500 group-hover:h-[85%]"></div>
+<div class="flex-1 bg-primary-dim h-[100%] rounded-t-md transition-all duration-500 group-hover:scale-y-110 origin-bottom"></div>
+</div>
+</div>
+<!-- Secondary Metric: Engagement -->
+<div class="col-span-12 md:col-span-4 bg-surface-container-low rounded-xl p-8 flex flex-col justify-between border-l-4 border-tertiary transition-all duration-300 hover:shadow-xl hover:-translate-y-1 opacity-0 animate-fade-in stagger-2 group">
+<div>
+<p class="font-label text-xs uppercase tracking-widest text-on-surface-variant mb-1">Engagement Rate</p>
+<h3 class="text-4xl font-headline font-bold text-on-surface">8.42%</h3>
+<p class="text-sm text-tertiary font-medium mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm group-hover:rotate-12 transition-transform" data-icon="auto_awesome">auto_awesome</span>
+                        Above platform average
+                    </p>
+</div>
+<div class="mt-8 pt-8 border-t border-outline-variant/20">
+<div class="flex justify-between text-xs font-label text-on-surface-variant mb-2">
+<span>Comments</span>
+<span class="font-bold text-on-surface">1,240</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-tertiary w-3/4 h-full transition-all duration-1000 ease-out"></div>
+</div>
+<div class="flex justify-between text-xs font-label text-on-surface-variant mt-4 mb-2">
+<span>Shares</span>
+<span class="font-bold text-on-surface">842</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-tertiary w-1/2 h-full transition-all duration-1000 ease-out"></div>
+</div>
+</div>
+</div>
+<!-- Tertiary Metric: Read Time -->
+<div class="col-span-12 md:col-span-4 bg-inverse-surface text-on-primary rounded-xl p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:-translate-y-1 opacity-0 animate-fade-in stagger-3 group">
+<div>
+<span class="material-symbols-outlined text-tertiary-fixed mb-4 group-hover:animate-pulse" data-icon="timer">timer</span>
+<p class="font-label text-xs uppercase tracking-widest text-outline-variant mb-1">Avg. Time on Page</p>
+<h3 class="text-4xl font-headline font-bold">4m 32s</h3>
+</div>
+<div class="mt-6">
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full border-2 border-inverse-surface hover:z-10 transition-all duration-300 hover:scale-110" data-alt="Professional headshot of a middle-aged man with glasses and a friendly smile, outdoor lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLEp1fuQfUqo4dnj4agV83tqtkUHd-jAN_uQ46nPuVoaAAAagQ64ehkEo9QEcBhtz714lKG-A-eo2y-Unj_O3PmlKUKhe7TOKHBUNFTcZ6_dD5Bcq605ighmONR1GYmZoOKYc_8BJ1M5Qa8eV8_tyO8JF_5C16_WI4kytakswOWrqSQzVpfe945jRa-L_nMAHpJy2BfRPnF8mHDA6l2dWI-UUAU3811IgpDJuuoyLiL7dthad--KwlteXrqe8cNCl6GwbTb12aF20A"/>
+<img class="w-8 h-8 rounded-full border-2 border-inverse-surface hover:z-10 transition-all duration-300 hover:scale-110" data-alt="Portrait of a smiling young woman with curly hair against a vibrant blurred city background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAunn1kO248917bTAx26bk2byj70xLBrIOELY9q5XMY4czJUVsvZQRLsjb0VjPSraS_lTjNWay0FCDnPbMkdu9-fqvGVrF2E8dMXt2ODDN-mQu-g1Bl9Ia-hO_eUISXgP6iRMDgFJtZyPTz1lGmrP7CHPsNJQe0sig2l3NRaYXg76FgwrnCX2ohhWTGuWv-79oS60gFLAiLTkjfp8RFlm2siE2s11zSmSQrQatSdt5NVLv9c1eLY0enehrTyV8fi3xf3teKSJlVjFtU"/>
+<img class="w-8 h-8 rounded-full border-2 border-inverse-surface hover:z-10 transition-all duration-300 hover:scale-110" data-alt="Close-up portrait of a man with a short beard looking thoughtfully to the side, soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxWhPeCrRw3aukSzrrnV1aCgJ33UynhHR0qpz0g9GQb7dPMoVOKwdyWC-x1XiE5BMlPw5hzDh91ZHhxDtlakBrlOfM7pva8RyKRX_-mw59CgrMZ0oPxagip3RhqqyhUOnEcu-wtvEIZ5svHHg-77vOaR_czepL-xNX3cwYevOApqhIL41VtXLKIHF40zzhA9ZtA86Erfo6qqgIdkBXKuPj_4NpDfDNghQaJ4UStczRR4FwJfYtooIC6EUbuRj1VDOFpLWOaKhIh1UB"/>
+<div class="w-8 h-8 rounded-full border-2 border-inverse-surface bg-on-surface-variant flex items-center justify-center text-[10px] font-bold">+12</div>
+</div>
+<p class="text-xs text-outline-variant mt-3 font-label">Based on 12.4k recent active sessions</p>
+</div>
+</div>
+<!-- Content Performance List -->
+<div class="col-span-12 md:col-span-8 bg-surface-container-lowest rounded-xl p-8 transition-all duration-300 hover:shadow-xl opacity-0 animate-fade-in stagger-4">
+<div class="flex justify-between items-center mb-8">
+<h4 class="font-headline font-bold text-xl">Top Performing Editorials</h4>
+<button class="bg-black text-white px-4 py-2 rounded-lg font-label text-sm font-bold flex items-center gap-1 border border-black hover:bg-white hover:text-black transition-all duration-300">
+                        View Detailed Report
+                        <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="space-y-6">
+<!-- Post 1 -->
+<div class="flex items-center justify-between group cursor-pointer p-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors">
+<div class="flex gap-4 items-center">
+<div class="w-12 h-12 bg-primary-container rounded-lg flex items-center justify-center text-primary font-bold transition-transform group-hover:scale-110 duration-300">
+                                01
+                            </div>
+<div>
+<h5 class="font-headline font-semibold text-on-surface group-hover:text-primary transition-colors">Architecting Scalable Microservices in Go</h5>
+<div class="flex gap-3 mt-1">
+<span class="px-2 py-0.5 bg-secondary-container text-secondary text-[10px] font-bold rounded font-mono">BACKEND</span>
+<span class="text-xs text-on-surface-variant font-label">Published 4 days ago</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<p class="font-headline font-bold text-on-surface">24.2k</p>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant">Views</p>
+</div>
+</div>
+<!-- Post 2 -->
+<div class="flex items-center justify-between group cursor-pointer p-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors">
+<div class="flex gap-4 items-center">
+<div class="w-12 h-12 bg-surface-container-high rounded-lg flex items-center justify-center text-on-surface-variant font-bold transition-transform group-hover:scale-110 duration-300">
+                                02
+                            </div>
+<div>
+<h5 class="font-headline font-semibold text-on-surface group-hover:text-primary transition-colors">The Future of Edge Computing and WebAssembly</h5>
+<div class="flex gap-3 mt-1">
+<span class="px-2 py-0.5 bg-secondary-container text-secondary text-[10px] font-bold rounded font-mono">INFRASTRUCTURE</span>
+<span class="text-xs text-on-surface-variant font-label">Published 12 days ago</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<p class="font-headline font-bold text-on-surface">18.9k</p>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant">Views</p>
+</div>
+</div>
+<!-- Post 3 -->
+<div class="flex items-center justify-between group cursor-pointer p-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors">
+<div class="flex gap-4 items-center">
+<div class="w-12 h-12 bg-surface-container-high rounded-lg flex items-center justify-center text-on-surface-variant font-bold transition-transform group-hover:scale-110 duration-300">
+                                03
+                            </div>
+<div>
+<h5 class="font-headline font-semibold text-on-surface group-hover:text-primary transition-colors">Why Your Rust Build Times are Slowing You Down</h5>
+<div class="flex gap-3 mt-1">
+<span class="px-2 py-0.5 bg-secondary-container text-secondary text-[10px] font-bold rounded font-mono">DEVELOPER EXPERIENCE</span>
+<span class="text-xs text-on-surface-variant font-label">Published 3 weeks ago</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<p class="font-headline font-bold text-on-surface">15.4k</p>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant">Views</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer Anchor -->
+<footer class="w-full py-6 mt-auto bg-slate-200 dark:bg-slate-950 flex flex-row justify-between items-center px-12 max-w-full ml-0 border-t border-transparent opacity-0 animate-fade-in stagger-4">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+<span class="font-['Inter'] text-xs font-medium uppercase tracking-widest text-slate-500">System Operational</span>
+</div>
+<span class="text-slate-300 dark:text-slate-800">|</span>
+<p class="font-['Inter'] text-xs font-medium uppercase tracking-widest text-slate-500">© 2024 DraftDock.</p>
+</div>
+<div class="flex gap-8">
+<a class="font-['Inter'] text-xs font-medium uppercase tracking-widest text-slate-500 hover:text-indigo-500 transition-colors" href="#">Resources</a>
+<a class="font-['Inter'] text-xs font-medium uppercase tracking-widest text-slate-500 hover:text-indigo-500 transition-colors" href="#">Twitter</a>
+<a class="font-['Inter'] text-xs font-medium uppercase tracking-widest text-slate-500 hover:text-indigo-500 transition-colors" href="#">Github</a>
+<a class="font-['Inter'] text-xs font-medium uppercase tracking-widest text-indigo-600 dark:text-indigo-400 border border-transparent px-2 py-1 rounded hover:bg-black hover:text-white transition-all duration-300 active:scale-95" href="#">Support Developer</a>
+</div>
+</footer>
+</main>
+</body></html>

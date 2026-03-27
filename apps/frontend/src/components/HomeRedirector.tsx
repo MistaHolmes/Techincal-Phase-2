@@ -9,7 +9,7 @@ const HomeRedirector = () => {
 
   useEffect(() => {
     if (isSignedIn) {
-      navigate("/blogs");
+      navigate("/explore");
     }
   }, [isSignedIn, navigate]);
 

@@ -5,7 +5,6 @@ import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Compass } from "lucide-react";
 import { usePageCache } from "@/context/PageCacheContext";
-import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -17,7 +16,8 @@ interface Blog {
   coverImage?: string;
   createdAt: string;
   updatedAt: string;
-  author: { email: string; name?: string };
+  authorId?: string;
+  author: { id?: string; email: string; name?: string; profilePicture?: string };
   tags: { id: string; name: string }[];
 }
 
@@ -143,15 +143,22 @@ const Explore = () => {
                 <h2 className="font-headline text-3xl md:text-5xl font-semibold mb-6 max-w-4xl leading-tight">
                   {featuredBlog.title}
                 </h2>
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 flex items-center justify-center overflow-hidden">
-                       <span className="material-symbols-outlined text-sm">person</span>
+                  <div className="flex items-center gap-6">
+                    <div
+                      className="flex items-center gap-3 cursor-pointer group/author"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/author/${featuredBlog.author?.id || featuredBlog.authorId}`); }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover/author:scale-110 group-hover/author:ring-2 group-hover/author:ring-violet-400 group-hover/author:shadow-lg group-hover/author:shadow-violet-500/30">
+                        <img
+                          src={featuredBlog.author?.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${featuredBlog.author?.email}`}
+                          alt={featuredBlog.author?.name || 'Author'}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="font-label text-sm font-medium group-hover/author:text-violet-300 transition-colors duration-200">
+                        {featuredBlog.author?.name || featuredBlog.author?.email?.split('@')[0] || 'Anonymous'}
+                      </span>
                     </div>
-                    <span className="font-label text-sm font-medium">
-                      {featuredBlog.author?.name || featuredBlog.author?.email?.split('@')[0] || 'Anonymous'}
-                    </span>
-                  </div>
                   <span className="w-1 h-1 rounded-full bg-white/40"></span>
                   <span className="font-label text-sm opacity-80">
                     {Math.ceil((featuredBlog.content || "").length / 1000) || 1} min read
@@ -249,7 +256,10 @@ const Explore = () => {
                       {(blog.content || "").replace(/[#*`>\[\]]/g, "").slice(0, 150)}...
                     </p>
                     <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
-                      <span className="font-label text-sm text-gray-500 font-medium">
+                      <span
+                        className="font-label text-sm text-gray-500 font-medium hover:text-violet-600 dark:hover:text-violet-400 cursor-pointer transition-colors duration-200"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/author/${blog.author?.id || blog.authorId}`); }}
+                      >
                         By {blog.author?.name || blog.author?.email?.split('@')[0] || 'Anonymous'}
                       </span>
                       <button className="font-label text-sm font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform text-gray-900 dark:text-white">
@@ -316,9 +326,6 @@ const Explore = () => {
         </div>
       </section>
 
-      <div className="mt-32">
-        <Footer />
-      </div>
     </AppShell>
   );
 };

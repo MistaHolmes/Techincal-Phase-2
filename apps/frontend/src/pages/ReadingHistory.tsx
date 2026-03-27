@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { History, Trash2, Clock } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
 import { usePageCache } from "@/context/PageCacheContext";
-import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -161,9 +160,6 @@ const ReadingHistory = () => {
             </div>
           )}
         </motion.div>
-      </div>
-      <div className="mt-20 px-4">
-        <Footer />
       </div>
     </>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   LayoutGrid, FileDiff, Compass, Bookmark, BarChart2, Settings,
-  Menu, X, Search, History, Trophy, MessageSquare, ChevronLeft, ChevronRight
+  Menu, X, Search, History, Trophy, MessageSquare, ChevronLeft, ChevronRight, Shield
 } from "lucide-react";
 import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
@@ -79,6 +79,7 @@ const Sidebar: React.FC<{ activePage?: string }> = ({ activePage = "dock" }) => 
   const { user, isLoaded } = useUser();
   const [userBlogs, setUserBlogs] = useState<Blog[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebar-collapsed") === "true";
@@ -93,6 +94,16 @@ const Sidebar: React.FC<{ activePage?: string }> = ({ activePage = "dock" }) => 
   useEffect(() => {
     localStorage.setItem("sidebar-collapsed", String(collapsed));
   }, [collapsed]);
+
+  // Check admin status
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    const API_URL = import.meta.env.VITE_API_URL;
+    axios
+      .get(`${API_URL}/api/admin/check`, { withCredentials: true })
+      .then(() => setIsAdmin(true))
+      .catch(() => setIsAdmin(false));
+  }, [user, isLoaded]);
 
   useEffect(() => {
     if (!isLoaded || !user || !user.id) return;
@@ -161,7 +172,7 @@ const Sidebar: React.FC<{ activePage?: string }> = ({ activePage = "dock" }) => 
           z-[70] flex flex-col transition-all duration-300 ease-in-out
           ${collapsed ? "w-[72px]" : "w-64"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0 md:static
+          md:translate-x-0 md:sticky md:top-16 md:h-[calc(100vh-4rem)] md:overflow-y-auto md:z-auto
         `}
       >
         {/* Header */}
@@ -205,6 +216,17 @@ const Sidebar: React.FC<{ activePage?: string }> = ({ activePage = "dock" }) => 
               collapsed={collapsed}
             />
           ))}
+
+          {/* Admin link — only visible to admins */}
+          {isAdmin && (
+            <NavItem
+              href="/admin"
+              icon={<Shield size={18} />}
+              label="Admin"
+              active={isActive("/admin")}
+              collapsed={collapsed}
+            />
+          )}
 
           {/* Your Blogs section (expanded only) */}
           {!collapsed && userBlogs.length > 0 && (

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import RichTextEditor from "@/components/RichTextEditor";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { AppShell } from "@/components/layout/AppShell";
+import { NewAppShell } from "@/components/new-components";
 import { Image, Upload, X as CloseIcon, Tag as TagIcon, Plus, FileDiff, History as HistoryIcon, Sparkles } from "lucide-react";
 import AISuggestionPanel from "@/components/editor/AISuggestionPanel";
 import ReadabilityMeter from "@/components/editor/ReadabilityMeter";
@@ -222,7 +222,7 @@ export function BlogForm() {
   );
 
   return (
-    <AppShell rightPanelContent={RightPanelContent}>
+    <NewAppShell rightPanelContent={RightPanelContent}>
       <div className="max-w-4xl mx-auto">
         {isSubmitting ? (
           <div className="py-20 text-center space-y-6">
@@ -433,7 +433,7 @@ export function BlogForm() {
           </motion.div>
         )}
       </div>
-    </AppShell>
+    </NewAppShell>
   );
 }
 

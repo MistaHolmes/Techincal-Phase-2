@@ -3,8 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { usePageCache } from "@/context/PageCacheContext";
 import BlogSkeleton from "@/components/BlogSkeleton";
-import { AppShell } from "@/components/layout/AppShell";
-import { Footer } from "@/components/Footer";
+import { NewAppShell } from "@/components/new-components";
 import { BackButton } from "@/components/ui/backButton";
 import {
   ChevronLeft,
@@ -37,8 +36,10 @@ interface Blog {
   coverImage?: string;
   authorId?: string;
   author: {
+    id?: string;
     email: string;
     name?: string;
+    profilePicture?: string;
   };
 }
 
@@ -46,7 +47,7 @@ interface Comment {
   id: string;
   content: string;
   createdAt: string;
-  author: { email: string; name?: string };
+  author: { id?: string; email: string; name?: string; profilePicture?: string };
   authorId?: string;
 }
 
@@ -55,7 +56,8 @@ interface RelatedBlog {
   title: string;
   content: string;
   coverImage?: string;
-  author: { email: string; name?: string };
+  authorId?: string;
+  author: { id?: string; email: string; name?: string; profilePicture?: string };
   tags: { id: string; name: string }[];
 }
 
@@ -252,11 +254,11 @@ const BlogView = () => {
 
   if (!blog) {
     return (
-      <AppShell>
+      <NewAppShell>
         <div className="max-w-3xl mx-auto py-12">
            <BlogSkeleton variant="large" />
         </div>
-      </AppShell>
+      </NewAppShell>
     );
   }
 
@@ -294,10 +296,15 @@ const BlogView = () => {
       {/* Author & Stats Widget */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-8 shadow-sm">
          <div className="flex items-center gap-4 mb-6">
-            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author.email}`} className="w-12 h-12 rounded-2xl" alt="" />
+            <img
+              src={blog.author.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author.email}`}
+              className="w-12 h-12 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110 hover:ring-2 hover:ring-violet-500 hover:shadow-lg hover:shadow-violet-500/20"
+              alt={authorName}
+              onClick={() => navigate(`/author/${blog.author?.id || blog.authorId}`)}
+            />
             <div>
-               <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Writen By</p>
-               <h4 className="font-bold text-gray-900 dark:text-white group-hover:underline cursor-pointer" onClick={() => navigate(`/author/${blog.authorId}`)}>{authorName}</h4>
+               <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Written By</p>
+               <h4 className="font-bold text-gray-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 cursor-pointer transition-colors duration-200" onClick={() => navigate(`/author/${blog.author?.id || blog.authorId}`)}>{authorName}</h4>
             </div>
          </div>
          <div className="grid grid-cols-2 gap-4">
@@ -339,7 +346,7 @@ const BlogView = () => {
   );
 
   return (
-    <AppShell
+    <NewAppShell
       hideSidebar={isFocusMode}
       hideRightPanel={isFocusMode}
       rightPanelContent={RightPanelContent}
@@ -377,9 +384,14 @@ const BlogView = () => {
 
           <div className="flex flex-wrap items-center gap-6 mb-12 pb-12 border-b border-gray-100 dark:border-gray-700">
              <div className="flex items-center gap-3">
-               <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author.email}`} className="w-10 h-10 rounded-xl" alt="" />
+               <img
+                 src={blog.author.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author.email}`}
+                 className="w-10 h-10 rounded-xl cursor-pointer transition-all duration-300 hover:scale-110 hover:ring-2 hover:ring-violet-500 hover:shadow-lg hover:shadow-violet-500/20"
+                 alt={authorName}
+                 onClick={(e) => { e.stopPropagation(); navigate(`/author/${blog.author?.id || blog.authorId}`); }}
+               />
                <div className="text-sm">
-                 <p className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer" onClick={() => navigate(`/author/${blog.authorId}`)}>{authorName}</p>
+                 <p className="font-bold text-gray-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 cursor-pointer transition-colors duration-200" onClick={() => navigate(`/author/${blog.author?.id || blog.authorId}`)}>{authorName}</p>
                  <p className="text-xs text-gray-500">{new Date(blog.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                </div>
              </div>
@@ -561,10 +573,15 @@ const BlogView = () => {
                       animate={{ opacity: 1 }}
                       className="flex gap-4 group"
                     >
-                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.author.email}`} className="w-10 h-10 rounded-xl bg-gray-100" alt="" />
+                      <img
+                        src={c.author?.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.author.email}`}
+                        className="w-10 h-10 rounded-xl bg-gray-100 cursor-pointer transition-all duration-300 hover:scale-110 hover:ring-2 hover:ring-violet-500 hover:shadow-lg hover:shadow-violet-500/20"
+                        alt={c.author.name || c.author.email.split("@")[0]}
+                        onClick={() => navigate(`/author/${(c.author as any)?.id || c.authorId}`)}
+                      />
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                           <span className="text-sm font-bold text-gray-900 dark:text-white">{c.author.name || c.author.email.split("@")[0]}</span>
+                           <span className="text-sm font-bold text-gray-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 cursor-pointer transition-colors duration-200" onClick={() => navigate(`/author/${(c.author as any)?.id || c.authorId}`)}>{c.author.name || c.author.email.split("@")[0]}</span>
                            <span className="text-[10px] font-bold text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 font-body leading-relaxed">{c.content}</p>
@@ -621,10 +638,7 @@ const BlogView = () => {
         </div>
       </div>
 
-      <div className="mt-20 px-4">
-        <Footer />
-      </div>
-    </AppShell>
+    </NewAppShell>
   );
 };
 

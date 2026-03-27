@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header2 from "./ui/header2";
-import { Footer } from "./Footer";
 import { Helmet } from "react-helmet-async";
 
 type Language = 'en' | 'es';
@@ -13,7 +11,7 @@ export function MyStory() {
     { command: '/welcome', output: '[SYSTEM INITIALIZED] - DraftDock Story Terminal v1.1\n\nWelcome to the backend of my journey. Type /help to see available modules.' },
   ]);
   const [currentCommand, setCurrentCommand] = useState('');
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [, setHistoryIndex] = useState(-1);
   const bottomRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,13 +40,13 @@ BIO: We believe great ideas deserve great tools. DraftDock is our attempt at cre
       `,
       problem: `
 THE PAIN POINT:
-As a writer, I was tired of platforms that were either too simple to organize complex thoughts, or too bloated with features that distracted from the writing itself. 
+As a writer, I was tired of platforms that were either too simple to organize complex thoughts, or too bloated with features that distracted from the writing itself.
 
 I found myself jumping between Markdown editors, Note apps, and complex CMS tools. The fragmentation was killing the creative flow.
       `,
       solution: `
 THE DRAFTDOCK WAY:
-A clean, minimalist workspace that puts the writer FIRST. 
+A clean, minimalist workspace that puts the writer FIRST.
 - Distraction-free editing.
 - Simple, powerful organization.
 - Technical excellence wrapped in premium design.
@@ -201,7 +199,7 @@ CANALES SEGUROS:
   const renderOutput = (output: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = output.split(urlRegex);
-    return parts.map((part, index) => 
+    return parts.map((part, index) =>
       urlRegex.test(part) ? (
         <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
           {part}
@@ -217,7 +215,7 @@ CANALES SEGUROS:
       <Helmet>
         <title>My Story | Terminal | DraftDock</title>
       </Helmet>
-      
+
       {/* <Header2 /> */}
 
       <main className="flex-1 flex font-mono">
@@ -233,8 +231,8 @@ CANALES SEGUROS:
           </div>
 
           {/* Terminal Output */}
-          <div 
-            ref={terminalRef} 
+          <div
+            ref={terminalRef}
             className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-green-500/20 scrollbar-track-transparent"
           >
             {history.map((entry, i) => (
@@ -270,4 +268,4 @@ CANALES SEGUROS:
       {/* <Footer /> */}
     </div>
   );
-}
+}

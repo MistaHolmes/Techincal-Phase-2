@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Explore | DraftDock</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#006f62",
+              "surface": "#f8f9fa",
+              "on-error-container": "#782232",
+              "background": "#f8f9fa",
+              "on-primary": "#f9f6ff",
+              "surface-bright": "#f8f9fa",
+              "on-secondary-container": "#40555f",
+              "surface-dim": "#d1dce0",
+              "on-secondary-fixed": "#2d424c",
+              "error-container": "#ff8b9a",
+              "on-tertiary-fixed": "#005046",
+              "secondary": "#4d626c",
+              "tertiary": "#006b5f",
+              "on-primary-container": "#3f48a1",
+              "primary-dim": "#4049a2",
+              "outline": "#737c7f",
+              "secondary-fixed": "#cfe6f2",
+              "surface-container-lowest": "#ffffff",
+              "on-primary-fixed-variant": "#4953ac",
+              "primary-container": "#e0e0ff",
+              "inverse-surface": "#0c0f10",
+              "tertiary-dim": "#005e53",
+              "primary-fixed-dim": "#ced1ff",
+              "on-secondary": "#f2faff",
+              "on-secondary-fixed-variant": "#495f69",
+              "tertiary-fixed": "#a2ffed",
+              "on-background": "#2b3437",
+              "secondary-dim": "#415660",
+              "secondary-container": "#cfe6f2",
+              "surface-container-high": "#e3e9ec",
+              "error-dim": "#4f0116",
+              "surface-container-highest": "#dbe4e7",
+              "surface-variant": "#dbe4e7",
+              "on-error": "#fff7f7",
+              "surface-container-low": "#f1f4f6",
+              "error": "#9e3f4e",
+              "tertiary-container": "#a2ffed",
+              "on-surface": "#2b3437",
+              "secondary-fixed-dim": "#c1d8e4",
+              "on-tertiary-container": "#006458",
+              "surface-tint": "#4c56af",
+              "inverse-primary": "#929bfa",
+              "primary-fixed": "#e0e0ff",
+              "on-tertiary": "#e3fff7",
+              "inverse-on-surface": "#9b9d9e",
+              "primary": "#4c56af",
+              "outline-variant": "#abb3b7",
+              "tertiary-fixed-dim": "#94f0df",
+              "on-primary-fixed": "#2c358e",
+              "on-surface-variant": "#586064",
+              "surface-container": "#eaeff1"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Manrope"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-background">
+<!-- SideNavBar from JSON -->
+<nav class="h-screen w-64 fixed left-0 top-0 border-r-0 bg-slate-100 dark:bg-slate-900 flex flex-col h-full py-8 px-4 z-50">
+<div class="mb-10 px-4">
+<h1 class="text-2xl font-bold text-indigo-700 dark:text-indigo-400 tracking-tighter font-headline">DraftDock</h1>
+<p class="text-xs text-slate-500 font-label">The Technical Editorial</p>
+</div>
+<button class="mb-8 mx-4 bg-gradient-to-r from-primary to-primary-dim text-white py-3 px-6 rounded-lg font-bold shadow-md hover:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+            New Post
+        </button>
+<div class="flex-1 space-y-2">
+<!-- Active Navigation Logic: "Explore" matches the page intent -->
+<a class="flex items-center gap-3 text-indigo-700 dark:text-indigo-300 border-l-2 border-indigo-600 dark:border-indigo-400 pl-4 py-2 font-bold font-headline transition-all opacity-80 duration-150" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span>Explore</span>
+</a>
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all font-headline" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+<span>Drafts</span>
+</a>
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all font-headline" href="#">
+<span class="material-symbols-outlined">bookmarks</span>
+<span>Bookmarks</span>
+</a>
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all font-headline" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all font-headline" href="#">
+<span class="material-symbols-outlined">history</span>
+<span>History</span>
+</a>
+</div>
+<div class="mt-auto space-y-2 border-t border-slate-200 pt-6">
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 hover:bg-slate-200/50 transition-all font-headline" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-400 pl-4 py-2 hover:text-indigo-500 hover:bg-slate-200/50 transition-all font-headline" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- Hero Header -->
+<header class="pt-16 px-12 pb-8">
+<h2 class="text-[3.5rem] font-bold font-headline tracking-tighter leading-none text-on-background mb-4">
+                Explore <span class="text-primary italic">Intelligence</span>.
+            </h2>
+<div class="flex items-center gap-8 border-b border-outline-variant/15 pb-6">
+<p class="text-on-surface-variant max-w-xl font-body">
+                    Curated technical insights from the world's leading engineers, architects, and designers. Dive into deep-dives that define the next decade of tech.
+                </p>
+<div class="flex gap-2 ml-auto">
+<span class="px-4 py-1.5 bg-secondary-container text-on-secondary-container rounded-lg text-xs font-label uppercase tracking-wider font-bold">Algorithms</span>
+<span class="px-4 py-1.5 bg-surface-container-highest text-on-surface-variant rounded-lg text-xs font-label uppercase tracking-wider">Architecture</span>
+<span class="px-4 py-1.5 bg-surface-container-highest text-on-surface-variant rounded-lg text-xs font-label uppercase tracking-wider">Frontend</span>
+<span class="px-4 py-1.5 bg-surface-container-highest text-on-surface-variant rounded-lg text-xs font-label uppercase tracking-wider">AI/ML</span>
+</div>
+</div>
+</header>
+<!-- Bento Grid Discovery Section -->
+<section class="px-12 py-8 grid grid-cols-12 gap-6 auto-rows-[280px]">
+<!-- Featured Post (Large) -->
+<div class="col-span-8 row-span-2 group relative overflow-hidden rounded-xl bg-surface-container-low shadow-sm">
+<img class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 opacity-80" data-alt="abstract technical visualization of a computer circuit board with glowing blue lines and futuristic geometric patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIGLh9cxZWrZFIBhXWOCcBLLh_P0zx7oDK7zoNopeOqr2QpMjI-JPcx9sW3KzqRvignbqrTcJ77mdKvKoBlsGOsnakjXr3mZWxm5fN-cyZBzeO3O62x3JaIcuBh5da5xvGPmHQzENLnp4WatV3S9ATsvtvj-EMTJFj4cFD-2TsfnOBXSIudtPxo45PFnEVoN4yppq45NmJShLdDkafImWEZDN0nupKEJpJT0Z5z1MAiQK4YBfLa8VX4f_dlK9T7m8GwLt-X3MEiQBU"/>
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface via-transparent to-transparent opacity-90"></div>
+<div class="absolute bottom-0 left-0 p-10 text-white">
+<div class="flex items-center gap-3 mb-4">
+<span class="bg-primary px-3 py-1 rounded text-[10px] font-label uppercase tracking-widest font-bold">Editor's Choice</span>
+<span class="text-xs font-label text-surface-container-highest">12 min read</span>
+</div>
+<h3 class="text-4xl font-headline font-bold mb-4 leading-tight">The Quantum Leap: Rethinking Silicon Architecture for 2025</h3>
+<p class="text-surface-variant font-body max-w-lg mb-6 line-clamp-2">How current limitations in hardware are driving the next revolution in distributed computing and edge-based intelligence systems.</p>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-fixed-dim flex items-center justify-center text-primary font-bold">JD</div>
+<span class="text-sm font-label font-medium">Julian DeMarre</span>
+</div>
+</div>
+</div>
+<!-- Side Card 1 -->
+<div class="col-span-4 row-span-1 bg-surface-container-lowest p-8 flex flex-col justify-between rounded-xl group hover:bg-surface-container-high transition-colors">
+<div>
+<span class="text-[10px] font-label font-bold uppercase tracking-widest text-primary mb-2 block">System Design</span>
+<h4 class="text-xl font-headline font-bold text-on-background group-hover:text-primary transition-colors">Scaling to 10M Concurrent WebSockets</h4>
+</div>
+<div class="flex justify-between items-center mt-4">
+<span class="text-xs font-label text-on-surface-variant">by Sarah Jenkins</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+<!-- Side Card 2 (Visual) -->
+<div class="col-span-4 row-span-1 relative overflow-hidden rounded-xl bg-tertiary-dim">
+<img class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-500" data-alt="close up of sophisticated electronics hardware with golden wiring and industrial components in dim warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpdz-F-SSZ73scxQVRtsCAwqg31gzX9axIPm1MSa7a8OoVTH2Uf5pOChugi3Zu6KKxGPJXFosxAxbsYGr5Iiz_3S7bWnamxjZrGK8EpNSUrLnQJGEUSAyfKYznxb1pvpSs-aUn7IniXypBIyhRKjBMltg4b4SZqPRw8gulQPKOiRsuI1AqYsB02lw_uI27X5K1BoHVXkdsJfTAL-_r7fq4DPBk48sIYnZ_Mvn6QaKKFzVwnLqQ22-JhwkJIWVY5xvo-TqiH3fMx6IV"/>
+<div class="relative h-full p-8 flex flex-col justify-end text-on-tertiary">
+<h4 class="text-lg font-headline font-bold leading-snug">Embedded Rust: The Future of IoT Security?</h4>
+<p class="text-xs font-label mt-2 opacity-80">Deep dive into memory safety.</p>
+</div>
+</div>
+<!-- Horizontal Feed Break -->
+<div class="col-span-12 py-12 flex flex-col gap-16">
+<!-- Editorial Feed Item 1 -->
+<article class="grid grid-cols-12 gap-8 items-center group">
+<div class="col-span-4 overflow-hidden rounded-xl bg-surface-container">
+<img class="w-full aspect-[16/10] object-cover group-hover:scale-105 transition-transform duration-500" data-alt="code editor screen showing a complex nested React component structure with vibrant syntax highlighting on a dark theme" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNDcqcBhBWGTchk1y5VILWDf4IafDNmb8M5uEMHhS9pUIj8KVorHf5IAccnxS298LJrBf8Rn33ySrv-F6XOkpJUNa-mhI2VKSZjgaLeRyUL5Zy5H3MS2AdkAB8AgPNde6t5ocepo7SWOVm0eeujiPTW65cv4Ip9US0vSJomffWnRrkkWQCL84Hrnav_R6zBYj8x98zWbO8E5btQuQqhrvzFbcebfHkhgR1XDwRWGIthTR0VXhicuLCWG5aAq5V7_yMmdVn5rOqioLq"/>
+</div>
+<div class="col-span-8 flex flex-col gap-3">
+<div class="flex items-center gap-4 text-xs font-label uppercase tracking-widest text-outline">
+<span>March 14, 2024</span>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<span>DevOps &amp; Infra</span>
+</div>
+<h3 class="text-3xl font-headline font-bold text-on-background hover:text-primary cursor-pointer transition-colors leading-tight">Beyond Kubernetes: The Era of Serverless Orchestration</h3>
+<p class="text-on-surface-variant font-body leading-relaxed max-w-2xl">
+                            Kubernetes has won the container war, but the complexity tax is starting to hurt. We explore the emerging patterns of "invisible infra" that prioritize developer experience over cluster management.
+                        </p>
+<div class="flex items-center gap-6 mt-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-xs font-label text-on-surface">1.2k</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">chat_bubble</span>
+<span class="text-xs font-label text-on-surface">42</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">bookmark</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Editorial Feed Item 2 -->
+<article class="grid grid-cols-12 gap-8 items-center group">
+<div class="col-span-4 order-last overflow-hidden rounded-xl bg-surface-container">
+<img class="w-full aspect-[16/10] object-cover group-hover:scale-105 transition-transform duration-500" data-alt="modern minimalist office workspace with high end mechanical keyboard and architectural drawing tools in natural soft light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPofLX5iEQyAWYqdv4VC5BS4AsmPam3md-L2pd-p0ITAeFWYqxl0LT9ID07di7TSdY3GuNI8OnkafTEG1Pj2H331U5J0c18CBUynsk9buMANhbaYRsV8NnF5moCPXgjaJmqnYFnCR8DNB3HwRZahNm9H9K0-7biKnSxm4BxwZZ_CREQVk_d_r3RWFfpQgzC0gxbahta9r7KpXqGYqbqWLDYaQL0Sfm_Cn_eDwMcwZytUs7OThRe6AbOcPznwryxwQti9ih6jUTJZMF"/>
+</div>
+<div class="col-span-8 flex flex-col gap-3 text-right items-end">
+<div class="flex items-center gap-4 text-xs font-label uppercase tracking-widest text-outline">
+<span>Product Engineering</span>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<span>March 12, 2024</span>
+</div>
+<h3 class="text-3xl font-headline font-bold text-on-background hover:text-primary cursor-pointer transition-colors leading-tight">Design Systems for Technical Audiences</h3>
+<p class="text-on-surface-variant font-body leading-relaxed max-w-2xl">
+                            How to build interfaces that developers actually like. Balancing density with clarity, and why your "clean" UI might be frustrating your most power-hungry users.
+                        </p>
+<div class="flex items-center gap-6 mt-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">bookmark</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-label text-on-surface">18</span>
+<span class="material-symbols-outlined text-sm">chat_bubble</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-label text-on-surface">856</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- Newsletter / Community Section -->
+<section class="px-12 py-20 bg-surface-container-low mt-12 mb-12 mx-12 rounded-2xl flex items-center justify-between">
+<div class="max-w-md">
+<h3 class="text-3xl font-headline font-bold text-on-background mb-4 tracking-tight">Stay synchronized.</h3>
+<p class="text-on-surface-variant font-body mb-8">Weekly technical deep-dives and architectural blueprints delivered directly to your inbox. No fluff, just signal.</p>
+<div class="flex gap-2">
+<input class="bg-surface-container-lowest border-none rounded-lg px-4 py-3 flex-1 focus:ring-2 focus:ring-primary/20 text-sm font-label" placeholder="engineer@domain.com" type="email"/>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-lg font-bold hover:bg-primary-dim transition-colors">Subscribe</button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-6 bg-surface-container-lowest rounded-xl text-center">
+<span class="text-2xl font-bold font-headline text-primary">12k+</span>
+<p class="text-[10px] font-label uppercase tracking-widest mt-1 text-outline">Contributors</p>
+</div>
+<div class="p-6 bg-surface-container-lowest rounded-xl text-center">
+<span class="text-2xl font-bold font-headline text-primary">450</span>
+<p class="text-[10px] font-label uppercase tracking-widest mt-1 text-outline">Daily Posts</p>
+</div>
+<div class="p-6 bg-surface-container-lowest rounded-xl text-center">
+<span class="text-2xl font-bold font-headline text-primary">8.4m</span>
+<p class="text-[10px] font-label uppercase tracking-widest mt-1 text-outline">Monthly Readers</p>
+</div>
+<div class="p-6 bg-surface-container-lowest rounded-xl text-center">
+<span class="text-2xl font-bold font-headline text-primary">99.9</span>
+<p class="text-[10px] font-label uppercase tracking-widest mt-1 text-outline">Signal Ratio</p>
+</div>
+</div>
+</section>
+<!-- Footer from JSON -->
+<footer class="w-full py-6 mt-auto bg-slate-200 dark:bg-slate-950 flex flex-row justify-between items-center px-12 max-w-full ml-64 border-none font-['Inter'] text-xs font-medium uppercase tracking-widest">
+<div class="flex items-center gap-4 text-slate-500 dark:text-slate-500">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-green-500 rounded-full"></span>
+<span>System Operational.</span>
+</div>
+<span>© 2024 DraftDock.</span>
+</div>
+<div class="flex gap-8">
+<a class="text-slate-500 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors active:scale-95 transition-transform" href="#">Resources</a>
+<a class="text-slate-500 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors active:scale-95 transition-transform" href="#">Twitter</a>
+<a class="text-slate-500 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors active:scale-95 transition-transform" href="#">Github</a>
+<a class="text-slate-500 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors active:scale-95 transition-transform" href="#">Support Developer</a>
+</div>
+</footer>
+</main>
+</body></html>

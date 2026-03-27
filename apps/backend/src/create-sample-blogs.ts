@@ -5,14 +5,24 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Creating meaningful sample blogs...');
 
-  // Find the first user to act as the author
-  const user = await prisma.user.findFirst({
-    select: { id: true }
-  });
-  
+  // Find the first user, or create a placeholder demo author
+  let user = await prisma.user.findFirst({ select: { id: true } });
+
   if (!user) {
-    console.error('No users found in the database. Cannot create sample blogs.');
-    return;
+    console.log('No users found – creating a demo author...');
+    user = await prisma.user.create({
+      data: {
+        id: 'demo_author_seed',
+        email: 'demo@draftdock.app',
+        name: 'DraftDock Team',
+        profilePicture: 'https://ui-avatars.com/api/?name=DraftDock+Team&background=4c56af&color=fff',
+        bio: 'Official DraftDock editorial team. Writing about tech, design, and engineering.',
+        isVerified: true,
+        role: 'AUTHOR',
+      },
+      select: { id: true },
+    });
+    console.log('Demo author created.');
   }
 
   const sampleBlogs = [
@@ -40,9 +50,13 @@ async function main() {
   ];
 
   for (const blog of sampleBlogs) {
-    await prisma.blog.create({
-      data: blog
-    });
+    // Idempotent — skip if a blog with this title from the demo author already exists
+    const existing = await prisma.blog.findFirst({ where: { title: blog.title, authorId: user!.id }, select: { id: true } });
+    if (existing) {
+      console.log(`Skipping (already exists): "${blog.title}"`);
+      continue;
+    }
+    await prisma.blog.create({ data: blog });
     console.log(`Created sample blog: "${blog.title}"`);
   }
 

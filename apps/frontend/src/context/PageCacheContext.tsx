@@ -24,16 +24,68 @@ const PageCacheContext = createContext<PageCacheContextValue | null>(null);
 
 const DEFAULT_MAX_AGE = 5 * 60 * 1000; // 5 minutes
 
+// ── Per-page TTL constants — import these in page components ──────────────────
+export const PAGE_TTL = {
+  /** Dashboard analytics — relatively short; data changes often */
+  dashboard: 2 * 60 * 1000,        // 2 min
+  /** Explore / discovery feed */
+  explore: 5 * 60 * 1000,          // 5 min
+  /** User bookmarks */
+  bookmarks: 3 * 60 * 1000,        // 3 min
+  /** Reading history */
+  history: 3 * 60 * 1000,          // 3 min
+  /** Blog list / home */
+  blogs: 5 * 60 * 1000,            // 5 min
+  /** User profile */
+  profile: 10 * 60 * 1000,         // 10 min
+  /** Leaderboard */
+  leaderboard: 5 * 60 * 1000,      // 5 min
+  /** Default fallback */
+  default: DEFAULT_MAX_AGE,
+} as const;
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SESSION_STORAGE_KEY = "pg_cache_v1";
+
+/** Hydrate in-memory store from sessionStorage (survives component unmount, not page reload from server) */
+function loadFromSession(): Map<string, CacheEntry> {
+  try {
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return new Map();
+    const obj: Record<string, CacheEntry> = JSON.parse(raw);
+    const now = Date.now();
+    const map = new Map<string, CacheEntry>();
+    // Only restore entries that are still within the longest possible TTL (10 min)
+    for (const [k, v] of Object.entries(obj)) {
+      if (now - v.timestamp < 10 * 60 * 1000) map.set(k, v);
+    }
+    return map;
+  } catch {
+    return new Map();
+  }
+}
+
+function persistToSession(store: Map<string, CacheEntry>) {
+  try {
+    const obj: Record<string, CacheEntry> = {};
+    for (const [k, v] of store.entries()) obj[k] = v;
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(obj));
+  } catch {
+    // quota exceeded or SSR — ignore
+  }
+}
+
 // ── Provider ───────────────────────────────────────────────────────────────────
 
 export const PageCacheProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const store = useRef(new Map<string, CacheEntry>());
+  const store = useRef<Map<string, CacheEntry>>(loadFromSession());
 
   const get = useCallback((key: string, maxAgeMs = DEFAULT_MAX_AGE): any | undefined => {
     const entry = store.current.get(key);
     if (!entry) return undefined;
     if (Date.now() - entry.timestamp > maxAgeMs) {
       store.current.delete(key);
+      persistToSession(store.current);
       return undefined;
     }
     return entry.data;
@@ -41,20 +93,24 @@ export const PageCacheProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const set = useCallback((key: string, data: any) => {
     store.current.set(key, { data, timestamp: Date.now() });
+    persistToSession(store.current);
   }, []);
 
   const invalidate = useCallback((...keys: string[]) => {
     keys.forEach((k) => store.current.delete(k));
+    persistToSession(store.current);
   }, []);
 
   const invalidatePrefix = useCallback((prefix: string) => {
     for (const key of Array.from(store.current.keys())) {
       if (key.startsWith(prefix)) store.current.delete(key);
     }
+    persistToSession(store.current);
   }, []);
 
   const invalidateAll = useCallback(() => {
     store.current.clear();
+    persistToSession(store.current);
   }, []);
 
   return (

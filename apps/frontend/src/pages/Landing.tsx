@@ -4,8 +4,8 @@ import { ArrowRight } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth, } from "@clerk/clerk-react";
 import TypeWriter from "../components/TypeWriter";
 import { useNavigate } from "react-router-dom";
-import { Footer } from "@/components/Footer";
 import BackgroundGlow from "@/components/ui/BackgroundGlow";
+import { Footer } from "@/components/Footer";
 
 const LandingPage: React.FC = () => {
   const mouseX = useMotionValue(0);
@@ -173,6 +173,7 @@ const LandingPage: React.FC = () => {
           </motion.section>
         )}
       </main>
+      {/* Footer */}
       <Footer />
     </div>
   );

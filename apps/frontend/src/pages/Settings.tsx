@@ -6,7 +6,6 @@ import { Settings as SettingsIcon, Moon, Sun, User, Save } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { useTheme } from "@/lib/ThemeContext";
-import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -166,9 +165,6 @@ const Settings = () => {
             </div>
           </div>
         </div>
-      </div>
-      <div className="mt-20 px-4">
-        <Footer />
       </div>
     </>
   );
