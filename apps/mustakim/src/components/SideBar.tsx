@@ -50,14 +50,14 @@ const NavItem: React.FC<NavItemProps> = ({ href, icon, label, active, collapsed 
         group relative flex items-center gap-3 w-full rounded-xl transition-all duration-200
         ${collapsed ? "justify-center px-3 py-3" : "px-3 py-2.5"}
         ${active
-          ? "bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 font-semibold"
-          : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 hover:text-gray-900 dark:hover:text-white"
+          ? "bg-primary/20 text-primary font-semibold"
+          : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
         }
       `}
     >
       {/* Active indicator bar */}
       {active && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-violet-600 dark:bg-violet-400 rounded-r-full" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full shadow-[0_0_8px_rgba(200,50,255,0.6)]" />
       )}
       <span className="flex-shrink-0">{icon}</span>
       {!collapsed && (
@@ -157,7 +157,7 @@ const Sidebar: React.FC<{ activePage?: string }> = ({ activePage = "dock" }) => 
       {/* Desktop Sidebar */}
       <div
         className={`
-          fixed top-0 left-0 h-full bg-white dark:bg-gray-950 border-r border-gray-200/80 dark:border-gray-800/80
+          fixed top-0 left-0 h-full bg-sidebar/80 backdrop-blur-3xl border-r border-sidebar-border
           z-[70] flex flex-col transition-all duration-300 ease-in-out
           ${collapsed ? "w-[72px]" : "w-64"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}

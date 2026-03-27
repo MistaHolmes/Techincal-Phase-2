@@ -57,50 +57,44 @@ const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black overflow-hidden relative">
+    <div className="dark min-h-screen bg-background text-foreground overflow-hidden relative">
       <BackgroundGlow />
-      {/* Background */}
-      <motion.div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gray-150" />
-
+      {/* Dynamic Background with Glowing Orbs */}
+      <motion.div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-background" />
         <motion.div
-          className="absolute inset-0"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-          onAnimationComplete={() => setIsGridActive(true)}
-        >
-          <motion.div
-            animate={{ y: [0, -10, 0, 8, 0], x: [0, 7, 0, -3, 0] }}
-            transition={{ duration: 12, ease: "easeInOut", repeat: Infinity }}
-            className="absolute inset-0"
-          >
-            <motion.div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `
-                  linear-gradient(to right, rgba(0, 0, 0, 0.12) 1.5px, transparent 1px),
-                  linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 1.5px, transparent 1px)
-                `,
-                backgroundSize: "clamp(20px, 4vw, 40px) clamp(20px, 4vw, 40px)",
-                x: isGridActive ? gridX : 0,
-                y: isGridActive ? gridY : 0,
-              }}
-            />
-          </motion.div>
-        </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
+          className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen"
+          animate={{ x: [0, 50, 0], y: [0, 30, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-pink-600/20 rounded-full blur-[120px] mix-blend-screen"
+          animate={{ x: [0, -50, 0], y: [0, -30, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+           className="absolute inset-0 opacity-30"
+           style={{
+             backgroundImage: `linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)`,
+             backgroundSize: "40px 40px",
+             x: isGridActive ? gridX : 0,
+             y: isGridActive ? gridY : 0,
+           }}
+           onAnimationComplete={() => setIsGridActive(true)}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
       </motion.div>
 
       {/* Header */}
-      <div className="absolute top-7 left-6 flex space-x-2 z-20">
-        <div className="h-2 w-2 rounded-full bg-black"></div>
-        <div className="h-2 w-2 rounded-full bg-black"></div>
+      <div className="absolute top-7 left-6 flex space-x-3 z-20">
+        <div className="h-3 w-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]"></div>
+        <div className="h-3 w-3 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.6)]"></div>
+        <div className="h-3 w-3 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
       </div>
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-20 glass rounded-full px-2 py-2">
         <SignedOut>
           <SignInButton>
-            <button className="px-4 py-2 border border-black bg-black text-white rounded-md hover:bg-white hover:text-black transition">
+            <button className="px-6 py-2 bg-primary/20 text-primary border border-primary/30 rounded-full hover:bg-primary hover:text-white transition-all duration-300">
               Sign In
             </button>
           </SignInButton>
@@ -117,56 +111,67 @@ const LandingPage: React.FC = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="w-full max-w-[90%] sm:max-w-3xl text-center space-y-6 sm:space-y-8"
+            className="w-full max-w-[90%] sm:max-w-4xl text-center space-y-8 p-10 glass-card rounded-[2.5rem]"
           >
             <motion.h1
               variants={itemVariants}
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight flex flex-wrap items-center justify-center gap-2"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight flex flex-col items-center justify-center gap-4"
             >
-              <span className="bg-black text-white px-2">
+              <span className="text-gradient drop-shadow-2xl">
                 <TypeWriter text="DraftDock" className="inline-block" />
               </span>
-              <span className="flex items-center">.app</span>
+              <span className="text-foreground/90 text-2xl md:text-4xl font-semibold">
+                The modern writing hub
+              </span>
             </motion.h1>
 
             <motion.p
               variants={itemVariants}
-              className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4"
+              className="text-lg sm:text-xl lg:text-2xl text-muted-foreground max-w-2xl mx-auto px-4 font-light"
             >
-              Read And Write Blogs of Folks, and Have a great time in this site
+              Read and write beautiful blogs. Join a vibrant community and share your story with the world in an engaging, premium format.
             </motion.p>
 
             <motion.div
               variants={itemVariants}
-              className="flex flex-col sm:flex-row gap-4 justify-center px-4"
+              className="flex flex-col sm:flex-row gap-6 justify-center px-4 pt-4"
             >
               <SignedIn>
                 <motion.button
                   onClick={() => route("/create-blog")}
-                  className="min-w-[140px] px-6 py-4 border-2 border-black text-black hover:bg-black hover:text-white rounded-md transition-all font-medium"
-                  whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(0,0,0,0.12)" }}
-                  whileTap={{ scale: 0.97 }}
+                  className="glass-button min-w-[180px] px-8 py-4 rounded-full font-semibold text-lg flex items-center justify-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  Start Drafting <ArrowRight className="ml-2 inline h-5 w-5" />
+                  Start Drafting <ArrowRight className="ml-2 h-5 w-5" />
                 </motion.button>
-                <motion.button className="min-w-[140px] px-6 py-4 bg-black text-white hover:bg-transparent hover:text-black border-2 border-black rounded-md transition-all font-medium"
+                <motion.button 
                   onClick={() => route("/blogs")}
-                  whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(0,0,0,0.12)" }}
-                  whileTap={{ scale: 0.97 }}
+                  className="min-w-[180px] px-8 py-4 bg-secondary/80 text-secondary-foreground hover:bg-secondary border border-white/10 rounded-full transition-all font-semibold text-lg backdrop-blur-md flex items-center justify-center"
+                  whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(255,255,255,0.1)" }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  Start Reading <ArrowRight className="ml-2 inline h-5 w-5" />
+                  Start Reading <ArrowRight className="ml-2 h-5 w-5" />
                 </motion.button>
               </SignedIn>
               <SignedOut>
                 <SignInButton mode="modal">
-                  <button className="min-w-[140px] px-6 py-4 border-2 border-black text-black hover:bg-black hover:text-white rounded-md transition-all font-medium">
-                    Start Drafting <ArrowRight className="ml-2 inline h-5 w-5" />
-                  </button>
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="glass-button min-w-[180px] px-8 py-4 rounded-full font-semibold text-lg flex items-center justify-center mx-auto sm:mx-0"
+                  >
+                    Start Drafting <ArrowRight className="ml-2 h-5 w-5" />
+                  </motion.button>
                 </SignInButton>
                 <SignInButton mode="modal">
-                  <button className="min-w-[140px] px-6 py-4 bg-black text-white hover:bg-transparent hover:text-black border-2 border-black rounded-md transition-all font-medium">
-                    Start Reading <ArrowRight className="ml-2 inline h-5 w-5" />
-                  </button>
+                  <motion.button 
+                    whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(255,255,255,0.1)" }}
+                    whileTap={{ scale: 0.95 }}
+                    className="min-w-[180px] px-8 py-4 bg-secondary/80 text-secondary-foreground hover:bg-secondary border border-white/10 rounded-full transition-all font-semibold text-lg backdrop-blur-md flex items-center justify-center mx-auto sm:mx-0"
+                  >
+                    Start Reading <ArrowRight className="ml-2 h-5 w-5" />
+                  </motion.button>
                 </SignInButton>
               </SignedOut>
             </motion.div>

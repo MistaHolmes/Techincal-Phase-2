@@ -24,7 +24,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   showSearch = true
 }) => {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Global Header */}
       <AppHeader
         searchTerm={searchTerm}
@@ -58,7 +58,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                   </button>
                 </div>
 
-                <div className="bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 rounded-2xl p-5 shadow-sm">
+                <div className="glass-card rounded-2xl p-5">
                   <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-4">Trending on DraftDock</h5>
                   <div className="space-y-4">
                     {[1, 2, 3].map(i => (

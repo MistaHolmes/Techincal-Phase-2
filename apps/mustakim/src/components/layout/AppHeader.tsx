@@ -33,7 +33,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-[60] border-b border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl px-4 h-16 flex items-center justify-between transition-all duration-300">
+    <header className="sticky top-0 z-[60] border-b border-border bg-background/60 backdrop-blur-2xl px-4 h-16 flex items-center justify-between transition-all duration-300">
       {/* Left: Brand */}
       <div className="flex items-center gap-4">
         <button
@@ -56,7 +56,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <input
             type="text"
             placeholder="Search drafts, authors, tags..."
-            className="w-full h-10 bg-gray-100 dark:bg-gray-900 border-transparent focus:bg-white dark:focus:bg-black border border-gray-100 dark:border-gray-800 focus:border-violet-500 rounded-xl pl-10 pr-4 text-sm transition-all focus:outline-none focus:ring-4 focus:ring-violet-500/10"
+            className="w-full h-10 bg-muted/50 border border-transparent focus:bg-background focus:border-primary rounded-xl pl-10 pr-4 text-sm transition-all focus:outline-none focus:ring-4 focus:ring-primary/20 backdrop-blur-md"
             value={localSearch}
             onChange={handleSearchChange}
             onKeyDown={handleSearchKeyDown}
