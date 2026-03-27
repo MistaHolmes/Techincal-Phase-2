@@ -118,9 +118,9 @@ const Explore = () => {
             <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="font-headline text-6xl md:text-7xl font-medium tracking-tight leading-[0.9] mb-8"
+              className="font-headline text-6xl md:text-7xl font-medium tracking-tight leading-[0.9] mb-8 text-white"
             >
-              Explore.<br />Discover what people are talking about.
+              Explore.<br /><span className="text-gradient-neon">Discover what people are talking about.</span>
             </motion.h1>
           </div>
 
@@ -174,7 +174,7 @@ const Explore = () => {
       {tags.length > 0 && (
         <section className="mb-24">
           <div className="mb-8 flex justify-between items-end">
-            <h3 className="font-headline text-3xl font-bold tracking-tight text-stitch-on-surface">Trending Topics</h3>
+            <h3 className="font-headline text-3xl font-bold tracking-tight text-white">Trending Topics</h3>
             <button onClick={() => navigate('/tags')} className="font-label text-sm font-semibold border-b border-stitch-on-surface pb-1 hover:opacity-60 transition-opacity">
               View all tags
             </button>
@@ -184,14 +184,14 @@ const Explore = () => {
               <div
                 key={tag.name}
                 onClick={() => navigate(`/tags/${tag.name}`)}
-                className="flex-none w-64 aspect-square bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl p-8 flex flex-col justify-between hover:bg-black dark:hover:bg-violet-600 group transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl hover:-translate-y-1"
+                className="flex-none w-64 aspect-square bg-[#111113] border border-[#1f1f23] rounded-2xl p-8 flex flex-col justify-between hover:bg-[#00e5ff]/10 hover:border-[#00e5ff]/30 group transition-all duration-300 cursor-pointer hover:shadow-[0_0_30px_rgba(0,229,255,0.1)] hover:-translate-y-1"
               >
-                <span className="material-symbols-outlined text-4xl group-hover:text-white text-stitch-on-surface" data-icon={idx % 4 === 0 ? "memory" : idx % 4 === 1 ? "palette" : idx % 4 === 2 ? "smart_toy" : "spa"}>
+                <span className="material-symbols-outlined text-4xl group-hover:text-[#00e5ff] text-zinc-400" data-icon={idx % 4 === 0 ? "memory" : idx % 4 === 1 ? "palette" : idx % 4 === 2 ? "smart_toy" : "spa"}>
                   {idx % 4 === 0 ? "memory" : idx % 4 === 1 ? "palette" : idx % 4 === 2 ? "smart_toy" : "spa"}
                 </span>
                 <div>
-                  <span className="font-headline text-2xl font-medium group-hover:text-white text-stitch-on-surface block">{tag.name}</span>
-                  <span className="font-label text-xs text-stitch-secondary group-hover:text-white/70">{tag.count} blog{tag.count !== 1 ? "s" : ""}</span>
+                  <span className="font-headline text-2xl font-medium group-hover:text-[#00e5ff] text-zinc-200 block">{tag.name}</span>
+                  <span className="font-label text-xs text-zinc-600 group-hover:text-[#00e5ff]/60">{tag.count} blog{tag.count !== 1 ? "s" : ""}</span>
                 </div>
               </div>
             ))}
@@ -201,21 +201,21 @@ const Explore = () => {
 
       {/* Discovery Section */}
       <section>
-        <div className="flex items-center justify-between mb-12 border-b border-gray-200 dark:border-gray-800 pb-4">
+        <div className="flex items-center justify-between mb-12 border-b border-[#1f1f23] pb-4">
           <div className="flex gap-8">
              <button
                onClick={() => setActiveTab('trending')}
-               className={`font-headline text-3xl font-bold transition-all ${activeTab === 'trending' ? 'text-gray-900 dark:text-white' : 'text-gray-400 opacity-60 hover:opacity-100'}`}
+               className={`font-headline text-3xl font-bold transition-all ${activeTab === 'trending' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}`}
              >
                Trending
              </button>
              {isSignedIn && (
                <button
                  onClick={() => setActiveTab('foryou')}
-                 className={`font-headline text-3xl font-bold transition-all flex items-center gap-2 ${activeTab === 'foryou' ? 'text-gray-900 dark:text-white' : 'text-gray-400 opacity-60 hover:opacity-100'}`}
+                 className={`font-headline text-3xl font-bold transition-all flex items-center gap-2 ${activeTab === 'foryou' ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}`}
                >
                  For You
-                 <span className="flex h-2 w-2 rounded-full bg-violet-500 animate-pulse" />
+                 <span className="flex h-2 w-2 rounded-full bg-[#00e5ff] animate-pulse shadow-[0_0_8px_rgba(0,229,255,0.5)]" />
                </button>
              )}
           </div>
@@ -225,7 +225,7 @@ const Explore = () => {
           <div className="lg:col-span-3">
              {loading ? (
                 <div className="flex items-center justify-center py-20">
-                  <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-4 border-[#00e5ff] border-t-transparent rounded-full animate-spin" />
                 </div>
              ) : (
                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-16 gap-x-10">
@@ -235,7 +235,7 @@ const Explore = () => {
                     className="flex flex-col group cursor-pointer"
                     onClick={() => navigate(`/blog/${blog.id}`)}
                   >
-                    <div className="aspect-[16/10] bg-gray-200 dark:bg-gray-800 mb-6 overflow-hidden rounded-2xl">
+                    <div className="aspect-[16/10] bg-[#1a1a1f] mb-6 overflow-hidden rounded-2xl border border-[#1f1f23]">
                       <img
                         alt={blog.title}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -244,25 +244,25 @@ const Explore = () => {
                     </div>
                     <div className="flex gap-2 mb-4">
                       {(blog.tags || []).slice(0, 2).map(t => (
-                        <span key={t.id} className="font-label text-[10px] uppercase tracking-widest px-2 py-1 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 rounded-md font-bold">
+                        <span key={t.id} className="font-label text-[10px] uppercase tracking-widest px-2 py-1 bg-[#00e5ff]/10 text-[#00e5ff] rounded-md font-bold">
                           {t.name}
                         </span>
                       ))}
                     </div>
-                    <h4 className="font-headline text-2xl font-bold mb-4 leading-snug group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors text-gray-900 dark:text-white">
+                    <h4 className="font-headline text-2xl font-bold mb-4 leading-snug group-hover:text-[#00e5ff] transition-colors text-zinc-100">
                       {blog.title || "Untitled Draft"}
                     </h4>
-                    <p className="text-gray-500 dark:text-gray-400 font-body line-clamp-2 mb-6 leading-relaxed">
+                    <p className="text-zinc-500 font-body line-clamp-2 mb-6 leading-relaxed">
                       {(blog.content || "").replace(/[#*`>\[\]]/g, "").slice(0, 150)}...
                     </p>
-                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
+                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-[#1f1f23]">
                       <span
-                        className="font-label text-sm text-gray-500 font-medium hover:text-violet-600 dark:hover:text-violet-400 cursor-pointer transition-colors duration-200"
+                        className="font-label text-sm text-zinc-500 font-medium hover:text-[#00e5ff] cursor-pointer transition-colors duration-200"
                         onClick={(e) => { e.stopPropagation(); navigate(`/author/${blog.author?.id || blog.authorId}`); }}
                       >
                         By {blog.author?.name || blog.author?.email?.split('@')[0] || 'Anonymous'}
                       </span>
-                      <button className="font-label text-sm font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform text-gray-900 dark:text-white">
+                      <button className="font-label text-sm font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform text-zinc-300">
                         Read Story <span className="material-symbols-outlined text-sm">arrow_forward</span>
                       </button>
                     </div>
@@ -278,22 +278,22 @@ const Explore = () => {
              )}
 
              <div className="flex justify-center mt-20">
-               <button className="px-10 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors font-label font-bold text-sm tracking-tight rounded-xl text-gray-900 dark:text-white shadow-sm">
+               <button className="px-10 py-3 bg-[#111113] border border-[#1f1f23] hover:border-[#00e5ff]/30 hover:bg-[#00e5ff]/5 transition-all font-label font-bold text-sm tracking-tight rounded-xl text-zinc-300">
                  Load more stories
                </button>
              </div>
           </div>
 
           {/* Sidebar / Right Panel */}
-          <div className="lg:col-span-1 border-l border-gray-100 dark:border-gray-800 pl-8 hidden lg:block">
+          <div className="lg:col-span-1 border-l border-[#1f1f23] pl-8 hidden lg:block">
              <div className="sticky top-28 space-y-12">
                 {recommendedAuthors.length > 0 && (
                   <div className="space-y-6">
-                     <h4 className="font-headline text-sm font-black uppercase tracking-widest text-gray-400">Writers to Follow</h4>
+                     <h4 className="font-headline text-sm font-black uppercase tracking-widest text-zinc-500">Writers to Follow</h4>
                      <div className="space-y-6">
                         {recommendedAuthors.map((author) => (
                            <div key={author.id} className="flex gap-4 group cursor-pointer" onClick={() => navigate(`/author/${author.id}`)}>
-                              <div className="w-12 h-12 rounded-full border-2 border-transparent group-hover:border-violet-500 overflow-hidden transition-all">
+                              <div className="w-12 h-12 rounded-full border-2 border-[#1f1f23] group-hover:border-[#00e5ff]/50 overflow-hidden transition-all">
                                  <img
                                    src={author.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.email}`}
                                    alt={author.name}
@@ -302,10 +302,10 @@ const Explore = () => {
                               </div>
                               <div className="flex-1 min-w-0">
                                  <div className="flex items-center gap-1">
-                                    <h5 className="font-headline text-sm font-bold truncate group-hover:text-violet-600 transition-colors">{author.name}</h5>
+                                    <h5 className="font-headline text-sm font-bold truncate group-hover:text-[#00e5ff] transition-colors text-zinc-200">{author.name}</h5>
                                     {author.isVerified && <span className="material-symbols-outlined text-[14px] text-blue-500 fill-blue-500">verified</span>}
                                  </div>
-                                 <p className="font-body text-xs text-gray-500 line-clamp-1 mt-0.5">{author.bio || `Level ${author.writerLevel} Writer`}</p>
+                                 <p className="font-body text-xs text-zinc-600 line-clamp-1 mt-0.5">{author.bio || `Level ${author.writerLevel} Writer`}</p>
                               </div>
                            </div>
                         ))}

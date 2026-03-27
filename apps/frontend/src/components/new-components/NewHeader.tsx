@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
-import { Search, Sun, Moon, Plus, Menu, X } from "lucide-react";
+import { Search, Sun, Moon, Plus, Menu, X, Zap } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { Notifications } from "../Notifications";
 
@@ -44,27 +44,32 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
   const isActive = (href: string) => location.pathname === href;
 
   return (
-    <nav className="fixed top-0 w-full z-[100] bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50">
-      <div className="flex justify-between items-center px-6 py-4 w-full">
+    <nav className="fixed top-0 w-full z-[100] bg-[#0a0a0b]/80 backdrop-blur-2xl border-b border-white/[0.06]">
+      <div className="flex justify-between items-center px-6 py-3.5 w-full">
         {/* Left: Brand + Nav */}
-        <div className="flex items-center gap-12">
+        <div className="flex items-center gap-10">
           <button
             onClick={() => navigate("/blogs")}
-            className="text-2xl font-bold tracking-tighter text-black dark:text-white font-headline"
+            className="flex items-center gap-2 group"
           >
-            DraftDock.app
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00e5ff] to-[#00ff88] flex items-center justify-center">
+              <Zap size={16} className="text-[#0a0a0b]" fill="#0a0a0b" />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-white font-headline">
+              DraftDock
+            </span>
           </button>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <button
                 key={item.href}
                 onClick={() => navigate(item.href)}
-                className={`font-medium font-headline tracking-tight transition-colors ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive(item.href)
-                    ? "text-black dark:text-white font-bold border-b-2 border-black dark:border-white pb-1"
-                    : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                    ? "text-[#00e5ff] bg-[#00e5ff]/10"
+                    : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
                 }`}
               >
                 {item.label}
@@ -74,13 +79,13 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
         </div>
 
         {/* Right: Search + Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* Search bar (desktop) */}
           {showSearch && (
-            <div className="hidden sm:flex bg-gray-100 dark:bg-gray-900 px-4 py-2 rounded-lg items-center gap-2">
-              <Search className="text-zinc-400 w-4 h-4" />
+            <div className="hidden sm:flex bg-[#1a1a1f] px-4 py-2 rounded-xl items-center gap-2 border border-[#1f1f23] focus-within:border-[#00e5ff]/30 focus-within:shadow-[0_0_20px_rgba(0,229,255,0.08)] transition-all duration-300">
+              <Search className="text-zinc-500 w-4 h-4" />
               <input
-                className="bg-transparent border-none focus:ring-0 focus:outline-none text-sm w-48 text-gray-900 dark:text-white placeholder:text-zinc-400"
+                className="bg-transparent border-none focus:ring-0 focus:outline-none text-sm w-48 text-zinc-200 placeholder:text-zinc-600 font-body"
                 placeholder="Search insights..."
                 type="text"
                 value={localSearch}
@@ -93,11 +98,11 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2.5 rounded-xl text-zinc-500 hover:text-[#00e5ff] hover:bg-[#1a1a1f] transition-all duration-200"
             title="Toggle Theme"
           >
             {theme === "dark" ? (
-              <Sun size={18} className="text-yellow-500" />
+              <Sun size={18} className="text-amber-400" />
             ) : (
               <Moon size={18} />
             )}
@@ -109,7 +114,7 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
           {/* Write button */}
           <button
             onClick={() => navigate("/create-blog")}
-            className="hidden sm:flex bg-black dark:bg-white text-white dark:text-black px-6 py-2 rounded-md font-headline font-bold text-sm hover:opacity-80 transition-all active:scale-95 items-center gap-2"
+            className="hidden sm:flex btn-neon px-5 py-2.5 rounded-xl text-sm items-center gap-2 active:scale-95"
           >
             <Plus size={16} />
             Write
@@ -119,7 +124,7 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
           {user && (
             <button
               onClick={() => navigate("/profile")}
-              className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-gray-200 dark:ring-gray-700 hover:ring-indigo-500 transition-all"
+              className="w-9 h-9 rounded-xl overflow-hidden ring-2 ring-[#1f1f23] hover:ring-[#00e5ff]/50 transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,229,255,0.15)]"
             >
               <img
                 src={
@@ -134,7 +139,7 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
 
           {/* Mobile menu toggle */}
           <button
-            className="md:hidden p-2 text-gray-600 dark:text-gray-400"
+            className="md:hidden p-2 text-zinc-400 hover:text-white"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -144,7 +149,7 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-6 py-4 space-y-3">
+        <div className="md:hidden border-t border-white/[0.06] bg-[#0a0a0b] px-6 py-4 space-y-1">
           {navItems.map((item) => (
             <button
               key={item.href}
@@ -152,20 +157,20 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
                 navigate(item.href);
                 setMobileMenuOpen(false);
               }}
-              className={`block w-full text-left py-2 font-headline font-medium ${
+              className={`block w-full text-left py-2.5 px-3 rounded-lg text-sm font-medium transition-all ${
                 isActive(item.href)
-                  ? "text-black dark:text-white font-bold"
-                  : "text-zinc-500 dark:text-zinc-400"
+                  ? "text-[#00e5ff] bg-[#00e5ff]/10"
+                  : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
               }`}
             >
               {item.label}
             </button>
           ))}
           {showSearch && (
-            <div className="flex bg-gray-100 dark:bg-gray-900 px-4 py-2 rounded-lg items-center gap-2 mt-2">
-              <Search className="text-zinc-400 w-4 h-4" />
+            <div className="flex bg-[#1a1a1f] px-4 py-2 rounded-xl items-center gap-2 mt-3 border border-[#1f1f23]">
+              <Search className="text-zinc-500 w-4 h-4" />
               <input
-                className="bg-transparent border-none focus:ring-0 focus:outline-none text-sm flex-1 text-gray-900 dark:text-white placeholder:text-zinc-400"
+                className="bg-transparent border-none focus:ring-0 focus:outline-none text-sm flex-1 text-zinc-200 placeholder:text-zinc-600"
                 placeholder="Search insights..."
                 type="text"
                 value={localSearch}
