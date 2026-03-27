@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header2 from "./ui/header2";
-import { Footer } from "./Footer";
+// Unused components removed
 import { Helmet } from "react-helmet-async";
 
 type Language = 'en' | 'es';
@@ -13,7 +12,7 @@ export function MyStory() {
     { command: '/welcome', output: '[SYSTEM INITIALIZED] - DraftDock Story Terminal v1.1\n\nWelcome to the backend of my journey. Type /help to see available modules.' },
   ]);
   const [currentCommand, setCurrentCommand] = useState('');
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [, setHistoryIndex] = useState(-1);
   const bottomRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);

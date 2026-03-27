@@ -42,7 +42,7 @@ const Button = React.forwardRef<
       whileTap={{ scale: 0.93 }}
       className={classNames}
       ref={ref}
-      {...props}
+      {...(props as any)}
     >
       {children}
     </motion.button>
