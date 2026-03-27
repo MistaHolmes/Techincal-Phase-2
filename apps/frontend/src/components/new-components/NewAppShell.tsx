@@ -8,6 +8,7 @@ interface NewAppShellProps {
   activePage?: string;
   hideSidebar?: boolean;
   hideRightPanel?: boolean;
+  hideFooter?: boolean;
   rightPanelContent?: React.ReactNode;
   searchTerm?: string;
   setSearchTerm?: (val: string) => void;
@@ -19,6 +20,7 @@ export const NewAppShell: React.FC<NewAppShellProps> = ({
   activePage,
   hideSidebar = false,
   hideRightPanel = false,
+  hideFooter = false,
   rightPanelContent,
   searchTerm,
   setSearchTerm,
@@ -44,11 +46,11 @@ export const NewAppShell: React.FC<NewAppShellProps> = ({
 
         {/* Main Content Area */}
         <main
-          className={`flex-1 min-w-0 min-h-[calc(100vh-4.5rem)] flex flex-col ${
-            !hideSidebar ? "" : ""
+          className={`flex-1 min-w-0 flex flex-col ${
+            hideFooter ? "h-[calc(100vh-4.5rem)] overflow-hidden" : "min-h-[calc(100vh-4.5rem)]"
           }`}
         >
-          <div className="flex-1">{children}</div>
+          <div className={hideFooter ? "h-full" : "flex-1"}>{children}</div>
         </main>
 
         {/* Right Sidebar / Panel */}
@@ -111,7 +113,7 @@ export const NewAppShell: React.FC<NewAppShellProps> = ({
       )}
 
       {/* Footer */}
-      <Footer />
+      {!hideFooter && <Footer />}
     </div>
   );
 };
