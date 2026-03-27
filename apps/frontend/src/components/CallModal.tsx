@@ -6,7 +6,6 @@ import {
   VideoOff,
   Mic,
   MicOff,
-  X,
 } from "lucide-react";
 import type { CallState, CallType, IncomingCallInfo } from "../hooks/useWebRTC";
 
