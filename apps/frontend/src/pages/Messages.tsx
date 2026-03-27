@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   MessageCircle,
@@ -21,6 +21,8 @@ import {
   Calendar,
   ExternalLink,
 } from "lucide-react";
+import { useWebRTC } from "../hooks/useWebRTC";
+import CallModal from "../components/CallModal";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -59,8 +61,10 @@ interface Message {
 // ── Component ─────────────────────────────────────────────────────────────────
 const Messages = () => {
   const { getToken } = useAuth();
+  const { user: clerkUser } = useUser();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Core state
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -103,6 +107,29 @@ const Messages = () => {
     if (showEmoji) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmoji]);
+
+  // ── Fetch current user's DB id for WebRTC registration ─────────────────────
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch(`${API_URL}/api/user/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentUserId(data.id);
+        }
+      } catch {}
+    })();
+  }, [getToken]);
+
+  // ── WebRTC calling hook ────────────────────────────────────────────────────
+  const webrtc = useWebRTC({
+    userId: currentUserId,
+    userName: clerkUser?.fullName || clerkUser?.username || "",
+    userAvatar: clerkUser?.imageUrl || "",
+  });
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   useEffect(() => { fetchConversations(); }, []);
@@ -500,17 +527,25 @@ const Messages = () => {
               </div>
             </div>
             <div className="hidden sm:flex items-center gap-0.5">
-              {/* Video — coming soon */}
+              {/* Video call */}
               <button
-                title="Video call (coming soon)"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                title="Video call"
+                onClick={() => {
+                  const u = activeConversation!.otherUser;
+                  webrtc.startCall(u.id, "video", getDisplayName(u), getAvatar(u));
+                }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-violet-600 dark:hover:text-violet-400 transition-all"
               >
                 <Video size={16} />
               </button>
-              {/* Phone — coming soon */}
+              {/* Voice call */}
               <button
-                title="Voice call (coming soon)"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                title="Voice call"
+                onClick={() => {
+                  const u = activeConversation!.otherUser;
+                  webrtc.startCall(u.id, "audio", getDisplayName(u), getAvatar(u));
+                }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-violet-600 dark:hover:text-violet-400 transition-all"
               >
                 <Phone size={16} />
               </button>
@@ -698,19 +733,41 @@ const Messages = () => {
    *  RENDER
    * ═══════════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="flex h-full" style={{ overflow: "hidden" }}>
-      {showList && <ConversationList />}
-      {showChat && <ChatPanel />}
-      {showInfo && !isMobile && <InfoPanel />}
-      {/* Mobile info overlay */}
-      {showInfo && isMobile && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end" onClick={() => setShowInfo(false)}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "85%" }}>
-            <InfoPanel />
+    <>
+      <div className="flex h-full" style={{ overflow: "hidden" }}>
+        {showList && <ConversationList />}
+        {showChat && <ChatPanel />}
+        {showInfo && !isMobile && <InfoPanel />}
+        {/* Mobile info overlay */}
+        {showInfo && isMobile && (
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end" onClick={() => setShowInfo(false)}>
+            <div onClick={(e) => e.stopPropagation()} style={{ width: "85%" }}>
+              <InfoPanel />
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+
+      {/* Call overlay */}
+      <CallModal
+        callState={webrtc.callState}
+        callType={webrtc.callType}
+        isMuted={webrtc.isMuted}
+        isCameraOff={webrtc.isCameraOff}
+        callDuration={webrtc.callDuration}
+        incomingCall={webrtc.incomingCall}
+        callError={webrtc.callError}
+        remoteUserName={webrtc.remoteUserName}
+        remoteUserAvatar={webrtc.remoteUserAvatar}
+        localVideoRef={webrtc.localVideoRef}
+        remoteVideoRef={webrtc.remoteVideoRef}
+        onAccept={webrtc.acceptCall}
+        onReject={webrtc.rejectCall}
+        onEnd={webrtc.endCall}
+        onToggleMic={webrtc.toggleMic}
+        onToggleCamera={webrtc.toggleCamera}
+      />
+    </>
   );
 };
 
