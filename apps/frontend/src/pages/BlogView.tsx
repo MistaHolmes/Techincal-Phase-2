@@ -255,7 +255,7 @@ const BlogView = () => {
   if (!blog) {
     return (
       <NewAppShell>
-        <div className="max-w-3xl mx-auto py-12">
+        <div className="py-12 px-4 sm:px-8 lg:px-12">
            <BlogSkeleton variant="large" />
         </div>
       </NewAppShell>
@@ -357,7 +357,7 @@ const BlogView = () => {
       </Helmet>
       <ReadingProgressBar />
 
-      <div className="max-w-4xl mx-auto">
+      <div className="px-4 sm:px-8 lg:px-12 py-8">
         <div className="mb-10 lg:hidden">
           <BackButton variant="link" onClick={() => navigate(-1)}>
             <ChevronLeft className="me-1" size={16} /> Back
@@ -367,7 +367,6 @@ const BlogView = () => {
         <motion.article
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 sm:p-12 shadow-sm"
         >
           {/* Cover Image */}
           {blog.coverImage && (
