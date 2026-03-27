@@ -64,7 +64,7 @@ const App: React.FC = () => {
           {/* Other pages using NewAppShell */}
           {/* Search page removed; searches now land on /explore */}
           <Route path="/leaderboard" element={<NewAppShell activePage="leaderboard"><Leaderboard /></NewAppShell>} />
-          <Route path="/messages" element={<RequireAuth><NewAppShell activePage="messages"><Messages /></NewAppShell></RequireAuth>} />
+          <Route path="/messages" element={<RequireAuth><NewAppShell activePage="messages" hideRightPanel hideFooter><Messages /></NewAppShell></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><NewAppShell activePage="settings"><Settings /></NewAppShell></RequireAuth>} />
           {/* Drafts moved into profile page; redirect legacy /drafts to profile with tab */}
           <Route path="/drafts" element={<RequireAuth><Navigate to="/profile?tab=drafts" replace /></RequireAuth>} />
