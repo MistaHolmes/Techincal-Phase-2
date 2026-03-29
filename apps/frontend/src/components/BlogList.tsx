@@ -3,79 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Share, Heart, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share, Heart, Clock, Bookmark } from "lucide-react";
 import { ShareButton } from "./ui/shareButton";
+import { useLike } from "@/context/LikeContext";
+import { useBookmarks } from "@/context/BookmarkContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const BlogCardLikeButton = ({ blogId }: { blogId: string }) => {
-  const [likes, setLikes] = useState(0);
-  const [liked, setLiked] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { getToken } = useAuth();
-
-  // Fetch current like count + user status
-  useEffect(() => {
-    const fetchLikes = async () => {
-      try {
-        const token = await getToken();
-        const headers: Record<string, string> = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const res = await fetch(`${API_URL}/api/likes/${blogId}`, { headers });
-        if (res.ok) {
-          const data = await res.json();
-          setLikes(data.likes ?? 0);
-          setLiked(data.liked ?? false);
-        }
-      } catch {}
-    };
-    fetchLikes();
-  }, [blogId, getToken]);
-
-  const handleLike = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (loading) return;
-
-    // Optimistic update
-    const wasLiked = liked;
-    setLiked(!wasLiked);
-    setLikes(prev => wasLiked ? Math.max(0, prev - 1) : prev + 1);
-    setLoading(true);
-
-    try {
-      const token = await getToken();
-      if (!token) {
-        // Revert — user not signed in
-        setLiked(wasLiked);
-        setLikes(prev => wasLiked ? prev + 1 : Math.max(0, prev - 1));
-        return;
-      }
-
-      const res = await fetch(`${API_URL}/api/likes/${blogId}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setLikes(data.likes);
-        setLiked(data.liked);
-      } else {
-        // Revert on failure
-        setLiked(wasLiked);
-        setLikes(prev => wasLiked ? prev + 1 : Math.max(0, prev - 1));
-      }
-    } catch {
-      setLiked(wasLiked);
-      setLikes(prev => wasLiked ? prev + 1 : Math.max(0, prev - 1));
-    } finally {
-      setLoading(false);
-    }
-  }, [blogId, liked, loading, getToken]);
+  const { likes, liked, toggle } = useLike(blogId);
 
   return (
     <button
-      onClick={handleLike}
+      onClick={(e) => { e.stopPropagation(); toggle(); }}
       aria-pressed={liked}
       className={`
         group flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-medium text-sm
@@ -93,6 +33,33 @@ const BlogCardLikeButton = ({ blogId }: { blogId: string }) => {
       />
       <span className="tabular-nums">{likes}</span>
       <span className="sr-only">{liked ? "Unlike" : "Like"}</span>
+    </button>
+  );
+};
+
+const BlogCardBookmarkButton = ({ blogId }: { blogId: string }) => {
+  const { isBookmarked, toggleBookmark } = useBookmarks();
+  const bookmarked = isBookmarked(blogId);
+
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); toggleBookmark(blogId); }}
+      aria-pressed={bookmarked}
+      className={`
+        group flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-medium text-sm
+        transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400
+        ${bookmarked
+          ? "bg-blue-50 border-blue-300 text-blue-600 shadow-sm dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-400"
+          : "bg-white border-gray-300 text-gray-600 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400 dark:hover:border-blue-500 dark:hover:text-blue-400 dark:hover:bg-blue-950/20"
+        }
+      `}
+    >
+      <Bookmark
+        size={16}
+        strokeWidth={2}
+        className={`transition-all duration-200 ${bookmarked ? "fill-blue-500 text-blue-500 scale-110" : "group-hover:scale-110"}`}
+      />
+      <span className="sr-only">{bookmarked ? "Remove bookmark" : "Bookmark"}</span>
     </button>
   );
 };
@@ -196,7 +163,10 @@ const BlogList: React.FC<BlogListProps> = ({ posts }) => {
                   <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed">{stripHtmlTags(post.summary)}</p>
 
                   <div className="flex items-center justify-between pt-2 border-t border-gray-50 dark:border-gray-800">
-                    <BlogCardLikeButton blogId={post.id} />
+                    <div className="flex items-center gap-2">
+                      <BlogCardLikeButton blogId={post.id} />
+                      <BlogCardBookmarkButton blogId={post.id} />
+                    </div>
 
                     <ShareButton
                       variant="link"

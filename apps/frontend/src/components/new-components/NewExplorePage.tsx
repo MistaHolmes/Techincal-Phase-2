@@ -5,6 +5,8 @@ import { Helmet } from "react-helmet-async";
 import { Compass, Heart, Bookmark } from "lucide-react";
 import BlogSkeleton from "@/components/BlogSkeleton";
 import { usePageCache, PAGE_TTL } from "@/context/PageCacheContext";
+import { useLike } from "@/context/LikeContext";
+import { useBookmarks } from "@/context/BookmarkContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -152,6 +154,46 @@ const NewExplorePage = () => {
 
   // words for rotating typewriter
   const rotatingWords = ["Intelligence", "Insights", "Architectures", "Patterns", "Practices"];
+
+  // Reusable like button for explore cards
+  const ExploreLikeButton = ({ blogId }: { blogId: string }) => {
+    const { likes, liked, toggle } = useLike(blogId);
+    return (
+      <button
+        onClick={(e) => { e.stopPropagation(); toggle(); }}
+        aria-label="Like"
+        aria-pressed={liked}
+        className={`inline-flex items-center gap-2 p-2 rounded-md transition-colors ${
+          liked
+            ? "text-rose-500 bg-rose-50 dark:bg-rose-950/30"
+            : "hover:bg-gray-100 dark:hover:bg-gray-800"
+        }`}
+      >
+        <Heart size={18} className={liked ? "fill-rose-500" : ""} />
+        <span className="text-xs font-label text-gray-600 dark:text-gray-400">{likes}</span>
+      </button>
+    );
+  };
+
+  // Reusable bookmark button for explore cards
+  const ExploreBookmarkButton = ({ blogId }: { blogId: string }) => {
+    const { isBookmarked, toggleBookmark } = useBookmarks();
+    const bookmarked = isBookmarked(blogId);
+    return (
+      <button
+        onClick={(e) => { e.stopPropagation(); toggleBookmark(blogId); }}
+        aria-label="Bookmark"
+        aria-pressed={bookmarked}
+        className={`inline-flex items-center p-2 rounded-md transition-colors ${
+          bookmarked
+            ? "text-blue-500 bg-blue-50 dark:bg-blue-950/30"
+            : "hover:bg-gray-100 dark:hover:bg-gray-800"
+        }`}
+      >
+        <Bookmark size={18} className={bookmarked ? "fill-blue-500" : ""} />
+      </button>
+    );
+  };
 
   // Newsletter dialog visibility (persist per session)
   const [showNewsletter, setShowNewsletter] = useState<boolean>(false);
@@ -412,24 +454,8 @@ const NewExplorePage = () => {
                       ...
                     </p>
                     <div className="flex items-center gap-4 mt-2">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); }}
-                        aria-label="Like"
-                        className="inline-flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                      >
-                        <Heart size={18} />
-                        <span className="text-xs font-label text-gray-600 dark:text-gray-400">
-                          {blog.likes || 0}
-                        </span>
-                      </button>
-
-                      <button
-                        onClick={(e) => { e.stopPropagation(); }}
-                        aria-label="Bookmark"
-                        className="inline-flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                      >
-                        <Bookmark size={18} />
-                      </button>
+                      <ExploreLikeButton blogId={blog.id} />
+                      <ExploreBookmarkButton blogId={blog.id} />
                     </div>
                   </div>
                 </article>

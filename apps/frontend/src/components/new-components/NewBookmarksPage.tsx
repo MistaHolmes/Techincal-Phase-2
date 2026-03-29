@@ -6,6 +6,7 @@ import { Bookmark, BookmarkX, Share2, Search, Filter } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { usePageCache, PAGE_TTL } from "@/context/PageCacheContext";
+import { useBookmarks } from "@/context/BookmarkContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -27,6 +28,7 @@ const NewBookmarksPage = () => {
   const [removing, setRemoving] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const cache = usePageCache();
+  const { toggleBookmark } = useBookmarks();
 
   const fetchBookmarks = async () => {
     const cached = cache.get("bookmarks", PAGE_TTL.bookmarks);
@@ -58,11 +60,8 @@ const NewBookmarksPage = () => {
   const handleRemove = async (blogId: string) => {
     setRemoving(blogId);
     try {
-      const token = await getToken();
-      await axios.delete(`${API_URL}/api/user/bookmarks/${blogId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
-      });
+      // Use the global context to toggle (remove) the bookmark
+      await toggleBookmark(blogId);
       cache.invalidate("bookmarks");
       setBlogs((prev) => prev.filter((b) => b.id !== blogId));
     } catch (err) {

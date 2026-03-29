@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { usePageCache } from "@/context/PageCacheContext";
+import { useLike } from "@/context/LikeContext";
+import { useBookmarks } from "@/context/BookmarkContext";
 import BlogSkeleton from "@/components/BlogSkeleton";
 import { NewAppShell } from "@/components/new-components";
 import { BackButton } from "@/components/ui/backButton";
@@ -19,7 +21,9 @@ import {
   Highlighter,
   Twitter,
   Linkedin,
-  Share2
+  Share2,
+  Heart,
+  Bookmark
 } from "lucide-react";
 import ReadingProgressBar from "@/components/ui/ReadingProgressBar";
 import 'highlight.js/styles/atom-one-dark.css';
@@ -89,6 +93,8 @@ const BlogView = () => {
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const API_URL = import.meta.env.VITE_API_URL;
   const cache = usePageCache();
+  const likeHook = useLike(blogId ?? "");
+  const { isBookmarked, toggleBookmark } = useBookmarks();
 
   // Fetch blog data
   useEffect(() => {
@@ -396,6 +402,33 @@ const BlogView = () => {
              </div>
 
              <div className="flex items-center gap-4 ml-auto">
+                {/* Like Button */}
+                <button
+                  onClick={() => likeHook.toggle()}
+                  aria-pressed={likeHook.liked}
+                  className={`flex items-center gap-2 p-2 rounded-xl border transition-all ${
+                    likeHook.liked
+                      ? "bg-rose-50 border-rose-200 text-rose-500 dark:bg-rose-950/30 dark:border-rose-800 dark:text-rose-400"
+                      : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:bg-rose-50 hover:text-rose-500"
+                  }`}
+                >
+                  <Heart size={18} className={likeHook.liked ? "fill-rose-500" : ""} />
+                  <span className="text-sm font-bold tabular-nums">{likeHook.likes}</span>
+                </button>
+
+                {/* Bookmark Button */}
+                <button
+                  onClick={() => blogId && toggleBookmark(blogId)}
+                  aria-pressed={blogId ? isBookmarked(blogId) : false}
+                  className={`p-2 rounded-xl border transition-all ${
+                    blogId && isBookmarked(blogId)
+                      ? "bg-blue-50 border-blue-200 text-blue-500 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-400"
+                      : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:bg-blue-50 hover:text-blue-500"
+                  }`}
+                >
+                  <Bookmark size={18} className={blogId && isBookmarked(blogId) ? "fill-blue-500" : ""} />
+                </button>
+
                 <div ref={shareRef} className="relative">
                   <button
                     onClick={() => setShareOpen(!shareOpen)}

@@ -337,7 +337,7 @@ export function BlogForm() {
 
               {formData.coverImage ? (
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl group ring-4 ring-white dark:ring-gray-700">
-                  <img src={formData.coverImage} alt="Cover" className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <img src={formData.coverImage} alt="Cover" className="w-full h-48 md:h-64 object-cover transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   <button
                     onClick={() => setFormData({ ...formData, coverImage: "" })}
@@ -349,7 +349,7 @@ export function BlogForm() {
               ) : (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="aspect-video border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-3xl flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/50 hover:border-violet-400 transition-all group"
+                  className="w-full h-48 md:h-64 border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-3xl flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/50 hover:border-violet-400 transition-all group"
                 >
                   <div className="w-16 h-16 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center text-violet-600 group-hover:scale-110 transition-transform">
                      <Upload size={32} />

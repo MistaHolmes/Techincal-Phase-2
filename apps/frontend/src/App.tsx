@@ -41,11 +41,15 @@ const PageLoader = () => (
 import { AppShell } from "./components/layout/AppShell";
 import { BlogCacheProvider } from "./context/BlogCacheContext";
 import { PageCacheProvider } from "./context/PageCacheContext";
+import { LikeProvider } from "./context/LikeContext";
+import { BookmarkProvider } from "./context/BookmarkContext";
 
 const App: React.FC = () => {
   return (
     <PageCacheProvider>
     <BlogCacheProvider>
+    <LikeProvider>
+    <BookmarkProvider>
     <Router>
       <Suspense fallback={<PageLoader />}>
         <Routes>
@@ -89,6 +93,8 @@ const App: React.FC = () => {
         </Routes>
       </Suspense>
     </Router>
+    </BookmarkProvider>
+    </LikeProvider>
     </BlogCacheProvider>
     </PageCacheProvider>
   );
