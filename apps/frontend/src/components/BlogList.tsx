@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Share, Heart, Clock, Bookmark } from "lucide-react";
@@ -8,7 +7,6 @@ import { ShareButton } from "./ui/shareButton";
 import { useLike } from "@/context/LikeContext";
 import { useBookmarks } from "@/context/BookmarkContext";
 
-const API_URL = import.meta.env.VITE_API_URL;
 
 const BlogCardLikeButton = ({ blogId }: { blogId: string }) => {
   const { likes, liked, toggle } = useLike(blogId);
