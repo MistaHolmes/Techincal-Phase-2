@@ -40,8 +40,13 @@ const BlogSkeleton: React.FC<BlogSkeletonProps> = ({ variant = "small" }) => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md mb-6 w-full max-w-4xl mx-auto">
-      {skeletons}
+    <div className="p-6 mb-6 w-full max-w-4xl mx-auto bg-transparent">
+      {variant !== "small" && (
+        <div className="w-full h-64 rounded-md mb-6 bg-gray-200 dark:bg-[rgba(255,255,255,0.04)] animate-pulse" />
+      )}
+      <div className="space-y-2">
+        {skeletons}
+      </div>
     </div>
   );
 };

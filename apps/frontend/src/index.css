@@ -77,37 +77,39 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Vercel-like near-black dark theme */
+  --background: #0b0b0c;
+  --foreground: #e6e6e6;
+  --card: #0b0b0c;
+  --card-foreground: #e6e6e6;
+  --popover: #0b0b0c;
+  --popover-foreground: #e6e6e6;
+  --primary: #0b0b0c;
+  --primary-foreground: #e6e6e6;
+  --secondary: #0f1720;
+  --secondary-foreground: #d1d5db;
+  --muted: #0f1720;
+  --muted-foreground: #9ca3af;
+  --accent: #0b0b0c;
+  --accent-foreground: #e6e6e6;
+  --destructive: #7f1d1d;
+  --border: rgba(255,255,255,0.06);
+  --input: rgba(255,255,255,0.04);
+  --ring: #2dd4bf;
+  --chart-1: #06b6d4;
+  --chart-2: #60a5fa;
+  --chart-3: #34d399;
+  --chart-4: #f97316;
+  --chart-5: #f472b6;
+  --sidebar: #0b0b0c;
+  --sidebar-foreground: #e6e6e6;
+  /* less-blue, more neutral accent to better match Vercel-like theme */
+  --sidebar-primary: #8b5cf6; /* violet-500 */
+  --sidebar-primary-foreground: #e6e6e6;
+  --sidebar-accent: #8b5cf6;
+  --sidebar-accent-foreground: #e6e6e6;
+  --sidebar-border: rgba(255,255,255,0.06);
+  --sidebar-ring: #8b5cf6;
 }
 
 @layer base {
@@ -165,7 +167,7 @@
   background: transparent;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: oklch(0.269 0 0);
+  background: rgba(255,255,255,0.08);
   border-radius: 3px;
 }
 
@@ -173,3 +175,14 @@
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* Dark-mode utility overrides: map Tailwind gray utilities to our near-black tokens
+   This ensures components that use dark:bg-gray-900 / dark:bg-gray-800 match the Vercel-like black. */
+.dark .bg-gray-900 { background-color: var(--background) !important; }
+.dark .bg-gray-800 { background-color: rgba(255,255,255,0.02) !important; }
+.dark .bg-gray-50 { background-color: transparent !important; }
+.dark .border-gray-700 { border-color: var(--sidebar-border) !important; }
+.dark .border-gray-800 { border-color: var(--sidebar-border) !important; }
+.dark .text-gray-400 { color: #9ca3af !important; }
+.dark .text-gray-500 { color: #6b7280 !important; }
+

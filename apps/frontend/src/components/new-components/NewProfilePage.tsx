@@ -211,12 +211,10 @@ const NewProfilePage = () => {
           </div>
 
           {/* Blog/Draft Content — outer tabs drive the section */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
-            <UserContentSection
-              activeSection={activeTab}
-              onSectionChange={updateActiveTab}
-            />
-          </div>
+          <UserContentSection
+            activeSection={activeTab}
+            onSectionChange={updateActiveTab}
+          />
         </div>
 
         {/* Network Sidebar */}

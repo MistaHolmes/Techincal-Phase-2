@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { Helmet } from "react-helmet-async";
 import { Compass, Heart, Bookmark } from "lucide-react";
+import BlogSkeleton from "@/components/BlogSkeleton";
 import { usePageCache, PAGE_TTL } from "@/context/PageCacheContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -47,7 +48,6 @@ const NewExplorePage = () => {
       setTags(cached.tags);
       if (cached.personalized) setPersonalized(cached.personalized);
       if (cached.recommendedAuthors) setRecommendedAuthors(cached.recommendedAuthors);
-      if (isSignedIn) setActiveTab("foryou");
       setLoading(false);
       return;
     }
@@ -90,7 +90,7 @@ const NewExplorePage = () => {
             aData = await aRes.json();
             setRecommendedAuthors(aData);
           }
-          setActiveTab("foryou");
+          // don't automatically switch to 'foryou' — keep default as 'trending'
         }
         cache.set(cacheKey, {
           trending: Array.isArray(tData) ? tData : [],
@@ -112,6 +112,58 @@ const NewExplorePage = () => {
   const featuredBlog = featured[0] || trending[0];
   const displayBlogs = activeTab === "foryou" ? personalized : recent;
 
+  // Typewriter + rotating words component
+  const RotatingWords = ({ words, className }: { words: string[]; className?: string }) => {
+    const [wordIndex, setWordIndex] = useState(0);
+    const [text, setText] = useState("");
+    const [phase, setPhase] = useState<"typing" | "pausing" | "deleting">("typing");
+
+    useEffect(() => {
+      let timeout: ReturnType<typeof setTimeout>;
+      const current = words[wordIndex];
+
+      if (phase === "typing") {
+        if (text.length < current.length) {
+          timeout = setTimeout(() => setText(current.slice(0, text.length + 1)), 80);
+        } else {
+          timeout = setTimeout(() => setPhase("pausing"), 700);
+        }
+      } else if (phase === "pausing") {
+        timeout = setTimeout(() => setPhase("deleting"), 800 + Math.random() * 400);
+      } else if (phase === "deleting") {
+        if (text.length > 0) {
+          timeout = setTimeout(() => setText(text.slice(0, text.length - 1)), 40);
+        } else {
+          setWordIndex((i) => (i + 1) % words.length);
+          setPhase("typing");
+        }
+      }
+
+      return () => clearTimeout(timeout);
+    }, [text, phase, wordIndex, words]);
+
+    return (
+      <span className={className}>
+        {text}
+        <span className="ml-1 inline-block text-indigo-600 dark:text-indigo-400 animate-pulse">|</span>
+      </span>
+    );
+  };
+
+  // words for rotating typewriter
+  const rotatingWords = ["Intelligence", "Insights", "Architectures", "Patterns", "Practices"];
+
+  // Newsletter dialog visibility (persist per session)
+  const [showNewsletter, setShowNewsletter] = useState<boolean>(false);
+  useEffect(() => {
+    try {
+      const dismissed = sessionStorage.getItem("dd_newsletter_dismissed");
+      setShowNewsletter(!dismissed);
+    } catch (e) {
+      setShowNewsletter(true);
+    }
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -123,9 +175,7 @@ const NewExplorePage = () => {
         <header className="pt-12 pb-8">
           <h2 className="text-4xl md:text-[3.5rem] font-bold font-headline tracking-tighter leading-none text-gray-900 dark:text-white mb-4">
             Explore{" "}
-            <span className="text-indigo-600 dark:text-indigo-400 italic">
-              Intelligence
-            </span>
+            <RotatingWords words={rotatingWords} className="text-indigo-600 dark:text-indigo-400 italic" />
             .
           </h2>
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6 border-b border-gray-200/50 dark:border-gray-800/50 pb-6">
@@ -288,15 +338,38 @@ const NewExplorePage = () => {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <div className="space-y-12 py-6">
+              {/* Hero skeleton */}
+              <header className="pt-12 pb-8">
+                <div className="h-12 md:h-20 w-2/3 bg-gray-200 dark:bg-[rgba(255,255,255,0.06)] rounded-md animate-pulse" />
+                <div className="mt-4 space-y-3 max-w-2xl">
+                  <div className="h-4 w-1/2 bg-gray-200 dark:bg-[rgba(255,255,255,0.04)] rounded animate-pulse" />
+                  <div className="h-4 w-2/3 bg-gray-200 dark:bg-[rgba(255,255,255,0.04)] rounded animate-pulse" />
+                </div>
+              </header>
+
+              {/* Bento grid skeleton */}
+              <section className="py-8 grid grid-cols-12 gap-6 auto-rows-[280px]">
+                <div className="col-span-12 md:col-span-8 row-span-2 rounded-xl bg-gray-200 dark:bg-[rgba(255,255,255,0.04)] animate-pulse" />
+                <div className="col-span-12 md:col-span-4 row-span-1 rounded-xl bg-gray-200 dark:bg-[rgba(255,255,255,0.04)] animate-pulse" />
+                <div className="col-span-12 md:col-span-4 row-span-1 rounded-xl bg-gray-200 dark:bg-[rgba(255,255,255,0.04)] animate-pulse" />
+              </section>
+
+              {/* Editorial feed skeletons */}
+              <section className="py-12 space-y-12">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-full">
+                    <BlogSkeleton variant="large" />
+                  </div>
+                ))}
+              </section>
             </div>
           ) : (
             <div className="flex flex-col gap-16">
               {displayBlogs.map((blog, idx) => (
                 <article
                   key={blog.id}
-                  className="grid grid-cols-12 gap-8 items-center group cursor-pointer"
+                  className="grid grid-cols-12 gap-8 items-center group cursor-pointer rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
                   onClick={() => navigate(`/blog/${blog.id}`)}
                 >
                   <div
@@ -338,16 +411,25 @@ const NewExplorePage = () => {
                       {(blog.summary || blog.title || "").slice(0, 200)}
                       ...
                     </p>
-                    <div className="flex items-center gap-6 mt-2">
-                      <div className="flex items-center gap-2">
-                        <Heart size={14} />
+                    <div className="flex items-center gap-4 mt-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); }}
+                        aria-label="Like"
+                        className="inline-flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <Heart size={18} />
                         <span className="text-xs font-label text-gray-600 dark:text-gray-400">
                           {blog.likes || 0}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Bookmark size={14} />
-                      </div>
+                      </button>
+
+                      <button
+                        onClick={(e) => { e.stopPropagation(); }}
+                        aria-label="Bookmark"
+                        className="inline-flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <Bookmark size={18} />
+                      </button>
                     </div>
                   </div>
                 </article>
@@ -366,48 +448,55 @@ const NewExplorePage = () => {
           )}
         </section>
 
-        {/* Newsletter Section - matching stitch */}
-        <section className="py-16 bg-gray-50 dark:bg-gray-900 mt-12 mb-12 -mx-8 md:-mx-12 px-8 md:px-12 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="max-w-md">
-            <h3 className="text-3xl font-headline font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
-              Stay synchronized.
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 font-body mb-8">
-              Weekly technical deep-dives and architectural blueprints delivered
-              directly to your inbox. No fluff, just signal.
-            </p>
-            <div className="flex gap-2">
-              <input
-                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 flex-1 focus:ring-2 focus:ring-indigo-500/20 text-sm font-label focus:outline-none"
-                placeholder="engineer@domain.com"
-                type="email"
-              />
-              <button className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors">
-                Subscribe
+        {/* Newsletter dialog (dismissible for the session) */}
+        {showNewsletter && (
+          <div className="fixed bottom-8 right-8 z-50 w-full max-w-2xl px-4">
+            <div className="relative bg-white dark:bg-[var(--card)] text-gray-900 dark:text-[var(--card-foreground)] rounded-xl shadow-2xl border border-gray-200 dark:border-[var(--sidebar-border)] p-6">
+              <button
+                aria-label="Close newsletter"
+                onClick={() => {
+                  try { sessionStorage.setItem('dd_newsletter_dismissed', '1'); } catch (e) {}
+                  setShowNewsletter(false);
+                }}
+                className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.03)] transition-colors"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
+
+              <div className="flex flex-col md:flex-row items-stretch gap-6">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-2xl font-headline font-bold mb-2">Stay synchronized.</h3>
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">Weekly technical deep-dives and architectural blueprints delivered directly to your inbox. No fluff, just signal.</p>
+                  <div className="flex gap-2">
+                    <input
+                      className="bg-white dark:bg-[var(--card)] border border-gray-200 dark:border-[var(--sidebar-border)] rounded-lg px-4 py-2 flex-1 min-w-0 focus:ring-2 focus:ring-indigo-500/20 text-sm font-label focus:outline-none"
+                      placeholder="engineer@domain.com"
+                      type="email"
+                    />
+                    <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-colors">Subscribe</button>
+                  </div>
+                </div>
+
+                <div className="w-full md:w-64 grid grid-cols-2 gap-3 items-stretch">
+                  {[
+                    { label: "Contributors", value: "12k+" },
+                    { label: "Daily Posts", value: "450" },
+                    { label: "Monthly Readers", value: "8.4m" },
+                    { label: "Signal Ratio", value: "99.9" },
+                  ].map((stat) => (
+                    <div key={stat.label} className="p-4 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] rounded-lg text-center border border-gray-100 dark:border-[var(--sidebar-border)] flex flex-col justify-center">
+                      <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{stat.value}</div>
+                      <div className="text-xs text-gray-400 mt-1">{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: "Contributors", value: "12k+" },
-              { label: "Daily Posts", value: "450" },
-              { label: "Monthly Readers", value: "8.4m" },
-              { label: "Signal Ratio", value: "99.9" },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="p-6 bg-white dark:bg-gray-800 rounded-xl text-center border border-gray-200/80 dark:border-gray-700"
-              >
-                <span className="text-2xl font-bold font-headline text-indigo-600 dark:text-indigo-400">
-                  {stat.value}
-                </span>
-                <p className="text-[10px] font-label uppercase tracking-widest mt-1 text-gray-400">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
+        )}
+
       </div>
     </>
   );
