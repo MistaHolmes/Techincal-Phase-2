@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
+import { usePageCache } from "@/context/PageCacheContext";
+import { NewAppShell } from "@/components/new-components";
 import BlogList from "@/components/BlogList";
 import BlogSkeleton from "@/components/BlogSkeleton";
-import { Footer } from "@/components/Footer";
-import Header from "@/components/ui/header";
 
 // Define the Blog type
 interface Blog {
@@ -16,7 +16,8 @@ interface Blog {
   authorId: string;
   published: string;
   image?: string;
-  tags?: string[];
+  tags?: { id: string, name: string }[];
+  coverImage?: string;
 }
 
 const Blogs: React.FC = () => {
@@ -25,12 +26,21 @@ const Blogs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredBlogs, setFilteredBlogs] = useState<Blog[]>([]);
   const [allBlogs, setAllBlogs] = useState<Blog[]>([]);
-  
+
   const hasFetchedAllBlogs = useRef(false);
+  const cache = usePageCache();
 
   useEffect(() => {
     if (!isLoaded || !user || hasFetchedAllBlogs.current) return;
     hasFetchedAllBlogs.current = true;
+
+    const cached = cache.get('blogs:all');
+    if (cached) {
+      setAllBlogs(cached);
+      setFilteredBlogs(cached);
+      setLoading(false);
+      return;
+    }
 
     const API_URL = import.meta.env.VITE_API_URL;
 
@@ -39,20 +49,27 @@ const Blogs: React.FC = () => {
       .then((res) => {
         const fetchedBlogs = res.data
           .filter((b: any) => b.published === true)
-          .map((b: any) => ({
-            id: b.id,
-            title: b.title,
-            summary: b.content.slice(0, 150) + "...",
-            author: b.author?.email
-              ? b.author.email.split("@")[0].replace(/^./, (c: any) => c.toUpperCase())
-              : "Anonymous",
-            authorId: b.authorId,
-            updatedAt: new Date(b.updatedAt),
-            published: new Date(b.updatedAt).toLocaleDateString(),
-            tags: b.tags || [],
-          }))
+          .map((b: any) => {
+            const summary = b.summary || b.title || '';
+
+            return {
+              id: b.id,
+              title: b.title,
+              summary: summary.slice(0, 150) + (summary.length > 150 ? "..." : ""),
+              coverImage: b.coverImage || "",
+              author: b.author?.name
+                || (b.author?.email
+                  ? b.author.email.split("@")[0].replace(/^./, (c: any) => c.toUpperCase())
+                  : "Anonymous"),
+              authorId: b.authorId,
+              updatedAt: new Date(b.updatedAt),
+              published: new Date(b.updatedAt).toLocaleDateString(),
+              tags: b.tags || [],
+            };
+          })
           .sort((a: any, b: any) => b.updatedAt.getTime() - a.updatedAt.getTime());
-        
+
+        cache.set('blogs:all', fetchedBlogs);
         setAllBlogs(fetchedBlogs);
         setFilteredBlogs(fetchedBlogs);
       })
@@ -80,34 +97,29 @@ const Blogs: React.FC = () => {
   }, [searchTerm, allBlogs]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100/30 ">
-      {/* Main content */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Header */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} />          
-          <main className="flex-1 overflow-y-auto bg-muted/20 p-4 md:p-6">
-            <div className="max-w-6xl mx-auto">                    
-              {loading ? (
-                <div className="space-y-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <BlogSkeleton key={i} />
-                  ))}
-                </div>
-              ) : (
-                <BlogList posts={filteredBlogs} />
-              )}
+    <NewAppShell
+      activePage="dock"
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+    >
+      <div className="max-w-4xl mx-auto">
+        {loading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <BlogSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <div className="flex flex-col gap-2">
+               <h1 className="text-4xl font-headline font-bold text-gray-900 dark:text-white">Community Dock</h1>
+               <p className="text-gray-500 dark:text-gray-400">Discover the latest drafts and stories from the community.</p>
             </div>
-            <div>
-              
-            </div>
-            <div className="mt-8">
-              <Footer />
-            </div>
-          </main>
-        </div>
+            <BlogList posts={filteredBlogs} />
+          </div>
+        )}
       </div>
-    </div>
+    </NewAppShell>
   );
 };
 

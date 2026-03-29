@@ -1,93 +1,26 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Share, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share, Heart, Clock, Bookmark } from "lucide-react";
 import { ShareButton } from "./ui/shareButton";
+import { useLike } from "@/context/LikeContext";
+import { useBookmarks } from "@/context/BookmarkContext";
 
-const API_URL = import.meta.env.VITE_API_URL;
 
 const BlogCardLikeButton = ({ blogId }: { blogId: string }) => {
-  const [likes, setLikes] = useState(0);
-  const [liked, setLiked] = useState(false);
-  const [likeQueue, setLikeQueue] = useState(0);
-  const wsRef = useRef<WebSocket | null>(null);
-
-  // Initialize and get current count via HTTP (or just rely on WS broadcast)
-  useEffect(() => {
-    const fetchLikes = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/blogs/${blogId}`);
-        const data = await res.json();
-        setLikes(data.likes ?? 0);
-      } catch (err) {
-        // silently ignore error on lists if individual fail
-      }
-    };
-    fetchLikes();
-  }, [blogId]);
-
-  useEffect(() => {
-    if (!blogId) return;
-    const wsUrl = API_URL.replace(/^http/, "ws");
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      ws.send(`getLikes:${blogId}`);
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "likes_update" && data.blogId === blogId) {
-          setLikes(data.likes);
-        }
-      } catch {
-        // ignore non-JSON messages (pong, etc.)
-      }
-    };
-
-    return () => {
-      ws.close();
-    };
-  }, [blogId]);
-
-  // Debounced queue
-  useEffect(() => {
-    if (likeQueue === 0 || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-
-    const timeoutPath = setTimeout(() => {
-      if (likeQueue > 0) wsRef.current?.send(`like:${blogId}`);
-      else if (likeQueue < 0) wsRef.current?.send(`unlike:${blogId}`);
-      setLikeQueue(0);
-    }, 1000);
-
-    return () => clearTimeout(timeoutPath);
-  }, [likeQueue, blogId]);
-
-  const handleLike = (e: React.MouseEvent) => {
-    e.stopPropagation(); // prevent clicking the card to navigate
-    if (liked) {
-      setLikes((prev) => Math.max(0, prev - 1));
-      setLikeQueue((prev) => prev - 1);
-    } else {
-      setLikes((prev) => prev + 1);
-      setLikeQueue((prev) => prev + 1);
-    }
-    setLiked((prev) => !prev);
-  };
+  const { likes, liked, toggle } = useLike(blogId);
 
   return (
     <button
-      onClick={handleLike}
+      onClick={(e) => { e.stopPropagation(); toggle(); }}
       aria-pressed={liked}
       className={`
         group flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-medium text-sm
         transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400
         ${liked
-          ? "bg-rose-50 border-rose-300 text-rose-600 shadow-sm"
-          : "bg-white border-gray-300 text-gray-600 hover:border-rose-300 hover:text-rose-500 hover:bg-rose-50"
+          ? "bg-rose-50 border-rose-300 text-rose-600 shadow-sm dark:bg-rose-950/30 dark:border-rose-800 dark:text-rose-400"
+          : "bg-white border-gray-300 text-gray-600 hover:border-rose-300 hover:text-rose-500 hover:bg-rose-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400 dark:hover:border-rose-500 dark:hover:text-rose-400 dark:hover:bg-rose-950/20"
         }
       `}
     >
@@ -102,12 +35,41 @@ const BlogCardLikeButton = ({ blogId }: { blogId: string }) => {
   );
 };
 
+const BlogCardBookmarkButton = ({ blogId }: { blogId: string }) => {
+  const { isBookmarked, toggleBookmark } = useBookmarks();
+  const bookmarked = isBookmarked(blogId);
+
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); toggleBookmark(blogId); }}
+      aria-pressed={bookmarked}
+      className={`
+        group flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-medium text-sm
+        transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400
+        ${bookmarked
+          ? "bg-blue-50 border-blue-300 text-blue-600 shadow-sm dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-400"
+          : "bg-white border-gray-300 text-gray-600 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400 dark:hover:border-blue-500 dark:hover:text-blue-400 dark:hover:bg-blue-950/20"
+        }
+      `}
+    >
+      <Bookmark
+        size={16}
+        strokeWidth={2}
+        className={`transition-all duration-200 ${bookmarked ? "fill-blue-500 text-blue-500 scale-110" : "group-hover:scale-110"}`}
+      />
+      <span className="sr-only">{bookmarked ? "Remove bookmark" : "Bookmark"}</span>
+    </button>
+  );
+};
+
 interface Blog {
   id: string;
   title: string;
   summary: string;
   author: string;
+  authorId?: string;
   published: string;
+  coverImage?: string;
 }
 
 interface BlogListProps {
@@ -175,38 +137,58 @@ const BlogList: React.FC<BlogListProps> = ({ posts }) => {
               tabIndex={0}
               onClick={() => handleClick(post.id)}
               onKeyDown={(e) => e.key === "Enter" && handleClick(post.id)}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.5 }}
-              className="w-full max-w-3xl border rounded-lg px-6 py-4 shadow-sm bg-white/70 cursor-pointer hover:shadow-md transition-shadow hover:text-gray-500"
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="w-full max-w-3xl border border-gray-100 dark:border-gray-800 rounded-2xl px-6 py-5 shadow-sm bg-white dark:bg-gray-900 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-none hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
             >
-              <div className="flex justify-between text-sm text-gray-500 mb-2">
-                <span>{post.published}</span>
-                <span className="text-gray-400">By {post.author}</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{stripHtmlTags(post.title)}</h3>
-              <p className="text-gray-700 text-sm mb-4">{stripHtmlTags(post.summary)}</p>
-              
-              <div className="mt-4 flex items-end justify-end flex-col gap-3">
-                <BlogCardLikeButton blogId={post.id} />
-                
-                <ShareButton
-                  variant="link"
-                  className="flex items-center gap-1 text-gray-700 hover:bg-gray-100 rounded-full px-3 py-1.5 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const postUrl = `${window.location.origin}/blog/${post.id}`;
-                    navigator.clipboard.writeText(postUrl)
-                      .then(() => {
-                        setCopiedId(post.id);
-                        setTimeout(() => setCopiedId(null), 1000);
-                      });
-                  }}
-                >
-                  <Share className="opacity-60" size={16} strokeWidth={2} aria-hidden="true" />
-                  <span className="text-gray-700 text-sm">{copiedId === post.id ? "Copied!" : "Share"}</span>
-                </ShareButton>
+              <div className="flex gap-5">
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-3">
+                    <div className="flex items-center gap-3">
+                      <span>{post.published}</span>
+                      <span className="flex items-center gap-1"><Clock size={11} className="opacity-60" />{Math.max(1, Math.ceil(stripHtmlTags(post.summary).split(/\s+/).filter(Boolean).length / 200))} min</span>
+                    </div>
+                    <span
+                      className="text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 cursor-pointer transition-colors duration-200"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/author/${post.authorId}`); }}
+                    >
+                      By {post.author}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-headline font-bold mb-2 text-gray-900 dark:text-white leading-snug line-clamp-2">{stripHtmlTags(post.title)}</h3>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed">{stripHtmlTags(post.summary)}</p>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-50 dark:border-gray-800">
+                    <div className="flex items-center gap-2">
+                      <BlogCardLikeButton blogId={post.id} />
+                      <BlogCardBookmarkButton blogId={post.id} />
+                    </div>
+
+                    <ShareButton
+                      variant="link"
+                      className="flex items-center gap-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full px-3 py-1.5 transition-colors text-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const postUrl = `${window.location.origin}/blog/${post.id}`;
+                        navigator.clipboard.writeText(postUrl)
+                          .then(() => {
+                            setCopiedId(post.id);
+                            setTimeout(() => setCopiedId(null), 1000);
+                          });
+                      }}
+                    >
+                      <Share size={14} strokeWidth={2} aria-hidden="true" />
+                      <span>{copiedId === post.id ? "Copied!" : "Share"}</span>
+                    </ShareButton>
+                  </div>
+                </div>
+                {post.coverImage && (
+                  <div className="flex-shrink-0 w-32 h-32 rounded-xl overflow-hidden hidden sm:block group/img">
+                    <img src={post.coverImage} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110" />
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}

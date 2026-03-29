@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  backend:
+    image: mistaholmes/draftdock-be-mar-21:latest
+    env_file:
+      - ./.env
+    restart: unless-stopped
+    networks:
+      - web
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+
+networks:
+  web:
+    driver: bridge

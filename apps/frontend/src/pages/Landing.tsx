@@ -3,7 +3,9 @@ import { motion, useMotionValue, useSpring, easeOut } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth, } from "@clerk/clerk-react";
 import TypeWriter from "../components/TypeWriter";
+import RotatingWords from "@/components/RotatingWords";
 import { useNavigate } from "react-router-dom";
+import BackgroundGlow from "@/components/ui/BackgroundGlow";
 import { Footer } from "@/components/Footer";
 
 const LandingPage: React.FC = () => {
@@ -35,7 +37,7 @@ const LandingPage: React.FC = () => {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         delayChildren: 0.3,
         staggerChildren: 0.2,
        },
@@ -43,12 +45,13 @@ const LandingPage: React.FC = () => {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 50 },
+    hidden: { opacity: 0, y: 40, filter: "blur(10px)" },
     visible: {
       opacity: 1,
       y: 0,
+      filter: "blur(0px)",
       transition: {
-        duration: 0.5,
+        duration: 0.7,
         ease: easeOut,
       },
     },
@@ -56,6 +59,7 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white text-black overflow-hidden relative">
+      <BackgroundGlow />
       {/* Background */}
       <motion.div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-gray-150" />
@@ -128,9 +132,14 @@ const LandingPage: React.FC = () => {
 
             <motion.p
               variants={itemVariants}
-              className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4"
+              className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 flex items-center justify-center gap-2"
             >
-              Read And Write Blogs of Folks, and Have a great time in this site
+              A collaborative space for evolving
+              <RotatingWords
+                words={["Performance", "Scalability", "Architecture", "Patterns", "Best Practices"]}
+                className="text-indigo-600 italic"
+              />
+              in real time.
             </motion.p>
 
             <motion.div
@@ -138,17 +147,21 @@ const LandingPage: React.FC = () => {
               className="flex flex-col sm:flex-row gap-4 justify-center px-4"
             >
               <SignedIn>
-                <button
+                <motion.button
                   onClick={() => route("/create-blog")}
                   className="min-w-[140px] px-6 py-4 border-2 border-black text-black hover:bg-black hover:text-white rounded-md transition-all font-medium"
+                  whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(0,0,0,0.12)" }}
+                  whileTap={{ scale: 0.97 }}
                 >
                   Start Drafting <ArrowRight className="ml-2 inline h-5 w-5" />
-                </button>
-                <button className="min-w-[140px] px-6 py-4 bg-black text-white hover:bg-transparent hover:text-black border-2 border-black rounded-md transition-all font-medium"
+                </motion.button>
+                <motion.button className="min-w-[140px] px-6 py-4 bg-black text-white hover:bg-transparent hover:text-black border-2 border-black rounded-md transition-all font-medium"
                   onClick={() => route("/blogs")}
+                  whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(0,0,0,0.12)" }}
+                  whileTap={{ scale: 0.97 }}
                 >
                   Start Reading <ArrowRight className="ml-2 inline h-5 w-5" />
-                </button>
+                </motion.button>
               </SignedIn>
               <SignedOut>
                 <SignInButton mode="modal">
@@ -161,11 +174,12 @@ const LandingPage: React.FC = () => {
                     Start Reading <ArrowRight className="ml-2 inline h-5 w-5" />
                   </button>
                 </SignInButton>
-              </SignedOut>              
+              </SignedOut>
             </motion.div>
           </motion.section>
         )}
       </main>
+      {/* Footer */}
       <Footer />
     </div>
   );
