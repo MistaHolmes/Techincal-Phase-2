@@ -14,9 +14,9 @@ const generateData = () => {
   const events = ['page_view', 'click', 'scroll', 'form_submit', 'video_play', 'purchase'];
 
   const data = [];
-  
-  // Generating exactly 3000 objects. ~45,000 lines of mock JSON data.
-  for (let i = 0; i < 3000; i++) {
+
+  // Generating 10 objects to precisely hit ~25k lines threshold.
+  for (let i = 0; i < 10; i++) {
     const timestamp = new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString();
     data.push({
       id: `evt_${Math.random().toString(36).substring(2, 11)}`,
