@@ -71,8 +71,11 @@ export const LikeProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await fetch(`${API_URL}/api/likes/${blogId}`, { headers });
       if (res.ok) {
         const data = await res.json();
-        stateRef.current.set(blogId, { likes: data.likes ?? 0, liked: data.liked ?? false });
-        notify(blogId);
+        // Don't overwrite state while there are pending optimistic toggles
+        if ((pendingRef.current.get(blogId) ?? 0) === 0 && !inflightRef.current.has(blogId)) {
+          stateRef.current.set(blogId, { likes: data.likes ?? 0, liked: data.liked ?? false });
+          notify(blogId);
+        }
       }
     } catch {
       // silently fail
@@ -168,6 +171,7 @@ export function useLike(blogId: string) {
   const ctx = useContext(LikeContext);
   if (!ctx) throw new Error("useLike must be used within LikeProvider");
 
+  const { isLoaded, isSignedIn } = useAuth();
   const [, forceUpdate] = useState(0);
 
   useEffect(() => {
@@ -180,6 +184,15 @@ export function useLike(blogId: string) {
       ctx.fetchLikeState(blogId);
     }
   }, [blogId, ctx]);
+
+  // Re-fetch once Clerk finishes loading so we get the correct `liked` status.
+  // The initial fetch above can fire before Clerk has a token, causing the backend
+  // to return liked:false even for a user who already liked the blog.
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      ctx.fetchLikeState(blogId);
+    }
+  }, [blogId, ctx, isLoaded, isSignedIn]);
 
   const state = ctx.getLikeState(blogId);
 
