@@ -16,10 +16,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <HelmetProvider>
       <ThemeProvider>
-        <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+        <ClerkProvider
+         publishableKey={PUBLISHABLE_KEY}
+         afterSignOutUrl="/"
+         appearance={{ layout: { unsafe_disableDevelopmentModeWarnings: true } }}
+        >
           <App />
         </ClerkProvider>
       </ThemeProvider>
     </HelmetProvider>
   </React.StrictMode>,
-);
+);
