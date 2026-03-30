@@ -1,18 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import RichTextEditor from "@/components/RichTextEditor";
+import MDEditor from "@uiw/react-md-editor";
 import axios from "axios";
-import { motion } from "framer-motion";
-import { AppShell } from "@/components/layout/AppShell";
-import { Image, Upload, X as CloseIcon, Tag as TagIcon, Plus, FileDiff, History as HistoryIcon, Sparkles } from "lucide-react";
+import { NewAppShell } from "@/components/new-components";
+import { Upload, X as CloseIcon, Plus, Sparkles } from "lucide-react";
 import AISuggestionPanel from "@/components/editor/AISuggestionPanel";
-import ReadabilityMeter from "@/components/editor/ReadabilityMeter";
 
 export function BlogForm() {
-  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { getToken } = useAuth();
@@ -33,6 +29,8 @@ export function BlogForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingExisting, setLoadingExisting] = useState(isEditMode);
   const [autoSaved, setAutoSaved] = useState(false);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
   const AUTO_SAVE_KEY = "draftdock_autosave";
@@ -179,26 +177,52 @@ export function BlogForm() {
     }
   };
 
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  const wordCount = formData.content.trim().split(/\s+/).filter(Boolean).length;
+
+  const insertMd = useCallback(
+    (prefix: string, suffix: string, blockMode: boolean) => {
+      const el = contentRef.current;
+      if (!el) return;
+      const start = el.selectionStart ?? 0;
+      const end   = el.selectionEnd   ?? 0;
+      const selected = formData.content.slice(start, end);
+      let snippet: string;
+      if (blockMode) {
+        const lineStart = formData.content.lastIndexOf("\n", start - 1) + 1;
+        const before = formData.content.slice(0, lineStart);
+        const after  = formData.content.slice(lineStart);
+        snippet = before + prefix + after;
+      } else {
+        snippet =
+          formData.content.slice(0, start) +
+          prefix +
+          (selected || "text") +
+          suffix +
+          formData.content.slice(end);
+      }
+      setFormData(fd => ({ ...fd, content: snippet }));
+      setTimeout(() => {
+        el.focus();
+        const pos = blockMode ? start + prefix.length : start + prefix.length + (selected || "text").length + suffix.length;
+        el.setSelectionRange(pos, pos);
+      }, 0);
+    },
+    [formData.content]
+  );
+
   if (loadingExisting) {
     return (
-      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 items-center justify-center">
-        <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen bg-[#f5f7f9] items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#702ae1] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  const RightPanelContent = (
-    <div className="space-y-6">
-      {/* Co-Authors Management */}
-      <CoAuthorsPanel blogId={blogId} />
-
-      {/* Version History Toggle */}
-      <VersionHistoryPanel blogId={blogId} onRestore={(title, content) => setFormData({ ...formData, title, content })} />
-
-      {/* Readability */}
-      <ReadabilityMeter content={formData.content} />
-
-      {/* AI Assistant */}
+  return (
+    <>
+      {/* ── Floating AI Assistant Panel ─────────────────────────── */}
       <AISuggestionPanel
         content={formData.content}
         onTitleSelect={(title) => setFormData({ ...formData, title })}
@@ -206,395 +230,529 @@ export function BlogForm() {
         onSummaryGenerated={(summary) => setFormData({ ...formData, summary })}
       />
 
-      {/* Summary Box */}
-      <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
-        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-          <FileDiff size={14} /> SEO Summary
-        </h3>
-        <Textarea
-          value={formData.summary}
-          onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
-          placeholder="Brief summary for social sharing..."
-          className="text-sm min-h-[100px] bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-violet-500 resize-none"
-        />
-      </div>
-    </div>
-  );
+      <NewAppShell hideRightPanel hideFooter>
+        {/* ── Main Editorial Canvas ─────────────────────────────── */}
+        <main className="pt-6 flex flex-col h-[calc(100vh-4.5rem)] px-4 md:px-8">
 
-  return (
-    <AppShell rightPanelContent={RightPanelContent}>
-      <div className="max-w-4xl mx-auto">
-        {isSubmitting ? (
-          <div className="py-20 text-center space-y-6">
-             <div className="w-16 h-16 border-4 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto" />
-             <p className="text-sm font-black uppercase tracking-widest text-gray-500 animate-pulse">Cooking your stories...</p>
-          </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 sm:p-12 shadow-sm"
-          >
-            {/* Meta & Status */}
-            <div className="mb-10 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 bg-violet-600 text-white rounded-full shadow-lg shadow-violet-200 dark:shadow-none">
-                  {isEditMode ? "Editing Mode" : "Creative Mode"}
-                </span>
-                {autoSaved && (
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase text-emerald-500 tracking-widest">
-                    <span className="relative flex w-2 h-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full w-2 h-2 bg-emerald-500" />
-                    </span>
-                    Auto-saved
-                  </div>
+          {/* ── Toolbar Container ────────────────────────────────── */}
+          <div className="px-0 md:px-8 mb-4 md:mb-6 flex-shrink-0">
+            <div className="bg-white rounded-xl p-2 flex items-center justify-between shadow-sm border border-gray-100/50">
+
+              {/* ── Format buttons ── */}
+              <div className="flex items-center gap-0.5 flex-nowrap overflow-x-auto no-scrollbar px-2 -mx-2">
+                {([
+                  { icon: "format_bold",          label: "Bold",            md: { p: "**",           s: "**",       block: false } },
+                  { icon: "format_italic",         label: "Italic",          md: { p: "*",            s: "*",        block: false } },
+                  { icon: "strikethrough_s",       label: "Strikethrough",   md: { p: "~~",           s: "~~",       block: false } },
+                  { icon: "DIV" },
+                  { icon: "looks_one",             label: "Heading 1",       md: { p: "# ",           s: "",         block: true  } },
+                  { icon: "looks_two",             label: "Heading 2",       md: { p: "## ",          s: "",         block: true  } },
+                  { icon: "looks_3",               label: "Heading 3",       md: { p: "### ",         s: "",         block: true  } },
+                  { icon: "DIV" },
+                  { icon: "format_list_bulleted",  label: "Bullet List",     md: { p: "- ",           s: "",         block: true  } },
+                  { icon: "format_list_numbered",  label: "Numbered List",   md: { p: "1. ",          s: "",         block: true  } },
+                  { icon: "checklist",             label: "Task List",       md: { p: "- [ ] ",       s: "",         block: true  } },
+                  { icon: "DIV" },
+                  { icon: "format_quote",          label: "Blockquote",      md: { p: "> ",           s: "",         block: true  } },
+                  { icon: "horizontal_rule",       label: "Divider",         md: { p: "\n\n---\n\n",  s: "",         block: false } },
+                  { icon: "table_chart",           label: "Table",           md: { p: "| Col 1 | Col 2 | Col 3 |\n|-------|-------|-------|\n| Cell  | Cell  | Cell  |\n", s: "", block: false } },
+                  { icon: "DIV" },
+                  { icon: "code",                  label: "Code Block",      md: { p: "```\n",        s: "\n```",    block: false } },
+                  { icon: "data_object",           label: "Inline Code",     md: { p: "`",            s: "`",        block: false } },
+                  { icon: "link",                  label: "Link",            md: { p: "[",            s: "](url)",   block: false } },
+                  { icon: "image",                 label: "Image",           md: { p: "![alt](",      s: ")",        block: false } },
+                ] as Array<{ icon: string; label?: string; md?: { p: string; s: string; block: boolean } }>
+                ).map((item, idx) =>
+                  item.icon === "DIV" ? (
+                    <span key={idx} className="inline-block mx-1 h-4 w-px bg-slate-100 self-center" />
+                  ) : (
+                    <button
+                      key={idx}
+                      type="button"
+                      title={item.label}
+                      onClick={() => item.md && insertMd(item.md.p, item.md.s, item.md.block)}
+                      className="relative p-1.5 hover:bg-purple-100/40 rounded-lg text-slate-500 hover:text-[#702ae1] transition-colors group/tb"
+                    >
+                      <span className="material-symbols-outlined select-none" style={{ fontSize: 19, display: "block", lineHeight: 1 }}>
+                        {item.icon}
+                      </span>
+                      <span className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] font-bold px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover/tb:opacity-100 transition-opacity z-20">
+                        {item.label}
+                      </span>
+                    </button>
+                  )
                 )}
               </div>
-              <div className="flex gap-2">
-                <Button onClick={() => {
-                   const win = window.open("", "_blank");
-                   win?.document.write(`<html><head><title>Preview: ${formData.title}</title><style>body{font-family:sans-serif;max-width:800px;margin:40px auto;line-height:1.6;padding:20px;} img{max-width:100%;border-radius:12px;} h1{font-size:3rem;margin-bottom:10px;}</style></head><body><h1>${formData.title}</h1>${formData.coverImage ? `<img src="${formData.coverImage}">` : ""}<hr>${formData.content}</body></html>`);
-                   win?.document.close();
-                }} className="bg-gray-50 dark:bg-gray-900 text-xs font-bold text-violet-600 hover:bg-violet-50 rounded-xl px-6">Preview</Button>
-                <Button onClick={() => navigate(-1)} className="bg-gray-50 dark:bg-gray-900 text-xs font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl px-6">Cancel</Button>
+
+              {/* ── Right side: help + publish settings + word count + status + actions ── */}
+              <div className="flex items-center gap-2 px-2 flex-shrink-0">
+                {/* Help button */}
+                <button
+                  type="button"
+                  onClick={() => setShowHelpDialog(true)}
+                  title="Formatting help"
+                  className="p-1.5 hover:bg-purple-100/40 rounded-lg text-slate-400 hover:text-[#702ae1] transition-colors"
+                >
+                  <span className="material-symbols-outlined select-none" style={{ fontSize: 19, display: "block", lineHeight: 1 }}>help_outline</span>
+                </button>
+
+                {/* Publish Settings quick access (moved from left panel) */}
+                <button
+                  type="button"
+                  onClick={() => setShowPublishDialog(true)}
+                  title="Publish Settings"
+                  className="p-1.5 ml-1 hover:bg-purple-100/40 rounded-lg text-slate-400 hover:text-[#702ae1] transition-colors"
+                >
+                  <span className="material-symbols-outlined select-none" style={{ fontSize: 19, display: "block", lineHeight: 1 }}>tune</span>
+                </button>
+
+                <div className="h-4 w-px bg-slate-200" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap">
+                  {wordCount} words
+                </span>
+                <div className="h-4 w-px bg-slate-200" />
+                <span className={`text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap ${autoSaved ? "text-[#702ae1]" : "text-slate-400"}`}>
+                  {autoSaved ? "Saved to cloud" : "Editing\u2026"}
+                </span>
+                <div className="h-4 w-px bg-slate-200" />
+                {isSubmitting ? (
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Publishing…</span>
+                ) : (
+                  <>
+                    {!isEditMode && (
+                      <button
+                        onClick={handleDraftSubmit}
+                        className="hidden md:inline-block px-3 py-1.5 text-[11px] font-semibold text-slate-600 hover:text-[#702ae1] transition-colors whitespace-nowrap"
+                      >
+                        Save Draft
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => handleSubmit(e, !!formData.scheduledAt)}
+                      className="px-4 py-1.5 bg-[#702ae1] text-white rounded-xl text-[11px] font-bold shadow-sm hover:bg-[#6411d5] transition-all active:scale-95 whitespace-nowrap"
+                    >
+                      {isEditMode ? "Update" : formData.scheduledAt ? "Schedule" : "Publish"}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
+            {/* Server error banner */}
             {errors.server && (
-              <div className="mb-10 p-6 bg-rose-50 dark:bg-rose-900/10 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30 rounded-3xl text-sm font-medium">
+              <div className="mt-3 px-4 py-2.5 bg-red-50 text-red-600 border border-red-100 rounded-xl text-xs font-medium">
                 {errors.server}
               </div>
             )}
+          </div>
 
-            {/* Title Section */}
-            <div className="mb-10">
-              <Textarea
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="The Next Great Story Starts Here..."
-                className="font-headline text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white bg-transparent border-0 focus:outline-none focus:ring-0 resize-none leading-tight min-h-[120px] p-0 shadow-none overflow-hidden placeholder:text-gray-200 dark:placeholder:text-gray-700"
-                ref={titleRef}
-              />
-              {errors.title && <p className="text-xs text-rose-500 font-bold mt-2 uppercase tracking-widest">{errors.title}</p>}
+          {/* ── Split Editor Layout ───────────────────────────────── */}
+          <div className="flex-1 px-0 md:px-8 pb-8 flex flex-col lg:flex-row gap-6 lg:gap-8 min-h-0">
+
+            {/* Left – Markdown Input */}
+            <section className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100/30 flex flex-col overflow-hidden">
+              <div className="p-6 md:p-10 flex-1 overflow-y-auto no-scrollbar flex flex-col">
+
+                {/* Title */}
+                <input
+                  ref={titleRef}
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Enter title..."
+                  className={`w-full text-3xl md:text-4xl font-extrabold text-gray-900 border-none focus:ring-0 focus:outline-none p-0 mb-8 bg-transparent leading-tight placeholder:text-slate-300 ${errors.title ? "placeholder:text-red-300" : ""}`}
+                />
+                {errors.title && (
+                  <p className="text-xs text-red-500 font-semibold -mt-6 mb-6 uppercase tracking-widest">{errors.title}</p>
+                )}
+
+                {/* Markdown Content */}
+                <textarea
+                  ref={contentRef}
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  placeholder={"Start your masterpiece here using markdown...\n\n# Heading\n**bold**, *italic*\n> blockquote\n- list item\n```code```"}
+                  spellCheck
+                  className="flex-1 w-full border-none focus:ring-0 focus:outline-none p-0 text-base md:text-lg leading-relaxed text-slate-600 font-mono resize-none min-h-[260px] md:min-h-[400px] bg-transparent placeholder:text-slate-300"
+                />
+                {errors.content && (
+                  <p className="text-xs text-red-500 font-semibold mt-2 uppercase tracking-widest">{errors.content}</p>
+                )}
+
+                {/* Publish settings moved to toolbar */}
+              </div>
+            </section>
+
+            {/* Right – Live Preview */}
+            <section className="flex-1 bg-[#eef1f3] rounded-2xl flex flex-col overflow-hidden mt-6 lg:mt-0">
+              <div className="px-6 py-3 border-b border-white/20 flex items-center justify-between flex-shrink-0">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live Preview</span>
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 rounded-full bg-slate-300" />
+                  <div className="w-2 h-2 rounded-full bg-slate-300" />
+                  <div className="w-2 h-2 rounded-full bg-slate-300" />
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-white shadow-inner m-2 md:m-4 rounded-xl no-scrollbar">
+                <div data-color-mode="light">
+                  {formData.title.trim() && (
+                    <h1 className="text-4xl font-extrabold text-gray-900 mb-8 leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                      {formData.title}
+                    </h1>
+                  )}
+                  {formData.coverImage && (
+                    <div className="w-full aspect-video rounded-xl mb-8 overflow-hidden">
+                      <img src={formData.coverImage} alt="Cover" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <MDEditor.Markdown
+                    source={formData.content.trim() ? formData.content : "*Start typing on the left to see the preview here…*"}
+                    style={{ background: "transparent", fontSize: 16, lineHeight: 1.8 }}
+                  />
+                </div>
+              </div>
+            </section>
+
+          </div>
+        </main>
+      </NewAppShell>
+
+      {/* ─────────────────────────────────────────────────────────────── */}
+      {/* Hidden file input — always mounted so ref is valid */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const dataUrl = reader.result as string;
+              setFormData((fd) => {
+                const updated = { ...fd, coverImage: dataUrl };
+                localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(updated));
+                return updated;
+              });
+            };
+            reader.readAsDataURL(file);
+          }
+        }}
+      />
+
+      {/* ──────────────── Publish Settings Dialog ──────────────── */}
+      {showPublishDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowPublishDialog(false)} />
+
+          {/* Dialog card */}
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden dlg-zoom">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div>
+                <h2 className="text-sm font-bold text-slate-800">Publish Settings</h2>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-[0.16em] mt-0.5">Tags · Cover · SEO · Schedule</p>
+              </div>
+              <button onClick={() => setShowPublishDialog(false)} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition">
+                <CloseIcon size={16} />
+              </button>
             </div>
 
-            {/* Dynamic Tags */}
-            <div className="mb-10 space-y-4">
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-                <TagIcon size={14} /> Topic Tags
+            {/* Scrollable body */}
+            <div className="p-6 space-y-6 max-h-[65vh] overflow-y-auto no-scrollbar">
+
+              {/* ─ Tags */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-3">Tags</p>
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map(tag => (
+                    <span key={tag} className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-xs font-semibold text-slate-600">
+                      #{tag}
+                      <button onClick={() => removeTag(tag)} className="text-slate-300 hover:text-red-400 transition">
+                        <CloseIcon size={11} />
+                      </button>
+                    </span>
+                  ))}
+                  <div className="flex items-center gap-1.5 border border-dashed border-slate-200 rounded-lg px-3 py-1 focus-within:border-[#702ae1] transition">
+                    <input
+                      type="text"
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag(newTag))}
+                      placeholder="Add tag…"
+                      className="w-20 bg-transparent border-0 focus:ring-0 text-xs font-semibold p-0 text-slate-600 placeholder:text-slate-300"
+                    />
+                    <button onClick={() => addTag(newTag)}><Plus size={13} className="text-[#702ae1]" /></button>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-3">
-                {formData.tags.map(tag => (
-                  <span key={tag} className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold border border-gray-100 dark:border-gray-700 transition hover:bg-white hover:shadow-md">
-                    #{tag}
-                    <button onClick={() => removeTag(tag)} className="text-gray-400 hover:text-rose-500 transition">
+
+              {/* ─ Cover Image */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Cover Image</p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={async () => {
+                        if (!formData.title && !formData.content) return alert("Write something first!");
+                        setIsSubmitting(true);
+                        try {
+                          const token = await getToken();
+                          const res = await axios.post(`${API_URL}/api/ai/generate-image`,
+                            { prompt: formData.title || formData.content.slice(0, 100) },
+                            { headers: { Authorization: `Bearer ${token}` } }
+                          );
+                          const aiUrl = res.data.imageUrl as string;
+                          setFormData((fd) => {
+                            const updated = { ...fd, coverImage: aiUrl };
+                            localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(updated));
+                            return updated;
+                          });
+                        } finally { setIsSubmitting(false); }
+                      }}
+                      className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#702ae1] hover:bg-purple-50 px-2 py-1 rounded-lg transition"
+                    >
+                      <Sparkles size={11} /> AI Generate
+                    </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition"
+                    >
+                      <Upload size={11} /> Upload
+                    </button>
+                  </div>
+                </div>
+                {formData.coverImage ? (
+                  <div className="relative rounded-xl overflow-hidden group">
+                    <img src={formData.coverImage} alt="Cover" className="w-full h-36 object-cover" />
+                    <button
+                      onClick={() => setFormData((fd) => {
+                        const updated = { ...fd, coverImage: "" };
+                        localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(updated));
+                        return updated;
+                      })}
+                      className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition"
+                    >
                       <CloseIcon size={14} />
                     </button>
-                  </span>
-                ))}
-                <div className="flex items-center gap-2 bg-gray-50/50 dark:bg-gray-900/50 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 transition focus-within:bg-white focus-within:border-violet-400">
-                   <input
-                    type="text"
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag(newTag))}
-                    placeholder="Add..."
-                    className="w-20 bg-transparent border-0 focus:ring-0 text-xs font-bold p-0"
-                   />
-                   <button onClick={() => addTag(newTag)}><Plus size={14} className="text-violet-500" /></button>
-                </div>
-              </div>
-            </div>
-
-            {/* Premium Cover Image Section */}
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-                  <Image size={14} /> Visual Cover
-                </div>
-                <div className="flex gap-4">
-                  <button
-                    onClick={async () => {
-                      if (!formData.title && !formData.content) return alert("Write something first!");
-                      setIsSubmitting(true);
-                      try {
-                        const token = await getToken();
-                        const res = await axios.post(`${API_URL}/api/ai/generate-image`, {
-                          prompt: formData.title || formData.content.slice(0, 100)
-                        }, { headers: { Authorization: `Bearer ${token}` } });
-                        setFormData({ ...formData, coverImage: res.data.imageUrl });
-                      } finally { setIsSubmitting(false); }
-                    }}
-                    className="text-[10px] font-black uppercase tracking-widest text-violet-600 dark:text-violet-400 flex items-center gap-2 hover:bg-violet-50 dark:hover:bg-violet-900/20 px-3 py-1.5 rounded-lg transition"
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full h-28 border-2 border-dashed border-slate-100 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#702ae1] hover:bg-purple-50/30 transition-all group"
                   >
-                     <Sparkles size={14} /> Magic Generate
-                  </button>
-                  <button onClick={() => fileInputRef.current?.click()} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-600 transition">Upload</button>
-                </div>
+                    <Upload size={18} className="text-slate-300 group-hover:text-[#702ae1] transition-colors" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-[#702ae1] transition-colors">Drop or click to upload</p>
+                  </div>
+                )}
               </div>
 
-              {formData.coverImage ? (
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl group ring-4 ring-white dark:ring-gray-700">
-                  <img src={formData.coverImage} alt="Cover" className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <button
-                    onClick={() => setFormData({ ...formData, coverImage: "" })}
-                    className="absolute top-6 right-6 bg-white/90 dark:bg-gray-800/90 p-3 rounded-2xl text-rose-500 shadow-2xl hover:bg-rose-500 hover:text-white transition-all scale-90 group-hover:scale-100"
-                  >
-                    <CloseIcon size={20} />
-                  </button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="aspect-video border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-3xl flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/50 hover:border-violet-400 transition-all group"
-                >
-                  <div className="w-16 h-16 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center text-violet-600 group-hover:scale-110 transition-transform">
-                     <Upload size={32} />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs font-black uppercase tracking-widest text-gray-900 dark:text-white">Drop your visual story</p>
-                    <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">PNG or JPG (MAX. 5MB)</p>
-                  </div>
-                </div>
-              )}
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = () => setFormData({ ...formData, coverImage: reader.result as string });
-                  reader.readAsDataURL(file);
-                }
-              }} />
+              {/* ─ SEO Summary */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-3">SEO Summary</p>
+                <textarea
+                  value={formData.summary}
+                  onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                  placeholder="Brief summary for social sharing & SEO…"
+                  rows={3}
+                  className="w-full text-sm bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 resize-none focus:ring-1 focus:ring-[#702ae1] focus:outline-none text-slate-600 placeholder:text-slate-300"
+                />
+              </div>
+
+              {/* ─ Schedule */}
+              <div>
+                <label className="flex items-center gap-3 cursor-pointer mb-3">
+                  <input
+                    type="checkbox"
+                    checked={!!formData.scheduledAt}
+                    onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.checked ? new Date(Date.now() + 86400000).toISOString().slice(0, 16) : "" })}
+                    className="w-4 h-4 rounded border-slate-200 text-[#702ae1] focus:ring-[#702ae1]"
+                  />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Schedule Launch</span>
+                </label>
+                {formData.scheduledAt && (
+                  <input
+                    type="datetime-local"
+                    value={formData.scheduledAt}
+                    onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
+                    min={new Date().toISOString().slice(0, 16)}
+                    className="w-full text-sm p-3 border border-slate-100 rounded-xl bg-slate-50 text-slate-600 focus:ring-1 focus:ring-[#702ae1] focus:outline-none"
+                  />
+                )}
+              </div>
+
             </div>
 
-            {/* Rich Editor Integration */}
-            <div className="mb-12">
-              <RichTextEditor
-                value={formData.content}
-                onChange={(content) => setFormData({ ...formData, content })}
-                placeholder="Once upon a time..."
-                error={!!errors.content}
-              />
-              {errors.content && <p className="text-xs text-rose-500 font-bold mt-4 uppercase tracking-widest">{errors.content}</p>}
-            </div>
-
-            {/* Actions & Scheduling */}
-            <div className="pt-10 border-t border-gray-50 dark:border-gray-700 flex flex-col md:flex-row gap-8 items-start md:items-center justify-between">
-               <div className="space-y-4 w-full md:w-auto">
-                  <div className="flex items-center gap-4">
-                    {!isEditMode && (
-                        <Button
-                          onClick={handleDraftSubmit}
-                          disabled={isSubmitting}
-                          className="bg-gray-50 dark:bg-gray-900 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-white hover:shadow-md rounded-2xl px-8 h-14"
-                        >
-                          Save Draft
-                        </Button>
-                    )}
-                    <Button
-                      onClick={(e) => {
-                        const isScheduled = !!formData.scheduledAt;
-                        handleSubmit(e, isScheduled);
-                      }}
-                      disabled={isSubmitting}
-                      className="bg-black dark:bg-white text-white dark:text-black text-xs font-black uppercase tracking-[0.2em] rounded-2xl px-12 h-14 shadow-xl hover:opacity-90 transition-all flex-1 md:flex-none"
-                    >
-                      {isSubmitting ? "..." : isEditMode ? "Update" : formData.scheduledAt ? "Schedule" : "Launch Post"}
-                    </Button>
-                  </div>
-               </div>
-
-               <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-700 w-full md:w-auto">
-                  <div className="flex flex-col gap-1">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={!!formData.scheduledAt}
-                        onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.checked ? new Date(Date.now() + 86400000).toISOString().slice(0, 16) : "" })}
-                        className="w-4 h-4 rounded-md border-gray-300 text-violet-600 focus:ring-violet-500"
-                      />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Scheduled Launch</span>
-                    </label>
-                    {formData.scheduledAt && (
-                      <input
-                        type="datetime-local"
-                        value={formData.scheduledAt}
-                        onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
-                        min={new Date().toISOString().slice(0, 16)}
-                        className="text-[10px] font-bold p-2 border-none bg-transparent text-gray-900 dark:text-white focus:ring-0"
-                      />
-                    )}
-                  </div>
-               </div>
-            </div>
-          </motion.div>
-        )}
-      </div>
-    </AppShell>
-  );
-}
-
-function CoAuthorsPanel({ blogId }: { blogId?: string }) {
-  const [coAuthors, setCoAuthors] = useState<any[]>([]);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { getToken } = useAuth();
-  const API_URL = import.meta.env.VITE_API_URL;
-
-  const fetchCoAuthors = async () => {
-    if (!blogId) return;
-    try {
-      const res = await axios.get(`${API_URL}/api/coauthors/${blogId}/coauthors`);
-      setCoAuthors(res.data);
-    } catch (err) { console.error(err); }
-  };
-
-  const inviteUser = async () => {
-    if (!blogId || !inviteEmail) return;
-    setLoading(true);
-    try {
-      const token = await getToken();
-      await axios.post(`${API_URL}/api/coauthors/${blogId}/coauthors`, { inviteeEmail: inviteEmail }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setInviteEmail("");
-      fetchCoAuthors();
-    } catch (err: any) { alert(err.response?.data?.error || "Failed to invite"); }
-    finally { setLoading(false); }
-  };
-
-  useEffect(() => { if (blogId) fetchCoAuthors(); }, [blogId]);
-
-  if (!blogId) return null;
-
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
-      <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Collaborators</h3>
-      <div className="space-y-4 mb-4">
-        {coAuthors.map((ca) => (
-          <div key={ca.id} className="flex items-center gap-3">
-            <img src={ca.user.profilePicture || `https://ui-avatars.com/api/?name=${ca.user.name}`} className="w-8 h-8 rounded-full border border-gray-100" />
-            <div className="flex-1 min-w-0">
-               <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{ca.user.name || ca.user.email}</p>
-               <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">{ca.status}</p>
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+              <p className="text-[10px] text-slate-400">{formData.tags.length} tag{formData.tags.length !== 1 ? "s" : ""} · {formData.coverImage ? "Cover set" : "No cover"}{formData.scheduledAt ? " · Scheduled" : ""}</p>
+              <button
+                onClick={() => setShowPublishDialog(false)}
+                className="px-5 py-2 bg-[#702ae1] text-white rounded-xl text-xs font-bold shadow-sm hover:bg-[#6411d5] transition"
+              >
+                Done
+              </button>
             </div>
           </div>
-        ))}
-      </div>
-      <div className="flex gap-2">
-        <input
-          type="email"
-          value={inviteEmail}
-          onChange={(e) => setInviteEmail(e.target.value)}
-          placeholder="Peer's email..."
-          className="flex-1 text-[10px] font-bold bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-4 py-2"
-        />
-        <button onClick={inviteUser} disabled={loading} className="p-2 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition">
-           <Plus size={16} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function VersionHistoryPanel({ blogId, onRestore }: { blogId?: string, onRestore: (t: string, c: string) => void }) {
-  const [versions, setVersions] = useState<any[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { getToken } = useAuth();
-  const API_URL = import.meta.env.VITE_API_URL;
-
-  const fetchVersions = async () => {
-    if (!blogId) return;
-    setLoading(true);
-    try {
-      const token = await getToken();
-      const res = await axios.get(`${API_URL}/api/blogs/${blogId}/versions`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setVersions(res.data);
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
-  };
-
-  const saveVersion = async () => {
-    if (!blogId) return;
-    setLoading(true);
-    try {
-      const token = await getToken();
-      await axios.post(`${API_URL}/api/blogs/${blogId}/versions`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchVersions();
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
-  };
-
-  const handleRestore = async (vId: string) => {
-    if (!blogId) return;
-    if (!confirm("Are you sure? This will replace your current editor content.")) return;
-    try {
-      const token = await getToken();
-      const res = await axios.post(`${API_URL}/api/blogs/${blogId}/versions/${vId}/restore`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const blog = res.data.blog;
-      onRestore(blog.title, blog.content);
-      setIsOpen(false);
-    } catch (err) { console.error(err); }
-  };
-
-  useEffect(() => { if (isOpen) fetchVersions(); }, [isOpen]);
-
-  if (!blogId) return null;
-
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-          <HistoryIcon size={14} /> Revisions
-        </h3>
-        <button onClick={() => setIsOpen(!isOpen)} className="text-[10px] font-black uppercase text-violet-600 hover:underline">
-          {isOpen ? "Hide" : "History"}
-        </button>
-      </div>
-
-      {!isOpen ? (
-        <button onClick={saveVersion} disabled={loading} className="w-full py-3 text-[10px] font-black uppercase tracking-widest bg-gray-50 dark:bg-gray-900 text-gray-500 rounded-xl hover:bg-gray-100 transition disabled:opacity-50">
-          {loading ? "..." : "Create Snapshot"}
-        </button>
-      ) : (
-        <div className="space-y-3 mt-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-          {versions.length === 0 ? (
-            <p className="text-[10px] text-gray-400 text-center py-4 italic uppercase tracking-widest">Fresh paper. No ghosts.</p>
-          ) : (
-            versions.map((v) => (
-              <div key={v.id} className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-transparent hover:border-violet-100 dark:hover:border-violet-900 transition group relative">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-tighter">v{v.version}</p>
-                    <p className="text-[9px] font-bold text-gray-400 mt-0.5 uppercase">
-                      {new Date(v.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleRestore(v.id)}
-                    className="opacity-0 group-hover:opacity-100 text-[9px] font-black uppercase bg-violet-600 text-white px-3 py-1.5 rounded-lg transition-all"
-                  >
-                    Load
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-          <button onClick={saveVersion} disabled={loading} className="w-full py-3 text-[9px] font-black uppercase border-2 border-dashed border-gray-100 dark:border-gray-800 text-gray-400 rounded-xl hover:border-violet-400 transition mb-2">
-             + New Version
-          </button>
         </div>
       )}
-    </div>
+
+      {/* ──────────────────── Help Dialog ──────────────────── */}
+      {showHelpDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowHelpDialog(false)} />
+
+          <div className="relative w-full max-w-2xl bg-[#0d1117] rounded-2xl shadow-2xl border border-white/10 overflow-hidden dlg-zoom">
+
+            {/* Title bar */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                  <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+                  <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+                </div>
+                <span className="ml-3 text-[11px] font-mono text-white/30">markdown-cheatsheet.md</span>
+              </div>
+              <button onClick={() => setShowHelpDialog(false)} className="p-1 hover:bg-white/10 rounded-lg text-white/30 hover:text-white/60 transition">
+                <CloseIcon size={15} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 overflow-y-auto max-h-[72vh] no-scrollbar font-mono text-[12.5px] leading-6 space-y-5">
+
+              {/* ── Headings */}
+              <div>
+                <p className="text-[#8b949e] text-[9px] font-sans font-black uppercase tracking-[0.2em] pb-1.5 border-b border-white/5 mb-3">Headings</p>
+                <div className="space-y-1">
+                  <p><span className="text-[#79c0ff]"># </span><span className="text-[#c9d1d9]">Heading 1</span><span className="text-[#8b949e] ml-4 text-[11px]">// &lt;h1&gt; large title</span></p>
+                  <p><span className="text-[#79c0ff]">## </span><span className="text-[#c9d1d9]">Heading 2</span><span className="text-[#8b949e] ml-4 text-[11px]">// &lt;h2&gt; section header</span></p>
+                  <p><span className="text-[#79c0ff]">### </span><span className="text-[#c9d1d9]">Heading 3</span><span className="text-[#8b949e] ml-4 text-[11px]">// &lt;h3&gt; subsection</span></p>
+                </div>
+              </div>
+
+              {/* ── Emphasis */}
+              <div>
+                <p className="text-[#8b949e] text-[9px] font-sans font-black uppercase tracking-[0.2em] pb-1.5 border-b border-white/5 mb-3">Emphasis</p>
+                <div className="space-y-1">
+                  <p><span className="text-[#d2a8ff]">**</span><span className="text-[#7ee787]">bold text</span><span className="text-[#d2a8ff]">**</span><span className="text-[#8b949e] ml-4 text-[11px]">// strong</span></p>
+                  <p><span className="text-[#d2a8ff]">*</span><span className="text-[#ffa657]">italic text</span><span className="text-[#d2a8ff]">*</span><span className="text-[#8b949e] ml-4 text-[11px]">// or use _italic_</span></p>
+                  <p><span className="text-[#d2a8ff]">~~</span><span className="text-[#8b949e] line-through">strikethrough</span><span className="text-[#d2a8ff]">~~</span><span className="text-[#8b949e] ml-4 text-[11px]">// crossed out</span></p>
+                  <p><span className="text-[#d2a8ff]">**</span><span className="text-[#7ee787]">bold</span><span className="text-[#d2a8ff]">** and *</span><span className="text-[#ffa657]">italic</span><span className="text-[#d2a8ff]">*</span><span className="text-[#8b949e] ml-4 text-[11px]">// combined</span></p>
+                </div>
+              </div>
+
+              {/* ── Lists */}
+              <div>
+                <p className="text-[#8b949e] text-[9px] font-sans font-black uppercase tracking-[0.2em] pb-1.5 border-b border-white/5 mb-3">Lists</p>
+                <div className="space-y-1">
+                  <p><span className="text-[#56d364]">- </span><span className="text-[#c9d1d9]">Unordered item</span><span className="text-[#8b949e] ml-4 text-[11px]">// also * or +</span></p>
+                  <p><span className="text-[#56d364]">1. </span><span className="text-[#c9d1d9]">Ordered item</span><span className="text-[#8b949e] ml-4 text-[11px]">// numbered list</span></p>
+                  <p><span className="text-[#56d364]">- [ ] </span><span className="text-[#c9d1d9]">Task to do</span><span className="text-[#8b949e] ml-4 text-[11px]">// checkbox</span></p>
+                  <p><span className="text-[#56d364]">- [x] </span><span className="text-[#c9d1d9]">Completed task</span><span className="text-[#8b949e] ml-4 text-[11px]">// checked</span></p>
+                </div>
+              </div>
+
+              {/* ── Links & Images */}
+              <div>
+                <p className="text-[#8b949e] text-[9px] font-sans font-black uppercase tracking-[0.2em] pb-1.5 border-b border-white/5 mb-3">Links &amp; Images</p>
+                <div className="space-y-1">
+                  <p><span className="text-[#c9d1d9]">[</span><span className="text-[#58a6ff]">link text</span><span className="text-[#c9d1d9]">](</span><span className="text-[#a5d6ff]">https://url.com</span><span className="text-[#c9d1d9]">)</span><span className="text-[#8b949e] ml-4 text-[11px]">// hyperlink</span></p>
+                  <p><span className="text-[#c9d1d9]">![</span><span className="text-[#ffa657]">alt text</span><span className="text-[#c9d1d9]">](</span><span className="text-[#a5d6ff]">image.png</span><span className="text-[#c9d1d9]">)</span><span className="text-[#8b949e] ml-4 text-[11px]">// image embed</span></p>
+                </div>
+              </div>
+
+              {/* ── Code */}
+              <div>
+                <p className="text-[#8b949e] text-[9px] font-sans font-black uppercase tracking-[0.2em] pb-1.5 border-b border-white/5 mb-3">Code</p>
+                <div className="space-y-1">
+                  <p><span className="text-[#f47067]">`</span><span className="text-[#f47067]">inline code</span><span className="text-[#f47067]">`</span><span className="text-[#8b949e] ml-4 text-[11px]">// monospace span</span></p>
+                  <p><span className="text-[#f47067]">```</span><span className="text-[#c9d1d9]">javascript</span><span className="text-[#8b949e] ml-4 text-[11px]">// fenced code block</span></p>
+                  <p className="pl-4"><span className="text-[#7ee787]">const</span> <span className="text-[#c9d1d9]">x</span> <span className="text-[#d2a8ff]">=</span> <span className="text-[#ffa657]">42</span><span className="text-[#c9d1d9]">;</span></p>
+                  <p><span className="text-[#f47067]">```</span><span className="text-[#8b949e] ml-4 text-[11px]">// closing fence</span></p>
+                </div>
+              </div>
+
+              {/* ── Blockquote & Divider */}
+              <div>
+                <p className="text-[#8b949e] text-[9px] font-sans font-black uppercase tracking-[0.2em] pb-1.5 border-b border-white/5 mb-3">Blockquotes &amp; Dividers</p>
+                <div className="space-y-1">
+                  <p><span className="text-[#e3b341]">&gt; </span><span className="text-[#c9d1d9]">Quoted text</span><span className="text-[#8b949e] ml-4 text-[11px]">// blockquote</span></p>
+                  <p><span className="text-[#e3b341]">&gt;&gt; </span><span className="text-[#c9d1d9]">Nested quote</span><span className="text-[#8b949e] ml-4 text-[11px]">// nested</span></p>
+                  <p><span className="text-[#c9d1d9]">---</span><span className="text-[#8b949e] ml-4 text-[11px]">// horizontal rule / &lt;hr&gt;</span></p>
+                </div>
+              </div>
+
+              {/* ── Tables */}
+              <div>
+                <p className="text-[#8b949e] text-[9px] font-sans font-black uppercase tracking-[0.2em] pb-1.5 border-b border-white/5 mb-3">Tables</p>
+                <div className="space-y-1">
+                  <p><span className="text-[#a5d6ff]">| Col 1 </span><span className="text-[#8b949e]">|</span><span className="text-[#a5d6ff]"> Col 2 </span><span className="text-[#8b949e]">|</span></p>
+                  <p><span className="text-[#8b949e]">|-------|-------|</span><span className="text-[#8b949e] ml-4 text-[11px]">// separator row</span></p>
+                  <p><span className="text-[#a5d6ff]">| Cell  </span><span className="text-[#8b949e]">|</span><span className="text-[#a5d6ff]"> Cell  </span><span className="text-[#8b949e]">|</span><span className="text-[#8b949e] ml-4 text-[11px]">// data row</span></p>
+                </div>
+              </div>
+
+              {/* ── Keyboard tip */}
+              <div className="mt-4 p-3.5 rounded-xl bg-white/5 border border-white/10">
+                <p className="text-[#8b949e] text-[10px] font-sans">
+                  <span className="text-[#7ee787] font-bold">Tip:</span> Select text in the editor, then click a toolbar button to wrap it.
+                  Use <span className="bg-white/10 px-1.5 py-0.5 rounded text-[#c9d1d9]">Enter</span> after a list item to continue the list,
+                  or press <span className="bg-white/10 px-1.5 py-0.5 rounded text-[#c9d1d9]">Backspace</span> on an empty item to exit.
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes dlg-zoom { from { opacity: 0; transform: scale(0.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .dlg-zoom { animation: dlg-zoom 0.18s cubic-bezier(0.22,1,0.36,1); }
+
+        [data-color-mode="light"] .wmde-markdown { background: transparent !important; }
+        [data-color-mode="light"] .wmde-markdown h1 { font-size: 1.9rem; font-weight: 800; color: #111827; margin-bottom: .75rem; }
+        [data-color-mode="light"] .wmde-markdown h2 { font-size: 1.5rem; font-weight: 700; color: #702ae1; margin-bottom: .5rem; }
+        [data-color-mode="light"] .wmde-markdown h3 { font-size: 1.2rem; font-weight: 700; color: #1f2937; margin-bottom: .4rem; }
+        [data-color-mode="light"] .wmde-markdown p  { color: #4b5563; line-height: 1.8; margin-bottom: 1rem; font-size: 1rem; }
+        [data-color-mode="light"] .wmde-markdown blockquote {
+          border-left: 4px solid #702ae1;
+          background: rgba(112,42,225,.05);
+          padding: .5rem 1.5rem;
+          border-radius: 0 .5rem .5rem 0;
+          color: #6b7280;
+          margin-bottom: 1rem;
+          font-style: italic;
+        }
+        [data-color-mode="light"] .wmde-markdown ul { list-style: none; padding-left: 0; margin-bottom: 1rem; }
+        [data-color-mode="light"] .wmde-markdown ul li { display: flex; align-items: center; gap: .75rem; color: #4b5563; margin-bottom: .4rem; }
+        [data-color-mode="light"] .wmde-markdown ul li::before {
+          content: ""; display: inline-block;
+          width: .375rem; height: .375rem;
+          background: #702ae1; border-radius: 9999px; flex-shrink: 0;
+        }
+        [data-color-mode="light"] .wmde-markdown ol { padding-left: 1.5rem; list-style: decimal; margin-bottom: 1rem; }
+        [data-color-mode="light"] .wmde-markdown ol li { color: #4b5563; margin-bottom: .4rem; padding-left: .25rem; }
+        [data-color-mode="light"] .wmde-markdown ol li::marker { color: #702ae1; font-weight: 700; }
+        [data-color-mode="light"] .wmde-markdown input[type=checkbox] { accent-color: #702ae1; margin-right: .5rem; }
+        [data-color-mode="light"] .wmde-markdown table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: .95rem; }
+        [data-color-mode="light"] .wmde-markdown th { background: #f5f3ff; color: #702ae1; font-weight: 700; padding: .5rem 1rem; border: 1px solid #ede9fe; text-align: left; }
+        [data-color-mode="light"] .wmde-markdown td { padding: .5rem 1rem; border: 1px solid #f1f5f9; color: #4b5563; }
+        [data-color-mode="light"] .wmde-markdown tr:nth-child(even) td { background: #f8fafc; }
+        [data-color-mode="light"] .wmde-markdown hr { border: none; border-top: 2px solid #f1f5f9; margin: 2rem 0; }
+        [data-color-mode="light"] .wmde-markdown pre { background: #1e1e1e !important; border-radius: .5rem !important; margin-bottom: 1rem; }
+        [data-color-mode="light"] .wmde-markdown pre > code { font-family: monospace !important; background: transparent !important; color: #d4d4d4 !important; font-size: .9rem !important; }
+        [data-color-mode="light"] .wmde-markdown code:not(pre > code) { background: #f3f4f6; color: #702ae1; padding: .1em .4em; border-radius: .25rem; font-size: .9em; }
+        [data-color-mode="light"] .wmde-markdown a { color: #702ae1; text-decoration: underline; }
+      `}</style>
+    </>
   );
 }

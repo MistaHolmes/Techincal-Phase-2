@@ -8,7 +8,6 @@ import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { BarChart2, FileText, Trophy, Users, TrendingUp, CheckCircle, Zap, Award } from "lucide-react";
 import { usePageCache } from "@/context/PageCacheContext";
-import { Footer } from "@/components/Footer";
 import { AchievementGrid } from "@/components/social/AchievementGrid";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -90,8 +89,8 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-gray-900 dark:border-white border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -105,17 +104,17 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto py-8 px-4 relative z-[1]">
         {/* Hero Header — DraftDock style */}
         <header className="mb-16">
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-on-surface-variant font-bold tracking-tight mb-3">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-gray-500 dark:text-gray-400 font-bold tracking-tight mb-3">
             <TrendingUp size={16} />
             <span className="uppercase text-[10px] tracking-widest font-label">Analytics Overview</span>
           </motion.div>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <h1 className="text-6xl font-bold font-headline tracking-tighter text-primary">Dashboard</h1>
-            <button onClick={() => navigate('/create-blog')} className="px-6 py-3 bg-primary text-on-primary rounded-md font-headline font-bold transition-all hover:opacity-90 active:scale-95 flex items-center gap-2 w-fit">
+            <h1 className="text-6xl font-bold font-headline tracking-tighter text-gray-900 dark:text-white">Dashboard</h1>
+            <button onClick={() => navigate('/create-blog')} className="px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-md font-headline font-bold transition-all hover:opacity-90 active:scale-95 flex items-center gap-2 w-fit">
               <Zap size={16} /> New Story
             </button>
           </div>
-          <p className="text-on-surface-variant text-lg tracking-tight mt-2">Manage your technical drafts and published insights.</p>
+          <p className="text-gray-500 dark:text-gray-400 text-lg tracking-tight mt-2">Manage your technical drafts and published insights.</p>
         </header>
 
         {/* Metric Cards */}
@@ -150,39 +149,39 @@ const Dashboard = () => {
 
             {/* Retention */}
             <SectionCard title="Retention Analysis" subtitle="How many readers finish your stories">
-               <div className="space-y-5 text-on-surface">
+               <div className="space-y-5 text-gray-900 dark:text-white">
                   {completion.map((blog, i) => (
                     <div key={blog.id} className="space-y-2">
                        <div className="flex justify-between text-sm items-end">
                           <span className="font-bold truncate max-w-[70%] font-headline tracking-tight">{blog.title}</span>
-                          <span className="text-primary font-bold font-headline">{blog.rate}%</span>
+                          <span className="text-gray-900 dark:text-gray-200 font-bold font-headline">{blog.rate}%</span>
                        </div>
-                       <div className="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                       <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${blog.rate}%` }}
                             transition={{ duration: 1, delay: i * 0.1 }}
-                            className="h-full bg-primary rounded-full"
+                            className="h-full bg-gray-900 dark:bg-gray-200 rounded-full"
                           />
                        </div>
                     </div>
                   ))}
-                  {completion.length === 0 && <p className="text-center py-10 text-outline italic font-body">Start writing to see retention data.</p>}
+                  {completion.length === 0 && <p className="text-center py-10 text-gray-400 dark:text-gray-500 italic font-body">Start writing to see retention data.</p>}
                </div>
             </SectionCard>
 
             {/* Achievements */}
             <div className="space-y-6">
                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-secondary-container text-on-secondary-container rounded-lg">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-lg">
                     <Award size={18} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-headline font-bold text-primary">Milestones</h2>
-                    <p className="text-xs text-outline font-label">Your path to becoming a DraftDock elite</p>
+                    <h2 className="text-xl font-headline font-bold text-gray-900 dark:text-white">Milestones</h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-label">Your path to becoming a DraftDock elite</p>
                   </div>
                </div>
-               <div className="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/20">
+               <div className="bg-white dark:bg-gray-900 p-8 rounded-xl border border-gray-200/80 dark:border-gray-800">
                   <AchievementGrid achievements={userAchievements} allAchievements={allAchievements} />
                </div>
             </div>
@@ -251,9 +250,6 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-      <div className="mt-20 px-4">
-        <Footer />
-      </div>
     </>
   );
 };
@@ -265,15 +261,15 @@ function MetricCard({ title, value, icon, index = 0 }: any) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.08, ease: "easeOut" }}
-      className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/15 hover:bg-surface-container-low transition-all group"
+      className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200/80 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-all group"
     >
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2.5 bg-surface-container-high text-on-surface rounded-lg transition-transform group-hover:scale-105">
+        <div className="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg transition-transform group-hover:scale-105">
           {icon}
         </div>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-outline font-label">{title}</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 font-label">{title}</span>
       </div>
-      <h3 className="text-4xl font-black text-primary tracking-tight font-headline">{value}</h3>
+      <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight font-headline">{value}</h3>
     </motion.div>
   );
 }
@@ -283,10 +279,10 @@ export default Dashboard;
 
 function SectionCard({ title, subtitle, children }: any) {
   return (
-    <div className="bg-surface-container-lowest p-6 md:p-8 rounded-xl border border-outline-variant/15">
+    <div className="bg-white dark:bg-gray-900 p-6 md:p-8 rounded-xl border border-gray-200/80 dark:border-gray-800">
       <div className="mb-6">
-        <h3 className="text-lg font-headline font-bold text-primary tracking-tight">{title}</h3>
-        <p className="text-[10px] font-bold text-outline uppercase tracking-widest mt-1 font-label">{subtitle}</p>
+        <h3 className="text-lg font-headline font-bold text-gray-900 dark:text-white tracking-tight">{title}</h3>
+        <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1 font-label">{subtitle}</p>
       </div>
       {children}
     </div>
@@ -298,7 +294,7 @@ function LegendItem({ label, color }: any) {
   return (
     <div className="flex items-center gap-1.5">
       <div className={`w-2 h-2 rounded-full ${color}`} />
-      <span className="text-[10px] font-medium text-outline font-label">{label}</span>
+      <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 font-label">{label}</span>
     </div>
   );
 }

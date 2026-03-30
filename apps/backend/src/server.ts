@@ -8,10 +8,29 @@ import cors from 'cors';
 dotenv.config();
 
 // Shared modules (initialize redis connection on import)
-import './lib/redis';
+import redisClient from './lib/redis';
 import { initWebSocket } from './lib/websocket';
 import { initScheduler } from './lib/scheduler';
 import { globalLimiter } from './middleware/rateLimiter';
+
+/** Flush all Redis keys on startup so stale cache from the previous run doesn't persist */
+async function clearRedisOnStartup() {
+  try {
+    // Wait briefly to make sure the client has connected
+    await new Promise<void>((resolve) => {
+      if (redisClient.isReady) return resolve();
+      redisClient.once('connect', () => resolve());
+      // Timeout fallback so startup never hangs
+      setTimeout(resolve, 5000);
+    });
+    await redisClient.flushAll();
+    console.log('[Redis] Cache cleared on startup');
+  } catch (err) {
+    console.warn('[Redis] Could not clear cache on startup (non-fatal):', err);
+  }
+}
+
+clearRedisOnStartup();
 
 // Route modules
 import blogRoutes from './routes/blogs';
@@ -31,6 +50,7 @@ import achievementsRouter from './routes/achievements';
 import highlightRoutes from './routes/highlights';
 import coauthorRoutes from './routes/coauthors';
 import likeRoutes from './routes/likes';
+import adminRoutes from './routes/admin';
 
 // Team member routes
 import abinashRouter from './routes/abinash';
@@ -80,12 +100,12 @@ app.use('/api/achievements', achievementsRouter);
 app.use('/api/highlights', highlightRoutes);
 app.use('/api/coauthors', coauthorRoutes);
 app.use('/api/likes', likeRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ── Legacy Routes (backward compat) ─────────────────────────────────────────
 import { requireAuth } from '@clerk/express';
 import { syncUser } from './sync';
 import prisma from './lib/prisma';
-import redisClient from './lib/redis';
 import { sendBlogPublishedEmail } from './email';
 import { broadcastNotificationUpdate, invalidateUserBlogsCache, invalidatePublicBlogsCache } from './lib/websocket';
 

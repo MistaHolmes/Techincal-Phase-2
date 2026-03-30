@@ -2,9 +2,10 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { usePageCache } from "@/context/PageCacheContext";
+import { useLike } from "@/context/LikeContext";
+import { useBookmarks } from "@/context/BookmarkContext";
 import BlogSkeleton from "@/components/BlogSkeleton";
-import { AppShell } from "@/components/layout/AppShell";
-import { Footer } from "@/components/Footer";
+import { NewAppShell } from "@/components/new-components";
 import { BackButton } from "@/components/ui/backButton";
 import {
   ChevronLeft,
@@ -20,7 +21,9 @@ import {
   Highlighter,
   Twitter,
   Linkedin,
-  Share2
+  Share2,
+  Heart,
+  Bookmark
 } from "lucide-react";
 import ReadingProgressBar from "@/components/ui/ReadingProgressBar";
 import 'highlight.js/styles/atom-one-dark.css';
@@ -37,8 +40,10 @@ interface Blog {
   coverImage?: string;
   authorId?: string;
   author: {
+    id?: string;
     email: string;
     name?: string;
+    profilePicture?: string;
   };
 }
 
@@ -46,7 +51,7 @@ interface Comment {
   id: string;
   content: string;
   createdAt: string;
-  author: { email: string; name?: string };
+  author: { id?: string; email: string; name?: string; profilePicture?: string };
   authorId?: string;
 }
 
@@ -55,7 +60,8 @@ interface RelatedBlog {
   title: string;
   content: string;
   coverImage?: string;
-  author: { email: string; name?: string };
+  authorId?: string;
+  author: { id?: string; email: string; name?: string; profilePicture?: string };
   tags: { id: string; name: string }[];
 }
 
@@ -87,6 +93,8 @@ const BlogView = () => {
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const API_URL = import.meta.env.VITE_API_URL;
   const cache = usePageCache();
+  const likeHook = useLike(blogId ?? "");
+  const { isBookmarked, toggleBookmark } = useBookmarks();
 
   // Fetch blog data
   useEffect(() => {
@@ -252,11 +260,11 @@ const BlogView = () => {
 
   if (!blog) {
     return (
-      <AppShell>
-        <div className="max-w-3xl mx-auto py-12">
+      <NewAppShell>
+        <div className="py-12 px-4 sm:px-8 lg:px-12">
            <BlogSkeleton variant="large" />
         </div>
-      </AppShell>
+      </NewAppShell>
     );
   }
 
@@ -294,10 +302,15 @@ const BlogView = () => {
       {/* Author & Stats Widget */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-8 shadow-sm">
          <div className="flex items-center gap-4 mb-6">
-            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author.email}`} className="w-12 h-12 rounded-2xl" alt="" />
+            <img
+              src={blog.author.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author.email}`}
+              className="w-12 h-12 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-110 hover:ring-2 hover:ring-violet-500 hover:shadow-lg hover:shadow-violet-500/20"
+              alt={authorName}
+              onClick={() => navigate(`/author/${blog.author?.id || blog.authorId}`)}
+            />
             <div>
-               <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Writen By</p>
-               <h4 className="font-bold text-gray-900 dark:text-white group-hover:underline cursor-pointer" onClick={() => navigate(`/author/${blog.authorId}`)}>{authorName}</h4>
+               <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Written By</p>
+               <h4 className="font-bold text-gray-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 cursor-pointer transition-colors duration-200" onClick={() => navigate(`/author/${blog.author?.id || blog.authorId}`)}>{authorName}</h4>
             </div>
          </div>
          <div className="grid grid-cols-2 gap-4">
@@ -339,7 +352,7 @@ const BlogView = () => {
   );
 
   return (
-    <AppShell
+    <NewAppShell
       hideSidebar={isFocusMode}
       hideRightPanel={isFocusMode}
       rightPanelContent={RightPanelContent}
@@ -350,7 +363,7 @@ const BlogView = () => {
       </Helmet>
       <ReadingProgressBar />
 
-      <div className="max-w-4xl mx-auto">
+      <div className="px-4 sm:px-8 lg:px-12 py-8">
         <div className="mb-10 lg:hidden">
           <BackButton variant="link" onClick={() => navigate(-1)}>
             <ChevronLeft className="me-1" size={16} /> Back
@@ -360,7 +373,6 @@ const BlogView = () => {
         <motion.article
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 sm:p-12 shadow-sm"
         >
           {/* Cover Image */}
           {blog.coverImage && (
@@ -377,14 +389,46 @@ const BlogView = () => {
 
           <div className="flex flex-wrap items-center gap-6 mb-12 pb-12 border-b border-gray-100 dark:border-gray-700">
              <div className="flex items-center gap-3">
-               <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author.email}`} className="w-10 h-10 rounded-xl" alt="" />
+               <img
+                 src={blog.author.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author.email}`}
+                 className="w-10 h-10 rounded-xl cursor-pointer transition-all duration-300 hover:scale-110 hover:ring-2 hover:ring-violet-500 hover:shadow-lg hover:shadow-violet-500/20"
+                 alt={authorName}
+                 onClick={(e) => { e.stopPropagation(); navigate(`/author/${blog.author?.id || blog.authorId}`); }}
+               />
                <div className="text-sm">
-                 <p className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer" onClick={() => navigate(`/author/${blog.authorId}`)}>{authorName}</p>
+                 <p className="font-bold text-gray-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 cursor-pointer transition-colors duration-200" onClick={() => navigate(`/author/${blog.author?.id || blog.authorId}`)}>{authorName}</p>
                  <p className="text-xs text-gray-500">{new Date(blog.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                </div>
              </div>
 
              <div className="flex items-center gap-4 ml-auto">
+                {/* Like Button */}
+                <button
+                  onClick={() => likeHook.toggle()}
+                  aria-pressed={likeHook.liked}
+                  className={`flex items-center gap-2 p-2 rounded-xl border transition-all ${
+                    likeHook.liked
+                      ? "bg-rose-50 border-rose-200 text-rose-500 dark:bg-rose-950/30 dark:border-rose-800 dark:text-rose-400"
+                      : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:bg-rose-50 hover:text-rose-500"
+                  }`}
+                >
+                  <Heart size={18} className={likeHook.liked ? "fill-rose-500" : ""} />
+                  <span className="text-sm font-bold tabular-nums">{likeHook.likes}</span>
+                </button>
+
+                {/* Bookmark Button */}
+                <button
+                  onClick={() => blogId && toggleBookmark(blogId)}
+                  aria-pressed={blogId ? isBookmarked(blogId) : false}
+                  className={`p-2 rounded-xl border transition-all ${
+                    blogId && isBookmarked(blogId)
+                      ? "bg-blue-50 border-blue-200 text-blue-500 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-400"
+                      : "bg-gray-50 dark:bg-gray-900 border-transparent text-gray-500 hover:bg-blue-50 hover:text-blue-500"
+                  }`}
+                >
+                  <Bookmark size={18} className={blogId && isBookmarked(blogId) ? "fill-blue-500" : ""} />
+                </button>
+
                 <div ref={shareRef} className="relative">
                   <button
                     onClick={() => setShareOpen(!shareOpen)}
@@ -561,10 +605,15 @@ const BlogView = () => {
                       animate={{ opacity: 1 }}
                       className="flex gap-4 group"
                     >
-                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.author.email}`} className="w-10 h-10 rounded-xl bg-gray-100" alt="" />
+                      <img
+                        src={c.author?.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.author.email}`}
+                        className="w-10 h-10 rounded-xl bg-gray-100 cursor-pointer transition-all duration-300 hover:scale-110 hover:ring-2 hover:ring-violet-500 hover:shadow-lg hover:shadow-violet-500/20"
+                        alt={c.author.name || c.author.email.split("@")[0]}
+                        onClick={() => navigate(`/author/${(c.author as any)?.id || c.authorId}`)}
+                      />
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                           <span className="text-sm font-bold text-gray-900 dark:text-white">{c.author.name || c.author.email.split("@")[0]}</span>
+                           <span className="text-sm font-bold text-gray-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 cursor-pointer transition-colors duration-200" onClick={() => navigate(`/author/${(c.author as any)?.id || c.authorId}`)}>{c.author.name || c.author.email.split("@")[0]}</span>
                            <span className="text-[10px] font-bold text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 font-body leading-relaxed">{c.content}</p>
@@ -621,10 +670,7 @@ const BlogView = () => {
         </div>
       </div>
 
-      <div className="mt-20 px-4">
-        <Footer />
-      </div>
-    </AppShell>
+    </NewAppShell>
   );
 };
 

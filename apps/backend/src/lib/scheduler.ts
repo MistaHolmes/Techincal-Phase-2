@@ -1,26 +1,25 @@
 import prisma from "./prisma";
-import { broadcastNotificationUpdate } from "./websocket";
+import { broadcastNotificationUpdate, invalidatePublicBlogsCache, invalidateUserBlogsCache } from "./websocket";
 
 /**
- * Checks for blogs that are scheduled for publication and whose 
+ * Checks for blogs that are scheduled for publication and whose
  * scheduled time has passed.
  */
 export async function processScheduledBlogs() {
   try {
     const now = new Date();
-    
-    // Find blogs that are not published, have a scheduledAt date in the past
-    // Cast to any to bypass stale types if necessary, though prisma generate should fix it
-    const toPublish = await (prisma.blog as any).findMany({
+
+    const toPublish = await prisma.blog.findMany({
       where: {
         published: false,
         scheduledAt: {
-          lte: now
-        }
+          not: null,
+          lte: now,
+        },
       },
       include: {
-        author: true
-      }
+        author: true,
+      },
     });
 
     if (toPublish.length === 0) return;
@@ -28,26 +27,34 @@ export async function processScheduledBlogs() {
     console.log(`[Scheduler] Found ${toPublish.length} blogs to publish.`);
 
     for (const blog of toPublish) {
-      await (prisma.blog as any).update({
-        where: { id: blog.id },
-        data: {
-          published: true,
-          scheduledAt: null // Clear scheduling once published
-        }
-      });
+      try {
+        await prisma.blog.update({
+          where: { id: blog.id },
+          data: {
+            published: true,
+            scheduledAt: null,
+          },
+        });
 
-      // Create a notification record first
-      await prisma.notification.create({
-        data: {
-          userId: blog.authorId,
-          message: `Your scheduled blog "${blog.title}" is now live!`
-        }
-      });
+        await prisma.notification.create({
+          data: {
+            userId: blog.authorId,
+            message: `Your scheduled blog "${blog.title}" is now live!`,
+          },
+        });
 
-      // Notify the author via WS
-      broadcastNotificationUpdate(blog.authorId);
-      
-      console.log(`[Scheduler] Published: ${blog.title} (${blog.id})`);
+        // Invalidate caches so the new blog appears immediately
+        await invalidatePublicBlogsCache();
+        await invalidateUserBlogsCache(blog.authorId);
+
+        // Notify the author via WS
+        broadcastNotificationUpdate(blog.authorId);
+
+        console.log(`[Scheduler] Published: ${blog.title} (${blog.id})`);
+      } catch (blogErr) {
+        // Log individual blog publish errors but continue with the rest
+        console.error(`[Scheduler] Failed to publish blog ${blog.id}:`, blogErr);
+      }
     }
   } catch (error) {
     console.error("[Scheduler] Error processing scheduled blogs:", error);
@@ -59,5 +66,7 @@ export async function processScheduledBlogs() {
  */
 export function initScheduler(intervalMs: number = 60000) {
   console.log(`[Scheduler] Initialized with interval ${intervalMs}ms`);
+  // Run once immediately on startup (after a short delay for DB to be ready)
+  setTimeout(processScheduledBlogs, 5000);
   setInterval(processScheduledBlogs, intervalMs);
 }

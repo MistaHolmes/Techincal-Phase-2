@@ -3,9 +3,10 @@ import { motion, useMotionValue, useSpring, easeOut } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth, } from "@clerk/clerk-react";
 import TypeWriter from "../components/TypeWriter";
+import RotatingWords from "@/components/RotatingWords";
 import { useNavigate } from "react-router-dom";
-import { Footer } from "@/components/Footer";
 import BackgroundGlow from "@/components/ui/BackgroundGlow";
+import { Footer } from "@/components/Footer";
 
 const LandingPage: React.FC = () => {
   const mouseX = useMotionValue(0);
@@ -131,9 +132,14 @@ const LandingPage: React.FC = () => {
 
             <motion.p
               variants={itemVariants}
-              className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4"
+              className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 flex items-center justify-center gap-2"
             >
-              Read And Write Blogs of Folks, and Have a great time in this site
+              A collaborative space for evolving
+              <RotatingWords
+                words={["Performance", "Scalability", "Architecture", "Patterns", "Best Practices"]}
+                className="text-indigo-600 italic"
+              />
+              in real time.
             </motion.p>
 
             <motion.div
@@ -173,6 +179,7 @@ const LandingPage: React.FC = () => {
           </motion.section>
         )}
       </main>
+      {/* Footer */}
       <Footer />
     </div>
   );

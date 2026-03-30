@@ -53,7 +53,7 @@ router.get('/blogs', requireAuth(), async (req: any, res: any) => {
     const blogs = await prisma.blog.findMany({
       where: { authorId: user.id },
       orderBy: { updatedAt: 'desc' },
-      select: { id: true, title: true, content: true, published: true, createdAt: true, updatedAt: true, coverImage: true },
+      select: { id: true, title: true, summary: true, content: true, published: true, createdAt: true, updatedAt: true, coverImage: true, tags: true },
     });
 
     await redisClient.setEx(cacheKey, 120, JSON.stringify(blogs));
@@ -77,7 +77,7 @@ router.get('/blogs/published', requireAuth(), async (req, res: any) => {
     const blogs = await prisma.blog.findMany({
       where: { authorId: user.id, published: true },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, title: true, content: true, published: true, createdAt: true, updatedAt: true },
+      select: { id: true, title: true, summary: true, content: true, published: true, createdAt: true, updatedAt: true, coverImage: true, tags: true },
     });
 
     await redisClient.setEx(cacheKey, 600, JSON.stringify(blogs));
@@ -164,7 +164,11 @@ router.get('/history', requireAuth(), async (req, res: any) => {
 
     const history = await prisma.readingHistory.findMany({
       where: { userId: user.id },
-      include: { blog: { include: { author: { select: { email: true, name: true } }, tags: true } } },
+      include: { blog: { select: {
+        id: true, title: true, summary: true, coverImage: true, published: true,
+        likes: true, views: true, createdAt: true, updatedAt: true, authorId: true,
+        author: { select: { email: true, name: true, profilePicture: true } }, tags: true,
+      } } },
       orderBy: { readAt: 'desc' },
       take: 50,
     });
@@ -184,6 +188,10 @@ router.post('/history', requireAuth(), async (req, res: any) => {
 
     const { blogId } = req.body;
     if (!blogId) return res.status(400).json({ error: 'blogId is required' });
+
+    // Guard: make sure the blog actually exists before creating the FK reference
+    const blogExists = await prisma.blog.findUnique({ where: { id: blogId }, select: { id: true } });
+    if (!blogExists) return res.status(404).json({ error: 'Blog not found' });
 
     await (prisma as any).readingHistory.upsert({
       where: { userId_blogId: { userId: user.id, blogId } },

@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { UserButton, useAuth } from "@clerk/clerk-react";
+import { UserButton, useAuth, useUser } from "@clerk/clerk-react";
 import { Users, UserPlus, UserMinus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePageCache } from "@/context/PageCacheContext";
 import UserContentSection from "../components/UserContent";
-import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -19,6 +18,7 @@ interface FollowUser {
 
 const ProfileComponent = () => {
   const { getToken } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"followers" | "following">("followers");
   const [followers, setFollowers] = useState<FollowUser[]>([]);
@@ -117,57 +117,84 @@ const ProfileComponent = () => {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto py-8 px-4">
-        {/* Account Management Box */}
-        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 flex flex-col md:flex-row items-center justify-between transition-all mb-10 overflow-hidden relative group">
-           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
-              <Users size={160} />
-           </div>
-           <div className="md:w-3/4 relative z-10">
-            <h2 className="text-3xl font-headline font-bold text-gray-900 dark:text-white mb-4">Account Management</h2>
-            <p className="text-gray-500 dark:text-gray-400 font-body leading-relaxed max-w-2xl">
-              Access your personal details, security settings, and professional profile. Use the Clerk dashboard to manage your authentication and session data securely.
-            </p>
-          </div>
-          <div className="md:w-1/4 flex justify-center md:justify-end mt-8 md:mt-0 relative z-10">
-            <div className="p-2 bg-gray-50 dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-inner">
-               <UserButton
-                 afterSignOutUrl="/"
-                 appearance={{
-                   elements: {
-                     userButtonAvatarBox: "w-14 h-14",
-                   },
-                 }}
-               />
+      <div className="max-w-5xl mx-auto py-8 px-4 space-y-8">
+
+        {/* Profile Header */}
+        <header className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8">
+          <div className="flex flex-col sm:flex-row items-start gap-8">
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden ring-2 ring-gray-100 dark:ring-gray-800 shadow-sm">
+                <img
+                  src={user?.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 space-y-4">
+              <div>
+                <h1 className="text-2xl font-headline font-bold text-gray-900 dark:text-white">
+                  {user?.firstName && user?.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "User"}
+                </h1>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                  {user?.emailAddresses?.[0]?.emailAddress || ""}
+                </p>
+              </div>
+
+              {/* Stats Row */}
+              <div className="flex flex-wrap gap-8">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Followers</span>
+                  <span className="text-2xl font-headline font-bold text-gray-900 dark:text-white">{followers.length}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Following</span>
+                  <span className="text-2xl font-headline font-bold text-gray-900 dark:text-white">{following.length}</span>
+                </div>
+              </div>
+
+              {/* Clerk Account Management Button */}
+              <div className="flex items-center gap-3 pt-1">
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{ elements: { userButtonAvatarBox: "w-8 h-8" } }}
+                />
+                <span className="text-xs text-gray-400 dark:text-gray-500">Manage account settings</span>
+              </div>
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {/* Main Content: Blogs + Network sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          {/* Blogs / Drafts */}
           <div className="lg:col-span-2">
-             {/* Manage Your Blogs Section */}
-              <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
-                <UserContentSection />
-             </div>
+            <UserContentSection />
           </div>
 
-          <div className="space-y-10">
-            {/* Followers / Following Section */}
-            <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 transition-all">
-              <div className="flex items-center gap-4 mb-8">
+          {/* Network Sidebar */}
+          <aside className="space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+              <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-violet-100 dark:bg-violet-900/30 text-violet-600 rounded-xl">
-                   <Users className="w-5 h-5" />
+                  <Users className="w-4 h-4" />
                 </div>
-                <h2 className="text-xl font-headline font-bold text-gray-900 dark:text-white">Network</h2>
+                <h2 className="text-base font-headline font-bold text-gray-900 dark:text-white">Network</h2>
               </div>
 
               {/* Tab toggles */}
-              <div className="flex bg-gray-50 dark:bg-gray-950 p-1 rounded-2xl mb-8">
+              <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6">
                 <button
                   onClick={() => setActiveTab("followers")}
-                  className={`flex-1 py-3 font-bold text-xs uppercase tracking-widest rounded-xl transition-all ${
+                  className={`flex-1 py-2.5 font-bold text-xs uppercase tracking-widest rounded-lg transition-all ${
                     activeTab === "followers"
-                      ? "bg-white dark:bg-gray-800 text-violet-600 shadow-md"
+                      ? "bg-white dark:bg-gray-700 text-violet-600 shadow"
                       : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                   }`}
                 >
@@ -175,9 +202,9 @@ const ProfileComponent = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab("following")}
-                  className={`flex-1 py-3 font-bold text-xs uppercase tracking-widest rounded-xl transition-all ${
+                  className={`flex-1 py-2.5 font-bold text-xs uppercase tracking-widest rounded-lg transition-all ${
                     activeTab === "following"
-                      ? "bg-white dark:bg-gray-800 text-violet-600 shadow-md"
+                      ? "bg-white dark:bg-gray-700 text-violet-600 shadow"
                       : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                   }`}
                 >
@@ -187,42 +214,40 @@ const ProfileComponent = () => {
 
               {/* Content */}
               {loadingFollow ? (
-                <div className="flex justify-center py-10">
-                  <div className="w-6 h-6 border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                <div className="flex justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : (
                 <AnimatePresence mode="wait">
                   {activeTab === "followers" ? (
-                    <motion.div key="followers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                    <motion.div key="followers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3 max-h-96 overflow-y-auto">
                       {followers.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
-                          <UserPlus className="w-10 h-10 mx-auto mb-4 opacity-20" />
+                        <div className="text-center py-10 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                          <UserPlus className="w-8 h-8 mx-auto mb-3 opacity-30" />
                           <p className="text-xs font-bold uppercase tracking-tighter">No followers yet</p>
                         </div>
                       ) : (
-                        followers.map((user) => renderUserCard(user, false))
+                        followers.map((u) => renderUserCard(u, false))
                       )}
                     </motion.div>
                   ) : (
-                    <motion.div key="following" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                    <motion.div key="following" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3 max-h-96 overflow-y-auto">
                       {following.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
-                          <Users className="w-10 h-10 mx-auto mb-4 opacity-20" />
+                        <div className="text-center py-10 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                          <Users className="w-8 h-8 mx-auto mb-3 opacity-30" />
                           <p className="text-xs font-bold uppercase tracking-tighter">No follows yet</p>
                         </div>
                       ) : (
-                        following.map((user) => renderUserCard(user, true))
+                        following.map((u) => renderUserCard(u, true))
                       )}
                     </motion.div>
                   )}
                 </AnimatePresence>
               )}
             </div>
-          </div>
+          </aside>
+
         </div>
-      </div>
-      <div className="mt-20 px-4">
-        <Footer />
       </div>
     </>
   );

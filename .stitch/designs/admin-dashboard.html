@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DraftDock Admin | Command Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-variant": "#303542",
+              "on-primary-container": "#ede0ff",
+              "inverse-on-surface": "#2b303d",
+              "on-error": "#690005",
+              "secondary-fixed-dim": "#c1c6d7",
+              "surface-container-high": "#252a37",
+              "on-primary": "#3f008e",
+              "on-secondary-fixed-variant": "#414754",
+              "tertiary-container": "#616775",
+              "surface-container": "#1a1f2c",
+              "primary-fixed": "#eaddff",
+              "on-secondary-fixed": "#161c27",
+              "on-primary-fixed-variant": "#5a00c6",
+              "surface-container-highest": "#303542",
+              "error": "#ffb4ab",
+              "on-tertiary-fixed-variant": "#414754",
+              "inverse-primary": "#732ee4",
+              "surface": "#0e131f",
+              "outline-variant": "#4a4455",
+              "secondary-fixed": "#dde2f3",
+              "on-tertiary": "#2a303d",
+              "on-secondary": "#2a303d",
+              "inverse-surface": "#dee2f3",
+              "surface-container-low": "#161b28",
+              "primary": "#d2bbff",
+              "primary-fixed-dim": "#d2bbff",
+              "on-surface": "#dee2f3",
+              "tertiary-fixed": "#dde2f3",
+              "surface-bright": "#343946",
+              "secondary-container": "#434957",
+              "on-error-container": "#ffdad6",
+              "on-tertiary-fixed": "#161c27",
+              "background": "#0e131f",
+              "secondary": "#c1c6d7",
+              "on-background": "#dee2f3",
+              "primary-container": "#7c3aed",
+              "on-tertiary-container": "#e1e6f6",
+              "tertiary": "#c1c6d6",
+              "error-container": "#93000a",
+              "on-primary-fixed": "#25005a",
+              "outline": "#958da1",
+              "surface-dim": "#0e131f",
+              "on-surface-variant": "#ccc3d8",
+              "surface-container-lowest": "#090e1a",
+              "tertiary-fixed-dim": "#c1c6d6",
+              "on-secondary-container": "#b3b8c8",
+              "surface-tint": "#d2bbff"
+            },
+            fontFamily: {
+              "headline": ["Newsreader"],
+              "body": ["Manrope"],
+              "label": ["Manrope"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-nav {
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .premium-gradient {
+            background: linear-gradient(135deg, #7c3aed 0%, #d2bbff 100%);
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a4455;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/30 min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-slate-900/70 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(124,58,237,0.08)] docked full-width top-0 sticky z-50 flex items-center justify-between w-full px-8 h-20 max-w-none">
+<div class="flex items-center gap-8">
+<h1 class="text-2xl font-bold font-headline italic text-slate-100">DraftDock Admin</h1>
+<nav class="hidden md:flex gap-6 items-center">
+<a class="text-violet-400 border-b-2 border-violet-500 pb-1 font-semibold" href="#">Dashboard</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Users</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Analytics</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Settings</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center bg-surface-container-lowest px-4 py-2 rounded-lg border border-outline-variant/15">
+<span class="material-symbols-outlined text-on-surface-variant text-sm mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 placeholder:text-on-surface-variant/50" placeholder="Search resources..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<button class="text-slate-400 hover:bg-white/5 p-2 rounded-lg transition-all scale-95 active:scale-90">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-slate-400 hover:bg-white/5 p-2 rounded-lg transition-all scale-95 active:scale-90">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="flex items-center gap-3 ml-2 pl-6 border-l border-outline-variant/20">
+<div class="text-right">
+<p class="text-sm font-semibold text-slate-100">Alexander Thorne</p>
+<p class="text-[10px] uppercase tracking-widest text-violet-400 font-label">Lead Curator</p>
+</div>
+<img alt="Admin User Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-violet-500/20" data-alt="Close-up portrait of a professional man with sharp features, soft studio lighting, dark charcoal background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkuzQ8qACuWGrBsY7ih0kaDBU57zpqVu2kuoANX6gyTNDdEhFjy3TvvjTEhBZsuMzimMMlOc4rQ91v1k70xaY7wI0IPfKZaXuJvnp771QNy9n4jaCIKaarJ5WjcZo1ht_xXyPUaUZCqZWBFDmQx8CZlVYjPHuW5y1bypCQ0KIG-uvVm91GByJe8ojp0sw5sYy1A5MYKv_49vBdCpFbK75mD6MBIFK8tQgM0bDIkxMatNtP7Sxe5lDcqLMVxfJlGr3_hNy29Z1B9HXs"/>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-[1600px] mx-auto px-8 py-12 space-y-12">
+<!-- Platform Stats Row -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Card 1 -->
+<div class="bg-surface-container p-8 rounded-xl relative overflow-hidden group transition-all duration-300 hover:translate-y-[-4px]">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-transparent opacity-50"></div>
+<div class="flex justify-between items-start mb-4">
+<span class="text-[11px] font-label uppercase tracking-widest text-on-surface-variant">Total Users</span>
+<span class="material-symbols-outlined text-primary-container" data-icon="group">group</span>
+</div>
+<div class="flex items-baseline gap-3">
+<h2 class="text-4xl font-headline font-bold text-on-surface">1,247</h2>
+<span class="text-[11px] font-label px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="trending_up">trending_up</span> +12 this week
+                    </span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container p-8 rounded-xl relative overflow-hidden group transition-all duration-300 hover:translate-y-[-4px]">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-transparent opacity-50"></div>
+<div class="flex justify-between items-start mb-4">
+<span class="text-[11px] font-label uppercase tracking-widest text-on-surface-variant">Blogs Published</span>
+<span class="material-symbols-outlined text-primary-container" data-icon="edit_note">edit_note</span>
+</div>
+<div class="flex items-baseline gap-3">
+<h2 class="text-4xl font-headline font-bold text-on-surface">3,892</h2>
+<span class="text-[11px] font-label px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="trending_up">trending_up</span> +8%
+                    </span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container p-8 rounded-xl relative overflow-hidden group transition-all duration-300 hover:translate-y-[-4px]">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-transparent opacity-50"></div>
+<div class="flex justify-between items-start mb-4">
+<span class="text-[11px] font-label uppercase tracking-widest text-on-surface-variant">Total Comments</span>
+<span class="material-symbols-outlined text-primary-container" data-icon="forum">forum</span>
+</div>
+<div class="flex items-baseline gap-3">
+<h2 class="text-4xl font-headline font-bold text-on-surface">28.4K</h2>
+<span class="text-[11px] font-label text-on-surface-variant italic">Moderated</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container p-8 rounded-xl relative overflow-hidden group transition-all duration-300 hover:translate-y-[-4px]">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-transparent opacity-50"></div>
+<div class="flex justify-between items-start mb-4">
+<span class="text-[11px] font-label uppercase tracking-widest text-on-surface-variant">Active Today</span>
+<span class="material-symbols-outlined text-primary-container" data-icon="monitoring">monitoring</span>
+</div>
+<div class="flex items-end justify-between">
+<h2 class="text-4xl font-headline font-bold text-on-surface">452</h2>
+<div class="h-8 flex items-end gap-[2px]">
+<div class="w-1 bg-primary/20 h-2 rounded-t-full"></div>
+<div class="w-1 bg-primary/40 h-4 rounded-t-full"></div>
+<div class="w-1 bg-primary/60 h-3 rounded-t-full"></div>
+<div class="w-1 bg-primary/80 h-6 rounded-t-full"></div>
+<div class="w-1 bg-primary h-5 rounded-t-full"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Content Area (Two Columns) -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+<!-- Left Column: Analytics -->
+<div class="lg:col-span-3 space-y-8">
+<!-- User Growth Chart -->
+<div class="bg-surface-container rounded-xl p-8 shadow-2xl">
+<div class="flex justify-between items-center mb-8">
+<div>
+<p class="text-[11px] font-label uppercase tracking-widest text-violet-400 mb-1">User Growth</p>
+<h3 class="text-xl font-headline italic">Monthly Acquisition</h3>
+</div>
+<select class="bg-surface-container-high border-none text-xs rounded-lg text-on-surface-variant focus:ring-1 focus:ring-primary/30">
+<option>Last 30 Days</option>
+<option>Last 90 Days</option>
+</select>
+</div>
+<div class="h-64 flex items-end justify-between px-2 border-b border-outline-variant/10 relative">
+<!-- Simulated Area Chart -->
+<div class="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-primary/10 to-transparent"></div>
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none">
+<path d="M0,180 Q100,150 200,170 T400,120 T600,140 T800,100 L800,200 L0,200 Z" fill="rgba(124, 58, 237, 0.05)"></path>
+<path d="M0,180 Q100,150 200,170 T400,120 T600,140 T800,100" fill="none" stroke="#7c3aed" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<div class="z-10 text-[10px] text-on-surface-variant font-label pb-2">Week 1</div>
+<div class="z-10 text-[10px] text-on-surface-variant font-label pb-2">Week 2</div>
+<div class="z-10 text-[10px] text-on-surface-variant font-label pb-2">Week 3</div>
+<div class="z-10 text-[10px] text-on-surface-variant font-label pb-2">Week 4</div>
+</div>
+</div>
+<!-- Content Performance Bar Chart -->
+<div class="bg-surface-container rounded-xl p-8 shadow-2xl">
+<div class="mb-8">
+<p class="text-[11px] font-label uppercase tracking-widest text-violet-400 mb-1">Performance</p>
+<h3 class="text-xl font-headline italic">Top Viewed Content</h3>
+</div>
+<div class="space-y-6">
+<div class="group cursor-default">
+<div class="flex justify-between text-xs font-label text-on-surface-variant mb-2">
+<span>The Art of Minimalist Living</span>
+<span class="group-hover:text-primary transition-colors italic">12.4K views</span>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full premium-gradient w-[92%] rounded-full"></div>
+</div>
+</div>
+<div class="group cursor-default">
+<div class="flex justify-between text-xs font-label text-on-surface-variant mb-2">
+<span>Deep Dive: Obsidian Workflows</span>
+<span class="group-hover:text-primary transition-colors italic">9.8K views</span>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full premium-gradient w-[78%] rounded-full"></div>
+</div>
+</div>
+<div class="group cursor-default">
+<div class="flex justify-between text-xs font-label text-on-surface-variant mb-2">
+<span>Modern Architecture in Berlin</span>
+<span class="group-hover:text-primary transition-colors italic">8.2K views</span>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full premium-gradient w-[65%] rounded-full"></div>
+</div>
+</div>
+<div class="group cursor-default">
+<div class="flex justify-between text-xs font-label text-on-surface-variant mb-2">
+<span>AI Ethics: A Global Perspective</span>
+<span class="group-hover:text-primary transition-colors italic">7.1K views</span>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full premium-gradient w-[54%] rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Activities & Alerts -->
+<div class="lg:col-span-2 space-y-8">
+<!-- Recent Activity Feed -->
+<div class="bg-surface-container rounded-xl p-8 shadow-2xl flex flex-col max-h-[480px]">
+<div class="mb-6 flex justify-between items-center">
+<h3 class="text-xl font-headline italic">Recent Activity</h3>
+<button class="text-[10px] font-label uppercase tracking-widest hover:text-primary transition-colors">Clear All</button>
+</div>
+<div class="flex-1 overflow-y-auto pr-2 space-y-6">
+<div class="flex gap-4 group">
+<div class="relative">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-lg" data-icon="person_add">person_add</span>
+</div>
+<div class="absolute top-8 left-1/2 w-[1px] h-full bg-outline-variant/20 -translate-x-1/2"></div>
+</div>
+<div class="pb-2">
+<p class="text-sm text-slate-200"><span class="font-bold">Julianne Vane</span> joined the platform</p>
+<p class="text-[10px] text-on-surface-variant font-label uppercase mt-1">2 minutes ago</p>
+</div>
+</div>
+<div class="flex gap-4 group">
+<div class="relative">
+<div class="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400">
+<span class="material-symbols-outlined text-lg" data-icon="publish">publish</span>
+</div>
+<div class="absolute top-8 left-1/2 w-[1px] h-full bg-outline-variant/20 -translate-x-1/2"></div>
+</div>
+<div class="pb-2">
+<p class="text-sm text-slate-200"><span class="font-bold">Marcus Roe</span> published <span class="italic">"The Quiet Revolution"</span></p>
+<p class="text-[10px] text-on-surface-variant font-label uppercase mt-1">45 minutes ago</p>
+</div>
+</div>
+<div class="flex gap-4 group">
+<div class="relative">
+<div class="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
+<span class="material-symbols-outlined text-lg" data-icon="security">security</span>
+</div>
+<div class="absolute top-8 left-1/2 w-[1px] h-full bg-outline-variant/20 -translate-x-1/2"></div>
+</div>
+<div class="pb-2">
+<p class="text-sm text-slate-200"><span class="font-bold">Elena K.</span> promoted to <span class="text-primary italic">Admin</span></p>
+<p class="text-[10px] text-on-surface-variant font-label uppercase mt-1">2 hours ago</p>
+</div>
+</div>
+<div class="flex gap-4 group">
+<div class="relative">
+<div class="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+<span class="material-symbols-outlined text-lg" data-icon="comment">comment</span>
+</div>
+</div>
+<div class="pb-2">
+<p class="text-sm text-slate-200"><span class="font-bold">System</span> auto-approved 14 comments</p>
+<p class="text-[10px] text-on-surface-variant font-label uppercase mt-1">3 hours ago</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Reported Content Panel -->
+<div class="bg-surface-container rounded-xl p-8 shadow-2xl border border-error/5">
+<div class="mb-6 flex items-center gap-3 text-error">
+<span class="material-symbols-outlined" data-icon="report">report</span>
+<h3 class="text-xl font-headline italic">Critical Reports</h3>
+</div>
+<div class="space-y-4">
+<div class="p-4 bg-surface-container-high rounded-xl border-l-2 border-error">
+<div class="flex justify-between items-start mb-2">
+<div>
+<p class="text-sm font-semibold text-slate-100">Violence in Urban Centers</p>
+<p class="text-xs text-on-surface-variant">by Arthur Penhaligon</p>
+</div>
+<span class="text-[9px] font-label uppercase tracking-tighter bg-error/20 text-error px-2 py-0.5 rounded">Severe</span>
+</div>
+<p class="text-[11px] text-on-surface-variant/80 italic mb-4">"Reason: Hate speech detected in paragraph 4..."</p>
+<div class="flex gap-2">
+<button class="flex-1 py-1.5 text-[10px] font-label uppercase bg-error/10 hover:bg-error/20 text-error rounded-lg transition-colors">Review</button>
+<button class="flex-1 py-1.5 text-[10px] font-label uppercase hover:bg-white/5 rounded-lg transition-colors">Dismiss</button>
+</div>
+</div>
+<div class="p-4 bg-surface-container-high rounded-xl border-l-2 border-secondary">
+<div class="flex justify-between items-start mb-2">
+<div>
+<p class="text-sm font-semibold text-slate-100">Cryptocurrency Scams Exposed</p>
+<p class="text-xs text-on-surface-variant">by Sarah Jenkins</p>
+</div>
+<span class="text-[9px] font-label uppercase tracking-tighter bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded">Spam</span>
+</div>
+<div class="flex gap-2 mt-4">
+<button class="flex-1 py-1.5 text-[10px] font-label uppercase bg-white/5 hover:bg-white/10 text-slate-100 rounded-lg transition-colors">Review</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- User Management Table Section -->
+<section class="bg-surface-container rounded-xl p-8 shadow-2xl space-y-8 overflow-hidden">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+<div>
+<h3 class="text-2xl font-headline italic mb-1">User Management</h3>
+<p class="text-sm text-on-surface-variant">Oversee and manage platform access control.</p>
+</div>
+<div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
+<div class="flex-1 md:flex-none relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant" data-icon="filter_list">filter_list</span>
+<input class="bg-surface-container-high pl-10 pr-4 py-2 rounded-lg border-none text-sm w-full md:w-64 focus:ring-1 focus:ring-primary/40" placeholder="Filter by name..." type="text"/>
+</div>
+<button class="flex items-center gap-2 premium-gradient text-on-primary px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="person_add">person_add</span>
+                        Add Admin
+                    </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-separate border-spacing-y-3">
+<thead class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
+<tr>
+<th class="px-4 pb-4">User</th>
+<th class="px-4 pb-4">Role</th>
+<th class="px-4 pb-4">Activity</th>
+<th class="px-4 pb-4">Joined</th>
+<th class="px-4 pb-4">Status</th>
+<th class="px-4 pb-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<tr class="group hover:bg-surface-container-high transition-colors">
+<td class="bg-surface-container-low px-4 py-4 rounded-l-2xl">
+<div class="flex items-center gap-3">
+<img alt="User Avatar" class="w-10 h-10 rounded-lg object-cover" data-alt="Modern man with short hair and clean shave, neutral lighting, solid dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhw4AOTTRpx0Rf__SBdM271Sdv7yd3v6q6n3ekwucGlS4vEwARVtVvF17hVKLxk3qcqe55xvzECacitVYwNZEMImIm5HHdle_0vdSsXi6CugoblIo_c3alGvoK7lWWQy1Ss0aYqfAqNV9Z7GCI6F_fcig26iUP2SLXMDQ5IMgk2YxB5MMmdXa5ta2kbJOq9NQVVrbqPFJq5quOBrcPhSyNwlVTXkhWlXlu7TWHgiuzQJkhhbGSTxnV0lXIv-ikheWFGQCwVoWSSILX"/>
+<div>
+<p class="font-bold text-slate-100">Silas Thorne</p>
+<p class="text-xs text-on-surface-variant">silas.t@draftdock.com</p>
+</div>
+</div>
+</td>
+<td class="bg-surface-container-low px-4 py-4">
+<span class="bg-primary-container/20 text-primary text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-tighter">Admin</span>
+</td>
+<td class="bg-surface-container-low px-4 py-4">
+<p class="text-slate-200">124 Blogs</p>
+<p class="text-[10px] text-on-surface-variant">1.2M Reads</p>
+</td>
+<td class="bg-surface-container-low px-4 py-4 text-on-surface-variant">
+                                Oct 12, 2023
+                            </td>
+<td class="bg-surface-container-low px-4 py-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+<span class="text-xs italic text-slate-300">Active</span>
+</div>
+</td>
+<td class="bg-surface-container-low px-4 py-4 rounded-r-2xl text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-high transition-colors">
+<td class="bg-surface-container-low px-4 py-4 rounded-l-2xl">
+<div class="flex items-center gap-3">
+<img alt="User Avatar" class="w-10 h-10 rounded-lg object-cover" data-alt="Young professional woman with long dark hair, soft natural lighting, elegant dark environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNvolL6PAD-nG9pELOzp4cB5TuGETHSeSpI21ci8AvTnDMQS87jXwALnliv1TjyWtgcd-sGa6PM5SdwlGs9T0D3C-vBLoTxrY7rRxhUBhjwnbCFFKzfb-8JF9TRfy7gPrhAsDGLor9MPjSUWesI60pJ9BNpqp9YyDPR2PYW9pvypTbXv7poV8M6V1r0X6GGCSRFXQTarzBqsqrJtGsQAcKrfnj3saSJ3QZNXgTxnPYm4rps2edHL3C2ARfe_cpwlpTpQ2_JcJVVZZk"/>
+<div>
+<p class="font-bold text-slate-100">Isabella Rossi</p>
+<p class="text-xs text-on-surface-variant">i.rossi@author.me</p>
+</div>
+</div>
+</td>
+<td class="bg-surface-container-low px-4 py-4">
+<span class="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-tighter">Author</span>
+</td>
+<td class="bg-surface-container-low px-4 py-4">
+<p class="text-slate-200">56 Blogs</p>
+<p class="text-[10px] text-on-surface-variant">840K Reads</p>
+</td>
+<td class="bg-surface-container-low px-4 py-4 text-on-surface-variant">
+                                Jan 04, 2024
+                            </td>
+<td class="bg-surface-container-low px-4 py-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+<span class="text-xs italic text-slate-300">Active</span>
+</div>
+</td>
+<td class="bg-surface-container-low px-4 py-4 rounded-r-2xl text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-high transition-colors">
+<td class="bg-surface-container-low px-4 py-4 rounded-l-2xl">
+<div class="flex items-center gap-3">
+<img alt="User Avatar" class="w-10 h-10 rounded-lg object-cover" data-alt="Smiling man with glasses, tech enthusiast aesthetic, soft daylight, blurred office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs7YF1b4x0s51rlFyWXxR1mzzhFXiFz5hPWMaKvt_DxSk93mSD_ragNReatlCpjFVQNYZJ3B7gmo-hVWDRumg7noP0cMEHztbIgDjOaAAiN05VmnfQEuI4Iox6Qn-SoxlUVz7fUQ0Hi9yv-kXkccRDcqhf4sGR2Z6k2KbHAZwQvtlbdHywLuwdmPmm3DNwBxH8ImTqTMCDRatTyrqdu479L7A_vcInH7jGQqDWK367esfMZmq45ev1ysFXPsHkUAwlK1KPEzEt_kJv"/>
+<div>
+<p class="font-bold text-slate-100">David Chen</p>
+<p class="text-xs text-on-surface-variant">chen.d@gmail.com</p>
+</div>
+</div>
+</td>
+<td class="bg-surface-container-low px-4 py-4">
+<span class="bg-slate-500/10 text-slate-400 text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-tighter">Contributor</span>
+</td>
+<td class="bg-surface-container-low px-4 py-4">
+<p class="text-slate-200">12 Blogs</p>
+<p class="text-[10px] text-on-surface-variant">120K Reads</p>
+</td>
+<td class="bg-surface-container-low px-4 py-4 text-on-surface-variant">
+                                Feb 18, 2024
+                            </td>
+<td class="bg-surface-container-low px-4 py-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-amber-500"></div>
+<span class="text-xs italic text-slate-300">Pending Review</span>
+</div>
+</td>
+<td class="bg-surface-container-low px-4 py-4 rounded-r-2xl text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex justify-between items-center text-xs font-label">
+<span class="text-on-surface-variant">Showing 1-10 of 1,247 users</span>
+<div class="flex gap-2">
+<button class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded-lg premium-gradient text-on-primary font-bold">1</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center hover:bg-white/5 transition-colors">2</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center hover:bg-white/5 transition-colors">3</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Quick Actions Footer Bar -->
+<footer class="mt-20 border-t border-outline-variant/10 bg-surface-container-lowest/50 backdrop-blur-md">
+<div class="max-w-[1600px] mx-auto px-8 py-8 flex flex-col md:flex-row items-center justify-between gap-6">
+<div class="flex items-center gap-8">
+<button class="flex items-center gap-2 premium-gradient text-on-primary px-8 py-3 rounded-full text-sm font-bold shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+                    Add New Admin
+                </button>
+<button class="flex items-center gap-2 px-6 py-3 border border-outline-variant/30 hover:bg-white/5 rounded-full text-sm font-semibold transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="download">download</span>
+                    Export Users CSV
+                </button>
+</div>
+<div class="flex items-center gap-10">
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors text-sm font-semibold group">
+<span class="material-symbols-outlined text-lg group-hover:rotate-45 transition-transform" data-icon="settings">settings</span>
+                    Platform Settings
+                </button>
+<button class="text-violet-400 hover:text-violet-300 transition-colors text-sm font-label uppercase tracking-widest border-b border-violet-500/30 pb-0.5">
+                    View System Logs
+                </button>
+</div>
+</div>
+</footer>
+</body></html>

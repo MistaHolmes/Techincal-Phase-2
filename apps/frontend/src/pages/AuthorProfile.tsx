@@ -6,7 +6,6 @@ import { Calendar, ArrowLeft, UserPlus, UserMinus, Users } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
 import { usePageCache } from "@/context/PageCacheContext";
 import Header2 from "@/components/ui/header2";
-import { Footer } from "@/components/Footer";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -261,7 +260,6 @@ const AuthorProfile = () => {
           </div>
         )}
       </main>
-      <Footer />
     </div>
   );
 };

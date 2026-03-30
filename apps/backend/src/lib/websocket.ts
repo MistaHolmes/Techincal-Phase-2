@@ -129,6 +129,77 @@ export function initWebSocket(wsPort: number = 3001) {
       // Heartbeat
       if (data === 'pong') { connectionData.isAlive = true; return; }
       if (data === 'ping') { connectionData.isAlive = true; ws.send('pong'); return; }
+
+      // ── WebRTC Signaling ──────────────────────────────────────────────
+      try {
+        const msg = JSON.parse(data);
+
+        // Call offer: caller → server → callee
+        if (msg.type === 'call-offer') {
+          const target = userConnections.get(msg.targetUserId);
+          if (target && target.ws.readyState === WebSocket.OPEN) {
+            target.ws.send(JSON.stringify({
+              type: 'incoming-call',
+              from: userId,
+              callerName: msg.callerName,
+              callerAvatar: msg.callerAvatar,
+              callType: msg.callType, // 'audio' | 'video'
+              offer: msg.offer,
+            }));
+          } else {
+            // Target user is offline
+            ws.send(JSON.stringify({ type: 'call-failed', reason: 'User is offline' }));
+          }
+          return;
+        }
+
+        // Call answer: callee → server → caller
+        if (msg.type === 'call-answer') {
+          const target = userConnections.get(msg.targetUserId);
+          if (target && target.ws.readyState === WebSocket.OPEN) {
+            target.ws.send(JSON.stringify({
+              type: 'call-answered',
+              from: userId,
+              answer: msg.answer,
+            }));
+          }
+          return;
+        }
+
+        // ICE candidate relay
+        if (msg.type === 'ice-candidate') {
+          const target = userConnections.get(msg.targetUserId);
+          if (target && target.ws.readyState === WebSocket.OPEN) {
+            target.ws.send(JSON.stringify({
+              type: 'ice-candidate',
+              from: userId,
+              candidate: msg.candidate,
+            }));
+          }
+          return;
+        }
+
+        // Call end
+        if (msg.type === 'call-end') {
+          const target = userConnections.get(msg.targetUserId);
+          if (target && target.ws.readyState === WebSocket.OPEN) {
+            target.ws.send(JSON.stringify({ type: 'call-ended', from: userId }));
+          }
+          return;
+        }
+
+        // Call reject
+        if (msg.type === 'call-reject') {
+          const target = userConnections.get(msg.targetUserId);
+          if (target && target.ws.readyState === WebSocket.OPEN) {
+            target.ws.send(JSON.stringify({ type: 'call-rejected', from: userId }));
+          }
+          return;
+        }
+
+      } catch {
+        // Not JSON – ignore
+      }
     });
 
     ws.on('close', () => { if (userId) userConnections.delete(userId); });

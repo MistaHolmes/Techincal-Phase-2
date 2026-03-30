@@ -1,28 +1,33 @@
 import React, { lazy, Suspense } from "react";
 import RequireAuth from "./components/RequireAuth";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import RequireAdmin from "./components/RequireAdmin";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./pages/Landing";
-import UserBlogs from "./pages/Blogs";
 import { BlogForm } from "./pages/BlogForm";
 import BlogView from "./pages/BlogView";
 import HomeRedirector from "./components/HomeRedirector";
 import { MyStory } from "./components/MyStory";
 import { Contact } from "./components/Contact";
-import ProfileComponent from "./pages/Profile";
 
-// Lazy-loaded pages
-const Explore = lazy(() => import("./pages/Explore"));
+// New revamped components
+import {
+  NewAppShell,
+  NewProfilePage,
+  NewDashboardPage,
+  NewExplorePage,
+  NewBookmarksPage,
+  NewHistoryPage,
+} from "./components/new-components";
+
+// Lazy-loaded pages (kept for non-revamped routes)
 const TagBlogs = lazy(() => import("./pages/TagBlogs"));
-const Bookmarks = lazy(() => import("./pages/Bookmarks"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AuthorProfile = lazy(() => import("./pages/AuthorProfile"));
 const Settings = lazy(() => import("./pages/Settings"));
-const SearchPage = lazy(() => import("./pages/SearchPage"));
-const ReadingHistory = lazy(() => import("./pages/ReadingHistory"));
 const SeriesPage = lazy(() => import("./pages/SeriesPage"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Messages = lazy(() => import("./pages/Messages"));
-const Drafts = lazy(() => import("./pages/Drafts"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUserDetails = lazy(() => import("./pages/admin/UserDetails"));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -36,29 +41,37 @@ const PageLoader = () => (
 import { AppShell } from "./components/layout/AppShell";
 import { BlogCacheProvider } from "./context/BlogCacheContext";
 import { PageCacheProvider } from "./context/PageCacheContext";
+import { LikeProvider } from "./context/LikeContext";
+import { BookmarkProvider } from "./context/BookmarkContext";
 
 const App: React.FC = () => {
   return (
     <PageCacheProvider>
     <BlogCacheProvider>
+    <LikeProvider>
+    <BookmarkProvider>
     <Router>
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<HomeRedirector />} />
           <Route path="/landing" element={<RequireAuth><AppShell hideSidebar hideRightPanel><LandingPage /></AppShell></RequireAuth>} />
 
-          {/* Main AppShell Routes */}
-          <Route path="/blogs" element={<RequireAuth><UserBlogs /></RequireAuth>} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/bookmarks" element={<RequireAuth><AppShell activePage="bookmarks"><Bookmarks /></AppShell></RequireAuth>} />
-          <Route path="/dashboard" element={<RequireAuth><AppShell activePage="dashboard"><Dashboard /></AppShell></RequireAuth>} />
-          <Route path="/search" element={<AppShell activePage="search"><SearchPage /></AppShell>} />
-          <Route path="/history" element={<RequireAuth><AppShell activePage="history"><ReadingHistory /></AppShell></RequireAuth>} />
-          <Route path="/leaderboard" element={<AppShell activePage="leaderboard"><Leaderboard /></AppShell>} />
-          <Route path="/messages" element={<RequireAuth><AppShell activePage="messages"><Messages /></AppShell></RequireAuth>} />
-          <Route path="/settings" element={<RequireAuth><AppShell activePage="settings"><Settings /></AppShell></RequireAuth>} />
-          <Route path="/profile" element={<RequireAuth><AppShell activePage="profile"><ProfileComponent /></AppShell></RequireAuth>} />
-          <Route path="/drafts" element={<RequireAuth><Drafts /></RequireAuth>} />
+          {/* Revamped pages with NewAppShell */}
+          {/* Legacy route: redirect to revamped explore page */}
+          <Route path="/blogs" element={<RequireAuth><Navigate to="/explore" replace /></RequireAuth>} />
+          <Route path="/explore" element={<NewAppShell activePage="explore"><NewExplorePage /></NewAppShell>} />
+          <Route path="/bookmarks" element={<RequireAuth><NewAppShell activePage="bookmarks"><NewBookmarksPage /></NewAppShell></RequireAuth>} />
+          <Route path="/dashboard" element={<RequireAuth><NewAppShell activePage="dashboard"><NewDashboardPage /></NewAppShell></RequireAuth>} />
+          <Route path="/history" element={<RequireAuth><NewAppShell activePage="history"><NewHistoryPage /></NewAppShell></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><NewAppShell activePage="profile" hideRightPanel><NewProfilePage /></NewAppShell></RequireAuth>} />
+
+          {/* Other pages using NewAppShell */}
+          {/* Search page removed; searches now land on /explore */}
+          <Route path="/leaderboard" element={<NewAppShell activePage="leaderboard"><Leaderboard /></NewAppShell>} />
+          <Route path="/messages" element={<RequireAuth><NewAppShell activePage="messages" hideRightPanel hideFooter><Messages /></NewAppShell></RequireAuth>} />
+          <Route path="/settings" element={<RequireAuth><NewAppShell activePage="settings"><Settings /></NewAppShell></RequireAuth>} />
+          {/* Drafts moved into profile page; redirect legacy /drafts to profile with tab */}
+          <Route path="/drafts" element={<RequireAuth><Navigate to="/profile?tab=drafts" replace /></RequireAuth>} />
 
           {/* Workflow Routes */}
           <Route path="/create-blog" element={<RequireAuth><BlogForm /></RequireAuth>} />
@@ -66,9 +79,13 @@ const App: React.FC = () => {
 
           {/* Public Views */}
           <Route path="/blog/:blogId" element={<BlogView />} />
-          <Route path="/author/:userId" element={<AppShell hideRightPanel><AuthorProfile /></AppShell>} />
-          <Route path="/tags/:tagName" element={<AppShell activePage="explore"><TagBlogs /></AppShell>} />
-          <Route path="/series/:id" element={<AppShell activePage="explore"><SeriesPage /></AppShell>} />
+          <Route path="/author/:userId" element={<NewAppShell hideRightPanel><AuthorProfile /></NewAppShell>} />
+          <Route path="/tags/:tagName" element={<NewAppShell activePage="explore"><TagBlogs /></NewAppShell>} />
+          <Route path="/series/:id" element={<NewAppShell activePage="explore"><SeriesPage /></NewAppShell>} />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+          <Route path="/admin/users/:id" element={<RequireAdmin><AdminUserDetails /></RequireAdmin>} />
 
           {/* static */}
           <Route path="/my-story" element={<MyStory />} />
@@ -76,6 +93,8 @@ const App: React.FC = () => {
         </Routes>
       </Suspense>
     </Router>
+    </BookmarkProvider>
+    </LikeProvider>
     </BlogCacheProvider>
     </PageCacheProvider>
   );

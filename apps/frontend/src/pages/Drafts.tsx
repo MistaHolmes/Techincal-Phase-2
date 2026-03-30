@@ -6,7 +6,7 @@ import { FileDiff, Trash2, Send, Pencil } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { usePageCache } from "@/context/PageCacheContext";
-import { AppShell } from "@/components/layout/AppShell";
+import { NewAppShell } from "@/components/new-components";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -91,12 +91,12 @@ const Drafts = () => {
   };
 
   return (
-    <AppShell activePage="drafts" hideRightPanel>
+    <NewAppShell activePage="drafts" hideRightPanel>
       <Helmet>
         <title>My Drafts — DraftDock</title>
       </Helmet>
 
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto px-6 py-8">
         {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -192,7 +192,7 @@ const Drafts = () => {
           </div>
         )}
       </div>
-    </AppShell>
+    </NewAppShell>
   );
 };
 

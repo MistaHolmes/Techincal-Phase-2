@@ -53,7 +53,11 @@ router.get('/personalized-feed', requireAuth(), async (req, res: any) => {
           ...(topTagIds.length > 0 ? [{ tags: { some: { id: { in: topTagIds } } } }] : []),
         ],
       },
-      include: { author: { select: { email: true, name: true, profilePicture: true } }, tags: true },
+      select: {
+        id: true, title: true, summary: true, coverImage: true, published: true,
+        likes: true, views: true, createdAt: true, updatedAt: true, authorId: true,
+        author: { select: { email: true, name: true, profilePicture: true } }, tags: true,
+      },
       orderBy: { updatedAt: 'desc' },
       take: 20,
     });

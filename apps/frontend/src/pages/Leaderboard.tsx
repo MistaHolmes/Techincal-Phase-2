@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { usePageCache } from "@/context/PageCacheContext";
 import { Trophy, Medal, Star, TrendingUp, Crown, Users } from "lucide-react";
 
@@ -20,6 +21,7 @@ const levelNames = ["", "Newcomer", "Contributor", "Rising Star", "Expert Writer
 const levelColors = ["", "text-gray-500", "text-blue-500", "text-purple-500", "text-amber-500", "text-red-500"];
 
 const Leaderboard = () => {
+  const navigate = useNavigate();
   const [leaders, setLeaders] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("all");
@@ -110,7 +112,10 @@ const Leaderboard = () => {
               <div className="w-8 flex justify-center">{getRankIcon(writer.rank)}</div>
 
               {/* Avatar */}
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+              <div
+                className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 hover:ring-2 hover:ring-violet-500 hover:shadow-lg hover:shadow-violet-500/20"
+                onClick={() => navigate(`/author/${writer.id}`)}
+              >
                 {writer.profilePicture ? (
                   <img src={writer.profilePicture} alt={writer.name} className="w-full h-full object-cover" />
                 ) : (
@@ -121,7 +126,7 @@ const Leaderboard = () => {
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-900 dark:text-white truncate">{writer.name}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white truncate cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors duration-200" onClick={() => navigate(`/author/${writer.id}`)}>{writer.name}</span>
                   {writer.isVerified && <span className="text-blue-500 text-sm">✓</span>}
                   <span className={`text-xs font-medium ${levelColors[writer.writerLevel] || "text-gray-400"}`}>
                     {levelNames[writer.writerLevel] || "Newcomer"}

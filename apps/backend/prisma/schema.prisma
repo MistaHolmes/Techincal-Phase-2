@@ -2,9 +2,13 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// The connection_limit and pool_timeout are appended to the URL at runtime
+// by Prisma's connection pool. To fix P2024 timeout errors with Neon pooler,
+// keep connection_limit low (since Neon pooler manages its own pool).
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -77,6 +81,8 @@ model Blog {
   @@index([seriesId])
   @@index([authorId])
   @@index([scheduledAt])
+  @@index([published, updatedAt])
+  @@index([published, views])
 }
 
 model Tag {
