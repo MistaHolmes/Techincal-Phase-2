@@ -1,5 +1,5 @@
 import { useState as useLocalState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Ship, Plus, Sun, Moon, Search } from "lucide-react";
 import { Notifications } from "../Notifications";
 import { ProfileButton } from "../ui/profilebutton";
@@ -17,6 +17,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   showSearch = true
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [localSearch, setLocalSearch] = useLocalState(searchTerm || "");
 
@@ -37,7 +38,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       {/* Left: Brand */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate("/blogs")}
+          onClick={() => {
+            // if already on explore, go to public landing; otherwise go to explore
+            if (location.pathname.startsWith("/explore")) navigate("/landing");
+            else navigate("/explore");
+          }}
           className="flex items-center gap-2 group transition-all"
         >
           <div className="bg-black dark:bg-white p-1.5 rounded-lg group-hover:scale-105 transition-transform">

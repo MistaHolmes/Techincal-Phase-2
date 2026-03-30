@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Compass } from "lucide-react";
 import { usePageCache } from "@/context/PageCacheContext";
+import { LikeContext } from "@/context/LikeContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -40,6 +41,7 @@ const Explore = () => {
   const [activeTab, setActiveTab] = useState<'trending' | 'foryou'>('trending');
   const { getToken, isSignedIn } = useAuth();
   const cache = usePageCache();
+  const likeCtx = useContext(LikeContext);
 
   useEffect(() => {
     const cacheKey = `explore:${isSignedIn}`;
@@ -101,6 +103,35 @@ const Explore = () => {
     };
     fetchAll();
   }, [isSignedIn]);
+
+  // Subscribe to like updates for trending blogs so we can keep the list sorted
+  useEffect(() => {
+    if (!likeCtx) return;
+    if (!trending || trending.length === 0) return;
+
+    const unsubscribers: Array<() => void> = [];
+
+    trending.forEach((b) => {
+      // Kick off fetch for fresh like counts (won't clobber optimistic toggles)
+      likeCtx.fetchLikeState(b.id).catch(() => {});
+
+      // Subscribe to updates for this blog
+      const unsub = likeCtx.subscribe(b.id, () => {
+        const s = likeCtx.getLikeState(b.id);
+        if (!s) return;
+        setTrending((prev) => {
+          const found = prev.find((p) => p.id === b.id);
+          if (!found) return prev;
+          const updated = prev.map((p) => (p.id === b.id ? { ...p, likes: s.likes } : p));
+          // Keep highest likes first
+          return [...updated].sort((x, y) => (y.likes ?? 0) - (x.likes ?? 0));
+        });
+      });
+      unsubscribers.push(unsub);
+    });
+
+    return () => unsubscribers.forEach((u) => u());
+  }, [trending, likeCtx]);
 
   const featuredBlog = featured[0] || trending[0];
 

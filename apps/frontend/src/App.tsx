@@ -38,7 +38,7 @@ const PageLoader = () => (
   </div>
 );
 
-import { AppShell } from "./components/layout/AppShell";
+// AppShell import removed (unused)
 import { BlogCacheProvider } from "./context/BlogCacheContext";
 import { PageCacheProvider } from "./context/PageCacheContext";
 import { LikeProvider } from "./context/LikeContext";
@@ -54,7 +54,8 @@ const App: React.FC = () => {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<HomeRedirector />} />
-          <Route path="/landing" element={<RequireAuth><AppShell hideSidebar hideRightPanel><LandingPage /></AppShell></RequireAuth>} />
+          {/* Public landing (allow visiting even when signed in via header click) */}
+          <Route path="/landing" element={<LandingPage />} />
 
           {/* Revamped pages with NewAppShell */}
           {/* Legacy route: redirect to revamped explore page */}

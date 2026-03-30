@@ -49,7 +49,10 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
         {/* Left: Brand + Nav */}
         <div className="flex items-center gap-12">
           <button
-            onClick={() => navigate("/blogs")}
+            onClick={() => {
+              if (location.pathname.startsWith("/explore")) navigate("/landing");
+              else navigate("/explore");
+            }}
             className="text-2xl font-bold tracking-tighter text-black dark:text-white font-headline"
           >
             DraftDock.app
