@@ -47,6 +47,8 @@ model User {
   tipsReceived       Tip[]               @relation("TipReceiver")
   tipsSent           Tip[]               @relation("Tipper")
   achievements       UserAchievement[]
+  collabSessions     CollabSession[]
+  collabInviteTokens CollabInviteToken[]
 }
 
 model Blog {
@@ -68,6 +70,7 @@ model Blog {
   seriesOrder        Int?
   summary            String?
   views              Int              @default(0)
+  ydocState          Bytes?
   author             User             @relation(fields: [authorId], references: [id])
   series             Series?          @relation(fields: [seriesId], references: [id])
   versions           BlogVersion[]
@@ -77,6 +80,8 @@ model Blog {
   highlights         Highlight[]
   readingHistory     ReadingHistory[]
   tags               Tag[]            @relation("BlogToTag")
+  collabSessions     CollabSession[]
+  collabInviteTokens CollabInviteToken[]
 
   @@index([seriesId])
   @@index([authorId])
@@ -355,4 +360,42 @@ enum InviteStatus {
   PENDING
   ACCEPTED
   DECLINED
+}
+
+// ── Collaboration Session Tracking ─────────────────────────────────────────────
+
+model CollabSession {
+  id        String    @id @default(cuid())
+  blogId    String
+  userId    String
+  joinedAt  DateTime  @default(now())
+  leftAt    DateTime?
+  blog      Blog      @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([blogId])
+  @@index([userId])
+}
+
+model CollabInviteToken {
+  id        String             @id @default(cuid())
+  token     String             @unique
+  blogId    String
+  creatorId String
+  status    CollabTokenStatus  @default(ACTIVE)
+  expiresAt DateTime
+  maxUses   Int                @default(5)
+  uses      Int                @default(0)
+  createdAt DateTime           @default(now())
+  blog      Blog               @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  creator   User               @relation(fields: [creatorId], references: [id])
+
+  @@index([token])
+  @@index([blogId])
+}
+
+enum CollabTokenStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
 }

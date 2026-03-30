@@ -28,6 +28,9 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Messages = lazy(() => import("./pages/Messages"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUserDetails = lazy(() => import("./pages/admin/UserDetails"));
+const CollaboratePage = lazy(() => import("./pages/CollaboratePage"));
+const CollaborativeBlogForm = lazy(() => import("./pages/CollaborativeBlogForm").then(m => ({ default: m.CollaborativeBlogForm })));
+const CollabJoinPage = lazy(() => import("./pages/CollaborativeBlogForm").then(m => ({ default: m.CollabJoinPage })));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -77,6 +80,11 @@ const App: React.FC = () => {
           {/* Workflow Routes */}
           <Route path="/create-blog" element={<RequireAuth><BlogForm /></RequireAuth>} />
           <Route path="/edit-blog/:blogId" element={<RequireAuth><BlogForm /></RequireAuth>} />
+
+          {/* Collaboration Routes */}
+          <Route path="/collaborate" element={<RequireAuth><CollaboratePage /></RequireAuth>} />
+          <Route path="/collab/:blogId" element={<RequireAuth><CollaborativeBlogForm /></RequireAuth>} />
+          <Route path="/collab/join/:token" element={<CollabJoinPage />} />
 
           {/* Public Views */}
           <Route path="/blog/:blogId" element={<BlogView />} />

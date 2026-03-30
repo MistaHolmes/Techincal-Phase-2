@@ -10,6 +10,7 @@ dotenv.config();
 // Shared modules (initialize redis connection on import)
 import redisClient from './lib/redis';
 import { initWebSocket } from './lib/websocket';
+import { initCollabServer } from './lib/collabServer';
 import { initScheduler } from './lib/scheduler';
 import { globalLimiter } from './middleware/rateLimiter';
 
@@ -49,6 +50,7 @@ import discoveryRoutes from './routes/discovery';
 import achievementsRouter from './routes/achievements';
 import highlightRoutes from './routes/highlights';
 import coauthorRoutes from './routes/coauthors';
+import collabRoutes from './routes/collab';
 import likeRoutes from './routes/likes';
 import adminRoutes from './routes/admin';
 
@@ -61,6 +63,7 @@ import supritRouter from './routes/suprit';
 const app = express();
 const port = parseInt(process.env.PORT || '3000', 10);
 const wsPort = parseInt(process.env.WS_PORT || '3001', 10);
+const collabPort = parseInt(process.env.COLLAB_PORT || '3002', 10);
 const server = http.createServer(app);
 
 // ── Middleware ────────────────────────────────────────────────────────────────
@@ -71,6 +74,7 @@ app.use(globalLimiter);
 
 // ── WebSocket on separate port ───────────────────────────────────────────────
 initWebSocket(wsPort);
+initCollabServer(collabPort);
 initScheduler(60000); // Check once per minute
 
 // ── Mount Routes ─────────────────────────────────────────────────────────────
@@ -99,6 +103,7 @@ app.use('/api/discovery', discoveryRoutes);
 app.use('/api/achievements', achievementsRouter);
 app.use('/api/highlights', highlightRoutes);
 app.use('/api/coauthors', coauthorRoutes);
+app.use('/api/collab', collabRoutes);
 app.use('/api/likes', likeRoutes);
 app.use('/api/admin', adminRoutes);
 

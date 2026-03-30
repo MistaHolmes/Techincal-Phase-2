@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
-import { Search, Sun, Moon, Plus, Menu, X } from "lucide-react";
+import { Search, Sun, Moon, Plus, Menu, X, Users, Compass, User } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { Notifications } from "../Notifications";
 
@@ -37,7 +37,7 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
 
   const navItems = [
     { label: "Explore", href: "/explore" },
-    { label: "Drafts", href: "/drafts" },
+    { label: "Collaborate", href: "/collaborate" },
     { label: "My Profile", href: "/profile" },
   ];
 
@@ -64,13 +64,16 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
               <button
                 key={item.href}
                 onClick={() => navigate(item.href)}
-                className={`font-medium font-headline tracking-tight transition-colors ${
+                className={`font-medium font-headline tracking-tight transition-colors flex items-center gap-1.5 ${
                   isActive(item.href)
                     ? "text-black dark:text-white font-bold border-b-2 border-black dark:border-white pb-1"
                     : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"
                 }`}
               >
-                {item.label}
+                {item.label === "Explore" && <Compass size={15} />}
+                {item.label === "Collaborate" && <Users size={15} />}
+                {item.label === "My Profile" && <User size={15} />}
+                <span>{item.label}</span>
               </button>
             ))}
           </div>
@@ -161,7 +164,12 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
                   : "text-zinc-500 dark:text-zinc-400"
               }`}
             >
-              {item.label}
+              <div className="flex items-center gap-2">
+                {item.label === "Explore" && <Compass size={16} />}
+                {item.label === "Collaborate" && <Users size={16} />}
+                {item.label === "My Profile" && <User size={16} />}
+                <span>{item.label}</span>
+              </div>
             </button>
           ))}
           {showSearch && (

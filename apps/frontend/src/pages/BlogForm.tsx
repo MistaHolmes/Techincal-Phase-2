@@ -31,6 +31,7 @@ export function BlogForm() {
   const [autoSaved, setAutoSaved] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [startLoading, setStartLoading] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
   const AUTO_SAVE_KEY = "draftdock_autosave";
@@ -95,6 +96,49 @@ export function BlogForm() {
       setFormData({ ...formData, tags: [...formData.tags, t] });
     }
     setNewTag("");
+  };
+
+  // Start collaboration session. If creating a new blog, create it first then start.
+  const startCollaboration = async () => {
+    setStartLoading(true);
+    setErrors({});
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Authentication required');
+
+      let id = blogId;
+
+      if (!isEditMode) {
+        // create a new blog as unpublished draft first
+        const payload = { ...formData, published: false };
+        const res = await axios.post(`${API_URL}/api/blogs`, payload, {
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        });
+        id = res.data.blog.id;
+        // attach tags
+        await axios.put(`${API_URL}/api/blogs/${id}/tags`, { tags: formData.tags }, {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        });
+      }
+
+      if (!id) throw new Error('Blog id not available');
+
+      // Call backend to start collab session
+      await axios.post(`${API_URL}/api/collab/${id}/start`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
+      });
+
+      // Navigate into the collaborative editor
+      navigate(`/collab/${id}`);
+    } catch (err) {
+      console.error('Failed to start collaboration:', err);
+      setErrors({ server: axios.isAxiosError(err) ? err.response?.data?.error || 'Failed to start collaboration' : 'Failed to start collaboration' });
+    } finally {
+      setStartLoading(false);
+    }
   };
 
   const removeTag = (tag: string) => {
@@ -327,12 +371,23 @@ export function BlogForm() {
                         Save Draft
                       </button>
                     )}
-                    <button
-                      onClick={(e) => handleSubmit(e, !!formData.scheduledAt)}
-                      className="px-4 py-1.5 bg-[#702ae1] text-white rounded-xl text-[11px] font-bold shadow-sm hover:bg-[#6411d5] transition-all active:scale-95 whitespace-nowrap"
-                    >
-                      {isEditMode ? "Update" : formData.scheduledAt ? "Schedule" : "Publish"}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => handleSubmit(e, !!formData.scheduledAt)}
+                        className="px-4 py-1.5 bg-[#702ae1] text-white rounded-xl text-[11px] font-bold shadow-sm hover:bg-[#6411d5] transition-all active:scale-95 whitespace-nowrap"
+                      >
+                        {isEditMode ? "Update" : formData.scheduledAt ? "Schedule" : "Publish"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={startCollaboration}
+                        disabled={startLoading || isSubmitting}
+                        className={`ml-2 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${startLoading || isSubmitting ? 'opacity-60' : 'bg-white text-[#702ae1] border border-[#702ae1] hover:bg-[#f8f6ff]'}`}
+                      >
+                        {startLoading ? 'Starting…' : 'Start Collaboration'}
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
