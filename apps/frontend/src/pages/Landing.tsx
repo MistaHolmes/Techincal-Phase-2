@@ -402,13 +402,13 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <div className="w-full aspect-square bg-surface-container relative p-8">
-              <div className="absolute inset-0 drafting-grid opacity-30"></div>
-              <div className="relative h-full w-full border border-primary/20 flex flex-col p-12 justify-center items-center">
-                <span className="material-symbols-outlined text-8xl text-primary mb-8" data-icon="token">token</span>
+            <div className="w-full aspect-square bg-gray-50 relative p-8">
+              <div className="absolute inset-0 drafting-grid opacity-10" />
+              <div className="relative h-full w-full border border-gray-300 bg-gray-50 flex flex-col p-12 justify-center items-center">
+                <span className="material-symbols-outlined text-8xl text-black mb-8" data-icon="token">token</span>
                 <div className="text-center">
-                  <p className="text-3xl font-black uppercase tracking-tighter mb-4">DraftDock Enterprise</p>
-                  <p className="text-sm text-on-surface-variant mb-8 max-w-xs mx-auto">Scalable infrastructure for global documentation teams and technical writers.</p>
+                  <p className="text-3xl font-black uppercase tracking-tighter mb-4 text-black">DraftDock Enterprise</p>
+                  <p className="text-sm text-gray-600 mb-8 max-w-xs mx-auto">Scalable infrastructure for global documentation teams and technical writers.</p>
                   <button
                     onClick={() => route('/contact')}
                     className="bg-black text-white px-8 py-4 font-bold uppercase text-xs tracking-widest hover:opacity-80 transition-opacity"
