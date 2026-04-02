@@ -84,7 +84,7 @@ const App: React.FC = () => {
           {/* Collaboration Routes */}
           <Route path="/collaborate" element={<RequireAuth><CollaboratePage /></RequireAuth>} />
           <Route path="/collab/:blogId" element={<RequireAuth><CollaborativeBlogForm /></RequireAuth>} />
-          <Route path="/collab/join/:token" element={<CollabJoinPage />} />
+          <Route path="/collab/join/:token" element={<RequireAuth><CollabJoinPage /></RequireAuth>} />
 
           {/* Public Views */}
           <Route path="/blog/:blogId" element={<BlogView />} />
