@@ -20,6 +20,14 @@ export const config = {
     instanceIps: (process.env.EC2_INSTANCE_IPS || '').split(',').map(s => s.trim()).filter(Boolean),
   },
 
+  // EC2 SSH for log retrieval + health checks
+  ec2Ssh: {
+    // Path to the private key. Can be absolute or relative to process.cwd().
+    // In the container the baked key is mounted at /ec2-keys/draftdock.pem
+    keyPath: process.env.EC2_SSH_KEY || '/ec2-keys/draftdock.pem',
+    user:    process.env.EC2_SSH_USER || 'ubuntu',
+  },
+
   // Postgres / NeonDB connection string (same as apps/backend/.env DATABASE_URL)
   neonDbUrl: (process.env.NEONDB_URL || process.env.DATABASE_URL || '').trim(),
 
@@ -31,6 +39,13 @@ export const config = {
     be: BE,
     fe: FE,
   },
+
+  // DraftDock backend domain names for DNS/TLS checks
+  domains: [
+    'draftdock-be.abhashbehera.online',
+    'ws-draftdock-be.abhashbehera.online',
+    'collab-draftdock-be.abhashbehera.online',
+  ],
 
   // Dashboard port — use 4001 so it doesn't conflict with root monitoring on 4000
   dashboardPort: parseInt(process.env.DASHBOARD_PORT || '4001'),

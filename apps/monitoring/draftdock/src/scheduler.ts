@@ -87,7 +87,7 @@ export async function runAllChecks(): Promise<CheckResult[]> {
     allResults.push(...ec2Results);
 
     const ec2Status = ec2Results.find(r => r.id === 'ec2-status' || r.id === 'ec2-status-0');
-    const publicIp = ec2Status?.details?.ip;
+    const publicIp = ec2Status?.details?.publicIp || ec2Status?.details?.ip;
     if (publicIp) {
       const logResults = await fetchEc2Logs(publicIp);
       allResults.push(...logResults);

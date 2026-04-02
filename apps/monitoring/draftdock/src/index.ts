@@ -14,6 +14,8 @@ async function main() {
   console.log(`   Alerts to:        ${config.alertTo || '(not set)'}`);
   console.log(`   Database:         ${config.neonDbUrl ? 'configured' : '(not set)'}`);
   console.log(`   EC2 IPs:          ${config.ec2.instanceIps.join(', ') || '(not set)'}`);
+  console.log(`   EC2 SSH key:      ${config.ec2Ssh.keyPath}`);
+  console.log(`   EC2 SSH user:     ${config.ec2Ssh.user}`);
 
   initHistory();
 

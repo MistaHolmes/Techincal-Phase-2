@@ -1,54 +1,65 @@
-import net from 'net';
+import * as fs from 'fs';
+import * as path from 'path';
+import { Client } from 'ssh2';
 import { config } from '../config';
 import type { CheckResult } from '../types';
 
-const DEFAULT_TIMEOUT = 3000;
-
+/**
+ * EC2 checks via pure-JS SSH (ssh2) — no exec() / shell spawn needed.
+ * Instance IPs come from EC2_INSTANCE_IPS in .env.
+ */
 export async function runEc2Checks(): Promise<CheckResult[]> {
-  const ips = config.ec2.instanceIps || [];
+  const results: CheckResult[] = [];
+  const ips = config.ec2.instanceIps;
   const now = new Date().toISOString();
+
   if (ips.length === 0) {
-    return [{ id: 'ec2-status', name: 'EC2 Instance — not configured', group: 'ec2', status: 'UNKNOWN', responseTimeMs: 0, message: 'No EC2_INSTANCE_IPS provided', timestamp: now, severity: 'WARNING' }];
+    results.push({ id: 'ec2-status', name: 'EC2 Instance Status', group: 'ec2', status: 'WARNING', responseTimeMs: 0, message: 'EC2_INSTANCE_IPS not set in .env — skipping EC2 checks', timestamp: now, severity: 'WARNING' });
+    results.push({ id: 'ec2-checks', name: 'EC2 System/Instance Checks', group: 'ec2', status: 'UNKNOWN', responseTimeMs: 0, message: 'No IPs configured', timestamp: now, severity: 'WARNING' });
+    results.push({ id: 'ec2-ssh', name: 'EC2 SSH Reachability', group: 'ec2', status: 'UNKNOWN', responseTimeMs: 0, message: 'No IPs configured', timestamp: now, severity: 'WARNING' });
+    return results;
   }
 
-  const checks: CheckResult[] = [];
-  for (const [i, ip] of ips.entries()) {
-    const id = i === 0 ? 'ec2-status' : `ec2-status-${i}`;
-    try {
-      const elapsed = await tcpConnectMs(ip, 22, DEFAULT_TIMEOUT);
-      checks.push({ id, name: `EC2 SSH ${ip}`, group: 'ec2', status: 'UP', responseTimeMs: elapsed, message: 'SSH port open', timestamp: now, severity: 'CRITICAL', details: { ip } });
-    } catch (err: any) {
-      checks.push({ id, name: `EC2 SSH ${ip}`, group: 'ec2', status: 'DOWN', responseTimeMs: 0, message: err.message || 'Unreachable', timestamp: now, severity: 'CRITICAL', details: { ip } });
-    }
-  }
+  const primaryIp = ips[0];
+  const sshResult = await sshPing(primaryIp);
+  const status = sshResult.ok ? 'UP' : 'DOWN';
 
-  return checks;
+  results.push({ id: 'ec2-status', name: 'EC2 Instance Status', group: 'ec2', status, responseTimeMs: sshResult.elapsed, message: sshResult.ok ? `Instance reachable via SSH at ${primaryIp}` : `Instance unreachable: ${sshResult.error}`, timestamp: new Date().toISOString(), severity: 'CRITICAL', details: { publicIp: primaryIp, allIps: ips } });
+  results.push({ id: 'ec2-checks', name: 'EC2 System/Instance Checks', group: 'ec2', status, responseTimeMs: sshResult.elapsed, message: sshResult.ok ? 'SSH handshake OK — instance healthy' : `SSH failed: ${sshResult.error}`, timestamp: new Date().toISOString(), severity: 'CRITICAL', details: { publicIp: primaryIp } });
+  results.push({ id: 'ec2-ssh', name: 'EC2 SSH Reachability', group: 'ec2', status, responseTimeMs: sshResult.elapsed, message: sshResult.ok ? `SSH OK: ${primaryIp}` : `SSH failed: ${sshResult.error}`, timestamp: new Date().toISOString(), severity: 'CRITICAL', details: { publicIp: primaryIp } });
+
+  return results;
 }
 
-function tcpConnectMs(host: string, port: number, timeoutMs = 3000): Promise<number> {
-  return new Promise<number>((resolve, reject) => {
-    const start = Date.now();
-    const s = new net.Socket();
-    let settled = false;
-    s.setTimeout(timeoutMs);
-    s.once('connect', () => {
-      const elapsed = Date.now() - start;
-      settled = true;
-      s.destroy();
-      resolve(elapsed);
+function resolveKeyPath(): string {
+  const raw = config.ec2Ssh.keyPath;
+  return raw.startsWith('/') ? raw : path.resolve(process.cwd(), raw);
+}
+
+function sshPing(host: string): Promise<{ ok: boolean; elapsed: number; error?: string }> {
+  const start = Date.now();
+  return new Promise((resolve) => {
+    let keyBuf: Buffer;
+    try { keyBuf = fs.readFileSync(resolveKeyPath()); }
+    catch (e: any) { return resolve({ ok: false, elapsed: 0, error: `Cannot read key: ${e.message}` }); }
+
+    const conn = new Client();
+    const timer = setTimeout(() => { conn.end(); resolve({ ok: false, elapsed: Date.now() - start, error: 'Connection timeout' }); }, 12000);
+
+    conn.on('ready', () => {
+      clearTimeout(timer);
+      conn.exec('echo ok', (err, stream) => {
+        conn.end();
+        resolve({ ok: !err, elapsed: Date.now() - start, error: err?.message });
+        stream?.resume();
+      });
     });
-    s.once('timeout', () => {
-      if (settled) return;
-      settled = true;
-      s.destroy();
-      reject(new Error('Timeout'));
+
+    conn.on('error', (err) => {
+      clearTimeout(timer);
+      resolve({ ok: false, elapsed: Date.now() - start, error: err.message });
     });
-    s.once('error', (err) => {
-      if (settled) return;
-      settled = true;
-      s.destroy();
-      reject(err);
-    });
-    s.connect(port, host);
+
+    conn.connect({ host, port: 22, username: config.ec2Ssh.user, privateKey: keyBuf, readyTimeout: 10000 });
   });
 }

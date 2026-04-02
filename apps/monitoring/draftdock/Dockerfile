@@ -1,22 +1,19 @@
-FROM oven/bun:1
+FROM oven/bun:latest
+
 WORKDIR /app
-COPY package.json ./
 
-# Install OpenSSH client for EC2 checks
-RUN apt-get update && apt-get install -y openssh-client && rm -rf /var/lib/apt/lists/*
+# Install production dependencies first (uses package.json / bun.lockb if present)
+COPY package.json bun.lockb* ./
+RUN bun install --production
 
-RUN bun install
-
+# Copy app sources
 COPY . .
 
-EXPOSE 4000
+# Ensure folder for mounted SSH key exists
+RUN mkdir -p /ec2-keys
 
-## Bake the EC2 SSH key into the image at /ec2-keys/
-# WARNING: embedding private keys into images is sensitive — ensure registry access is restricted.
-COPY .key/ec2-iit-pair /ec2-keys/ec2-iit-pair
-RUN chmod 600 /ec2-keys/ec2-iit-pair && chown root:root /ec2-keys/ec2-iit-pair || true
+ENV NODE_ENV=production
+EXPOSE 4001
 
-# Default env inside image points to baked key path; docker-compose can still override.
-ENV EC2_SSH_KEY=/ec2-keys/ec2-iit-pair
-
-CMD ["bun", "run", "start"]
+# Run the monitoring service (Bun can run TypeScript files directly)
+CMD ["bun", "src/index.ts"]

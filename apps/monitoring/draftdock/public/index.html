@@ -16,6 +16,7 @@
   <div class="app">
     <!-- Header -->
     <header class="header">
+
       <div class="header-left">
         <h1 style="display:flex;align-items:center;gap:10px;"><i data-lucide="shield-check"></i> DraftDock Monitor</h1>
         <span class="badge" id="lastRun">—</span>
@@ -37,12 +38,14 @@
       </div>
     </header>
 
+    <!-- Global Loading Banner -->
     <div id="globalLoader"
       style="display:none;align-items:center;justify-content:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:24px;color:var(--text);font-weight:600;font-size:0.9rem;">
       <i data-lucide="loader-2" class="loading" style="width:16px;height:16px;color:var(--accent);"></i> Health Check
       Cycle in progress...
     </div>
 
+    <!-- Email Alert Status Banner -->
     <div id="emailStatusBanner" style="display:none;align-items:center;gap:10px;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:0.85rem;font-weight:600;border:1px solid;"></div>
 
     <section class="summary-cards" id="summaryCards">
@@ -67,6 +70,7 @@
       </div>
     </section>
 
+    <!-- Filters -->
     <section class="filters">
       <select id="filterGroup" onchange="renderChecks()">
         <option value="all">All Groups</option>
@@ -88,6 +92,7 @@
       </select>
     </section>
 
+    <!-- Tabs -->
     <nav class="tabs">
       <button class="tab active" data-tab="checks" onclick="switchTab('checks')">Checks</button>
       <button class="tab" data-tab="chart" onclick="switchTab('chart')">Response Times</button>
@@ -96,6 +101,7 @@
       <button class="tab" data-tab="logs" onclick="switchTab('logs')">EC2 Logs</button>
     </nav>
 
+    <!-- Tab Content -->
     <main class="content">
       <div id="tab-checks" class="tab-panel active">
         <div class="checks-grid" id="checksGrid"></div>
@@ -138,6 +144,7 @@
     </main>
   </div>
 
+  <!-- Check Detail Modal -->
   <div id="checkDetailModal"
     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;">
     <div
@@ -148,6 +155,7 @@
     </div>
   </div>
 
+  <!-- Aggregated Logs Modal -->
   <div id="aggregatedLogModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;">
     <div style="background:var(--surface,#112240);border:1px solid var(--border,#1e3a5f);border-radius:12px;width:100%;max-width:800px;height:85vh;display:flex;flex-direction:column;padding:24px;position:relative;">
       <button onclick="closeAggregatedLogs()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:var(--text-dim,#8892b0);font-size:1.4rem;cursor:pointer;line-height:1;">✕</button>

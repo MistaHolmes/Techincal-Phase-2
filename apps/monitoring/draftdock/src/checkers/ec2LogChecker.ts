@@ -1,43 +1,74 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { Client } from 'ssh2';
+import { config } from '../config';
+import type { CheckResult } from '../types';
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
+const EC2_SERVICES = [
+  {
+    name: 'draftdock-be',
+    logCmd: 'docker logs draftdock-be --tail 100 2>&1 || echo "Container draftdock-be not found"',
+  },
+  {
+    name: 'nginx',
+    logCmd: 'sudo journalctl -u nginx.service --no-pager -n 50 2>/dev/null || sudo tail -n 50 /var/log/nginx/error.log 2>/dev/null || echo "No nginx logs found"',
+  },
+  {
+    name: 'system',
+    logCmd: 'top -b -n 1 | head -n 20 && echo "---" && df -h && echo "---" && free -h',
+  },
+];
 
-/**
- * Return cached/dummy EC2 logs for the dashboard. This scaffold writes
- * simple placeholder logs if none exist so the UI can display something.
- */
+let cachedLogs: Record<string, { logs: string; timestamp: string; error?: string }> = {};
+
 export function getCachedLogs() {
-  try {
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  } catch {}
-
-  // Single dummy log file per service — in real deployments, this would fetch over SSH.
-  const dummy = {
-    'ec2-1': {
-      timestamp: new Date().toISOString(),
-      logs: '--- DUMMY EC2 LOGS FOR DRAFTDOCK ---\nSystem boot OK.\nService: draftdock-app running.\nNo errors found.\n',
-    },
-  };
-
-  // Persist a cache file so subsequent calls return something.
-  try {
-    const file = path.join(DATA_DIR, 'ec2-logs.json');
-    if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify(dummy, null, 2), 'utf8');
-    const raw = fs.readFileSync(file, 'utf8');
-    return JSON.parse(raw);
-  } catch {
-    return dummy;
-  }
+  return cachedLogs;
 }
 
-/**
- * Placeholder for a function that would fetch logs from a real EC2 host.
- * For now, return an array of single-entry results mirroring the root monitor API.
- */
-export async function fetchEc2Logs(_publicIp: string) {
-  const now = new Date().toISOString();
-  return [
-    { id: 'ec2-journal', name: 'EC2 Journal (dummy)', group: 'ec2', status: 'UP', responseTimeMs: 10, message: 'Dummy logs fetched', timestamp: now, severity: 'NOTICE', details: { note: 'local dummy' } }
-  ];
+export async function fetchEc2Logs(publicIp: string): Promise<CheckResult[]> {
+  const results: CheckResult[] = [];
+
+  for (const svc of EC2_SERVICES) {
+    const start = Date.now();
+    try {
+      const logs = await sshExec(publicIp, svc.logCmd);
+      cachedLogs[svc.name] = { logs: logs.substring(0, 10000), timestamp: new Date().toISOString() };
+      results.push({ id: `ec2-logs-${svc.name}`, name: `EC2 Logs: ${svc.name}`, group: 'ec2', status: 'UP', responseTimeMs: Date.now() - start, message: `Retrieved ${logs.length} chars of logs`, timestamp: new Date().toISOString(), severity: 'NOTICE', details: { preview: logs.substring(0, 200) } });
+    } catch (err: any) {
+      cachedLogs[svc.name] = { logs: '', timestamp: new Date().toISOString(), error: err.message };
+      results.push({ id: `ec2-logs-${svc.name}`, name: `EC2 Logs: ${svc.name}`, group: 'ec2', status: 'WARNING', responseTimeMs: Date.now() - start, message: `Failed to fetch logs: ${err.message}`, timestamp: new Date().toISOString(), severity: 'NOTICE' });
+    }
+  }
+
+  return results;
+}
+
+function resolveKeyPath(): string {
+  const raw = config.ec2Ssh.keyPath;
+  return raw.startsWith('/') ? raw : path.resolve(process.cwd(), raw);
+}
+
+function sshExec(host: string, command: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let keyBuf: Buffer;
+    try { keyBuf = fs.readFileSync(resolveKeyPath()); }
+    catch (e: any) { return reject(new Error(`Cannot read SSH key: ${e.message}`)); }
+
+    const conn = new Client();
+    let output = '';
+    const timer = setTimeout(() => { conn.end(); reject(new Error('SSH exec timeout')); }, 30000);
+
+    conn.on('ready', () => {
+      conn.exec(command, (err, stream) => {
+        if (err) { clearTimeout(timer); conn.end(); reject(err); return; }
+        stream.on('data', (d: Buffer) => { output += d.toString(); });
+        stream.stderr.on('data', (d: Buffer) => { output += d.toString(); });
+        stream.on('close', () => { clearTimeout(timer); conn.end(); resolve(output); });
+      });
+    });
+
+    conn.on('error', (err) => { clearTimeout(timer); reject(err); });
+
+    conn.connect({ host, port: 22, username: config.ec2Ssh.user, privateKey: keyBuf, readyTimeout: 10000 });
+  });
 }
