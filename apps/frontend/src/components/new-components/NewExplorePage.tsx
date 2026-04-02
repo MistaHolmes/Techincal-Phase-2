@@ -32,7 +32,7 @@ const NewExplorePage = () => {
   const [trending, setTrending] = useState<Blog[]>([]);
   const [featured, setFeatured] = useState<Blog[]>([]);
   const [recent, setRecent] = useState<Blog[]>([]);
-  const [personalized, setPersonalized] = useState<Blog[]>([]);
+  const [, setPersonalized] = useState<Blog[]>([]);
   const [, setRecommendedAuthors] = useState<any[]>([]);
   const [tags, setTags] = useState<TagItem[]>([]);
   const [loading, setLoading] = useState(true);

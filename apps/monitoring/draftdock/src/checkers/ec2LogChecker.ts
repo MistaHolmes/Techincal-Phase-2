@@ -7,7 +7,7 @@ import type { CheckResult } from '../types';
 const EC2_SERVICES = [
   {
     name: 'draftdock-be',
-    logCmd: 'docker logs draftdock-be --tail 100 2>&1 || echo "Container draftdock-be not found"',
+    logCmd: 'sudo docker logs draftdock-be --tail 100 2>&1 || docker logs draftdock-be --tail 100 2>&1 || echo "Container draftdock-be not found or permission denied"',
   },
   {
     name: 'nginx',
