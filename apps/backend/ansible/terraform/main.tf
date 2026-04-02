@@ -68,6 +68,15 @@ resource "aws_security_group" "draftdock" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Direct access to Collab WebSocket port (Hocuspocus)
+  ingress {
+    description = "Collab WebSocket direct"
+    from_port   = 3002
+    to_port     = 3002
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

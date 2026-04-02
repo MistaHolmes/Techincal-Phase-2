@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { Helmet } from "react-helmet-async";
@@ -69,7 +69,7 @@ const NewExplorePage = () => {
         ]);
         setTrending(Array.isArray(tData) ? tData : []);
         setFeatured(Array.isArray(fData) ? fData : []);
-        setRecent(Array.isArray(rData) ? rData.slice(0, 9) : []);
+        setRecent(Array.isArray(rData) ? rData : []);
         setTags(Array.isArray(tagsData) ? tagsData : []);
 
         let pData: any[] = [];
@@ -97,7 +97,7 @@ const NewExplorePage = () => {
         cache.set(cacheKey, {
           trending: Array.isArray(tData) ? tData : [],
           featured: Array.isArray(fData) ? fData : [],
-          recent: Array.isArray(rData) ? rData.slice(0, 9) : [],
+          recent: Array.isArray(rData) ? rData : [],
           tags: Array.isArray(tagsData) ? tagsData : [],
           personalized: pData,
           recommendedAuthors: aData,
@@ -112,7 +112,12 @@ const NewExplorePage = () => {
   }, [isSignedIn]);
 
   const featuredBlog = featured[0] || trending[0];
-  const displayBlogs = activeTab === "foryou" ? personalized : recent;
+  // Trending = all blogs sorted by like count desc; For You = all blogs (newest first)
+  const trendingByLikes = useMemo(
+    () => [...recent].sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0)),
+    [recent]
+  );
+  const displayBlogs = activeTab === "foryou" ? recent : trendingByLikes;
 
   // Typewriter + rotating words component
   const RotatingWords = ({ words, className }: { words: string[]; className?: string }) => {
