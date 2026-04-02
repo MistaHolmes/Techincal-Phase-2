@@ -49,6 +49,7 @@ model User {
   achievements       UserAchievement[]
   collabSessions     CollabSession[]
   collabInviteTokens CollabInviteToken[]
+  blogLikes          BlogLike[]
 }
 
 model Blog {
@@ -82,6 +83,7 @@ model Blog {
   tags               Tag[]            @relation("BlogToTag")
   collabSessions     CollabSession[]
   collabInviteTokens CollabInviteToken[]
+  blogLikes          BlogLike[]
 
   @@index([seriesId])
   @@index([authorId])
@@ -398,4 +400,17 @@ enum CollabTokenStatus {
   ACTIVE
   EXPIRED
   REVOKED
+}
+
+model BlogLike {
+  id        String   @id @default(cuid())
+  blogId    String
+  userId    String
+  createdAt DateTime @default(now())
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([blogId, userId])
+  @@index([blogId])
+  @@index([userId])
 }

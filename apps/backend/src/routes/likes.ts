@@ -21,12 +21,24 @@ async function getLikeCount(blogId: string): Promise<number> {
   return count;
 }
 
-// Helper: check if user has liked a blog (stored in a Redis SET per blog)
+// Helper: check if user has liked a blog — Redis first, DB fallback (survives Redis flush on restart)
 async function hasUserLiked(blogId: string, userId: string): Promise<boolean> {
   try {
-    return !!(await redisClient.sIsMember(`blog:likedBy:${blogId}`, userId));
+    const inRedis = await redisClient.sIsMember(`blog:likedBy:${blogId}`, userId);
+    if (inRedis) return true;
   } catch {}
-  return false; // If Redis fails, assume not liked (safe default)
+  // Redis miss or server restart — check DB as source of truth
+  try {
+    const like = await prisma.blogLike.findUnique({
+      where: { blogId_userId: { blogId, userId } },
+    });
+    if (like) {
+      // Repopulate Redis for next time
+      try { await redisClient.sAdd(`blog:likedBy:${blogId}`, userId); } catch {}
+      return true;
+    }
+  } catch {}
+  return false;
 }
 
 // GET /api/likes/:blogId — get like count + whether current user liked
@@ -71,6 +83,9 @@ router.post('/:blogId', requireAuth(), writeLimiter, async (req, res: any) => {
         select: { likes: true },
       });
 
+      // Remove from DB (source of truth for like deduplication)
+      try { await prisma.blogLike.deleteMany({ where: { blogId, userId: user.id } }); } catch {}
+
       try {
         await redisClient.sRem(`blog:likedBy:${blogId}`, user.id);
         await redisClient.set(`blog:likes:${blogId}`, String(Math.max(0, updated.likes)), { EX: 600 });
@@ -84,6 +99,15 @@ router.post('/:blogId', requireAuth(), writeLimiter, async (req, res: any) => {
         data: { likes: { increment: 1 } },
         select: { likes: true },
       });
+
+      // Persist to DB — prevents duplicate likes after Redis flush/restart
+      try {
+        await prisma.blogLike.upsert({
+          where: { blogId_userId: { blogId, userId: user.id } },
+          create: { blogId, userId: user.id },
+          update: {},
+        });
+      } catch {}
 
       try {
         await redisClient.sAdd(`blog:likedBy:${blogId}`, user.id);

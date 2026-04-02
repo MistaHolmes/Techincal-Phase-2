@@ -1,0 +1,14 @@
+services:
+  monitoring:
+    image: mistaholmes/monitoring-swarajdesk:latest
+    container_name: monitoring_service
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - EC2_SSH_KEY=/ec2-keys/ec2-iit-pair
