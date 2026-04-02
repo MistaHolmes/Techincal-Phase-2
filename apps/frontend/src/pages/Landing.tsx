@@ -24,22 +24,25 @@ const LandingPage: React.FC = () => {
   // Always track mouse for the hue effect using requestAnimationFrame for smooth, GPU-accelerated updates
   useEffect(() => {
     let rafId: number | null = null;
-    let targetX = -9999;
-    let targetY = -9999;
+    let targetX = window.innerWidth / 2;
+    let targetY = window.innerHeight / 2;
+    let hasMoved = false;
 
     const tick = () => {
-      if (hueRef.current) {
-        const h = 250 + Math.round(((targetX || 0) / window.innerWidth) * 60);
+      if (hueRef.current && hasMoved) {
+        const h = 250 + Math.round((targetX / window.innerWidth) * 60);
         // Use transform (translate3d) so motion is GPU-accelerated and precise
         hueRef.current.style.transform = `translate3d(${targetX}px, ${targetY}px, 0) translate(-50%, -50%)`;
         hueRef.current.style.background = `radial-gradient(circle at 30% 30%, hsla(${h},80%,62%,0.14), rgba(0,0,0,0) 40%)`;
       }
 
-      // update parallax motion values used by the grid
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      mouseX.set(((targetX - centerX) / centerX) * 30);
-      mouseY.set(((targetY - centerY) / centerY) * 30);
+      // only drive the grid spring after the first real mouse event
+      if (hasMoved) {
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        mouseX.set(((targetX - centerX) / centerX) * 30);
+        mouseY.set(((targetY - centerY) / centerY) * 30);
+      }
 
       rafId = requestAnimationFrame(tick);
     };
@@ -47,6 +50,7 @@ const LandingPage: React.FC = () => {
     const onMove = (e: MouseEvent) => {
       targetX = e.clientX;
       targetY = e.clientY;
+      hasMoved = true;
     };
 
     window.addEventListener("mousemove", onMove);
