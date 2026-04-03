@@ -181,18 +181,22 @@ export function initCollabServer(port: number = 3002): HocuspocusServer {
           await prisma.blog.update({ where: { id: blogId }, data: updatePayload });
         }
 
-        // Create a blog version snapshot
-        const versionCount = await prisma.blogVersion.count({ where: { blogId } });
-        await prisma.blogVersion.create({
-          data: {
-            blogId,
-            title: (await prisma.blog.findUnique({ where: { id: blogId }, select: { title: true } }))?.title || 'Untitled',
-            content: plainContent,
-            version: versionCount + 1,
-          },
-        });
-
-        console.log(`[Collab] Persisted Y.Doc for ${blogId} (version ${versionCount + 1})`);
+        // Create a blog version snapshot (race-safe: use max instead of count)
+        const agg = await prisma.blogVersion.aggregate({ where: { blogId }, _max: { version: true } });
+        const nextVersion = (agg._max.version ?? 0) + 1;
+        const blogTitle = (await prisma.blog.findUnique({ where: { id: blogId }, select: { title: true } }))?.title || 'Untitled';
+        try {
+          await prisma.blogVersion.create({
+            data: { blogId, title: blogTitle, content: plainContent, version: nextVersion },
+          });
+          console.log(`[Collab] Persisted Y.Doc for ${blogId} (version ${nextVersion})`);
+        } catch (vErr: any) {
+          if (vErr?.code === 'P2002') {
+            console.warn(`[Collab] Version conflict for ${blogId} v${nextVersion}, skipping snapshot`);
+          } else {
+            throw vErr;
+          }
+        }
       } catch (err) {
         console.error(`[Collab] Failed to persist Y.Doc for ${blogId}:`, err);
       }

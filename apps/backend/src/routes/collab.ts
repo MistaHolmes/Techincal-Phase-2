@@ -191,21 +191,28 @@ router.post('/:blogId/save', requireAuth(), async (req, res: any) => {
       data: { content },
     });
 
-    // Create version snapshot
-    const versionCount = await prisma.blogVersion.count({ where: { blogId } });
-    await prisma.blogVersion.create({
-      data: {
-        blogId,
-        title: blog.title,
-        content,
-        version: versionCount + 1,
-      },
-    });
+    // Create version snapshot (race-safe: use max instead of count)
+    const agg = await prisma.blogVersion.aggregate({ where: { blogId }, _max: { version: true } });
+    const nextVersion = (agg._max.version ?? 0) + 1;
+    let savedVersion = nextVersion;
+    try {
+      await prisma.blogVersion.create({
+        data: { blogId, title: blog.title, content, version: nextVersion },
+      });
+    } catch (vErr: any) {
+      if (vErr?.code === 'P2002') {
+        // Concurrent save won the race — query the real latest version to return
+        const latest = await prisma.blogVersion.findFirst({ where: { blogId }, orderBy: { version: 'desc' }, select: { version: true } });
+        savedVersion = latest?.version ?? nextVersion;
+      } else {
+        throw vErr;
+      }
+    }
 
     await invalidateUserBlogsCache(user.id);
     await invalidatePublicBlogsCache();
 
-    return res.json({ savedAt: new Date().toISOString(), version: versionCount + 1 });
+    return res.json({ savedAt: new Date().toISOString(), version: savedVersion });
   } catch (err) {
     console.error('Failed to save collab:', err);
     return res.status(500).json({ error: 'Internal server error' });

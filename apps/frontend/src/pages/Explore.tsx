@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { Helmet } from "react-helmet-async";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Compass } from "lucide-react";
 import { usePageCache } from "@/context/PageCacheContext";
 import { LikeContext } from "@/context/LikeContext";
@@ -212,10 +212,14 @@ const Explore = () => {
           </div>
           <div className="flex overflow-x-auto no-scrollbar gap-4 scroll-smooth">
             {tags.map((tag, idx) => (
-              <div
+              <motion.div
                 key={tag.name}
                 onClick={() => navigate(`/tags/${tag.name}`)}
-                className="flex-none w-64 aspect-square bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl p-8 flex flex-col justify-between hover:bg-black dark:hover:bg-violet-600 group transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl hover:-translate-y-1"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.03 }}
+                whileHover={{ scale: 1.02, y: -4 }}
+                className="flex-none w-64 aspect-square bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl p-8 flex flex-col justify-between group cursor-pointer shadow-sm"
               >
                 <span className="material-symbols-outlined text-4xl group-hover:text-white text-stitch-on-surface" data-icon={idx % 4 === 0 ? "memory" : idx % 4 === 1 ? "palette" : idx % 4 === 2 ? "smart_toy" : "spa"}>
                   {idx % 4 === 0 ? "memory" : idx % 4 === 1 ? "palette" : idx % 4 === 2 ? "smart_toy" : "spa"}
@@ -224,9 +228,9 @@ const Explore = () => {
                   <span className="font-headline text-2xl font-medium group-hover:text-white text-stitch-on-surface block">{tag.name}</span>
                   <span className="font-label text-xs text-stitch-secondary group-hover:text-white/70">{tag.count} blog{tag.count !== 1 ? "s" : ""}</span>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+            </div>
         </section>
       )}
 
@@ -259,13 +263,26 @@ const Explore = () => {
                   <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
                 </div>
              ) : (
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-y-16 gap-x-10">
-                 {(activeTab === 'foryou' ? personalized : recent).map((blog) => (
-                  <article
-                    key={blog.id}
-                    className="flex flex-col group cursor-pointer"
-                    onClick={() => navigate(`/blog/${blog.id}`)}
-                  >
+               <AnimatePresence mode="wait">
+                 <motion.div
+                   key={activeTab}
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   exit={{ opacity: 0 }}
+                   transition={{ when: "beforeChildren" }}
+                   className="grid grid-cols-1 md:grid-cols-2 gap-y-16 gap-x-10"
+                 >
+                   {(activeTab === 'foryou' ? personalized : recent).map((blog, idx) => (
+                    <motion.article
+                      key={blog.id}
+                      className="flex flex-col group cursor-pointer"
+                      onClick={() => navigate(`/blog/${blog.id}`)}
+                      variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }}
+                      initial="hidden"
+                      animate="visible"
+                      transition={{ delay: idx * 0.02 }}
+                      whileHover={{ translateY: -6 }}
+                    >
                     <div className="aspect-[16/10] bg-gray-200 dark:bg-gray-800 mb-6 overflow-hidden rounded-2xl">
                       <img
                         alt={blog.title}
@@ -297,9 +314,10 @@ const Explore = () => {
                         Read Story <span className="material-symbols-outlined text-sm">arrow_forward</span>
                       </button>
                     </div>
-                  </article>
+                  </motion.article>
                  ))}
-               </div>
+                 </motion.div>
+               </AnimatePresence>
              )}
 
              {recent.length === 0 && !loading && (

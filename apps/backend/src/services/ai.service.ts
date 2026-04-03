@@ -42,7 +42,7 @@ class MockAIProvider implements AIProvider {
 
   async suggestTags(content: string): Promise<string[]> {
     const text = content.toLowerCase().replace(/[#*`>\[\]]/g, '');
-    
+
     const techKeywords: Record<string, string> = {
       'react': 'react', 'javascript': 'javascript', 'typescript': 'typescript',
       'python': 'python', 'node': 'nodejs', 'css': 'css', 'html': 'html',
@@ -196,9 +196,9 @@ class OpenAIProvider implements AIProvider {
   async suggestTitles(content: string): Promise<string[]> {
     try {
       const response = await this.client.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "You are a professional blog editor. Suggest 5 catchy, SEO-friendly titles for the following content. Return only a JSON array of strings." },
+          { role: "system", content: "You are a professional blog editor. Suggest 5 catchy, SEO-friendly titles for the following content. Return ONLY a JSON object: {\"titles\": [\"...\", ...]}" },
           { role: "user", content: content.slice(0, 4000) }
         ],
         response_format: { type: "json_object" }
@@ -214,9 +214,9 @@ class OpenAIProvider implements AIProvider {
   async suggestTags(content: string): Promise<string[]> {
     try {
       const response = await this.client.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "Suggest 5 relevant tech/lifestyle tags for the following content. Return only a JSON array of strings." },
+          { role: "system", content: "Suggest 5 relevant tech/lifestyle tags for the following content. Return ONLY a JSON object: {\"tags\": [\"...\", ...]}" },
           { role: "user", content: content.slice(0, 2000) }
         ],
         response_format: { type: "json_object" }
@@ -232,7 +232,7 @@ class OpenAIProvider implements AIProvider {
   async generateSummary(content: string): Promise<string> {
     try {
       const response = await this.client.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: "Write a concise 2-sentence summary (max 250 chars) of the following blog post." },
           { role: "user", content: content.slice(0, 3000) }
@@ -248,9 +248,9 @@ class OpenAIProvider implements AIProvider {
   async checkGrammar(text: string): Promise<GrammarSuggestion[]> {
     try {
       const response = await this.client.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "Identify grammar and spelling issues in the following text. Return a JSON array of objects with {original, suggestion, reason, offset, length}." },
+          { role: "system", content: "Identify grammar and spelling issues in the following text. Return ONLY a JSON object: {\"issues\": [{\"original\": ..., \"suggestion\": ..., \"reason\": ..., \"offset\": ..., \"length\": ...}]}" },
           { role: "user", content: text.slice(0, 2000) }
         ],
         response_format: { type: "json_object" }
@@ -278,12 +278,12 @@ export function getAIProvider(): AIProvider {
     const geminiKey = process.env.GEMINI_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
 
-    if (geminiKey && geminiKey.startsWith('AIzaSy') && geminiKey.length > 20) {
+    if (openaiKey && openaiKey.startsWith('sk-') && openaiKey.length > 20) {
+      console.log('AI: Initializing OpenAI Provider (gpt-4o-mini)');
+      provider = new OpenAIProvider(openaiKey);
+    } else if (geminiKey && geminiKey.startsWith('AIzaSy') && geminiKey.length > 20) {
       console.log('AI: Initializing Gemini Provider (will fallback to Mock on errors)');
       provider = new GeminiProvider(geminiKey);
-    } else if (openaiKey && openaiKey.startsWith('sk-') && openaiKey.length > 20) {
-      console.log('AI: Initializing OpenAI Provider');
-      provider = new OpenAIProvider(openaiKey);
     } else {
       console.log('AI: Using Mock Provider (no valid API key)');
       provider = new MockAIProvider();
