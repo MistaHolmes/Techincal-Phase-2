@@ -7,6 +7,7 @@ import RotatingWords from "@/components/RotatingWords";
 import { useNavigate } from "react-router-dom";
 import BackgroundGlow from "@/components/ui/BackgroundGlow";
 import { Footer } from "@/components/Footer";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const LandingPage: React.FC = () => {
   const mouseX = useMotionValue(0);
@@ -15,6 +16,7 @@ const LandingPage: React.FC = () => {
   const gridY = useSpring(mouseY, { stiffness: 80, damping: 15, mass: 0.7 });
 
   const [isGridActive, setIsGridActive] = useState(false);
+  const [isDark, setIsDark] = useState<boolean>(false);
   const hueRef = useRef<HTMLDivElement | null>(null);
   const { isLoaded } = useAuth();
   const route = useNavigate();
@@ -23,6 +25,15 @@ const LandingPage: React.FC = () => {
 
   // Always track mouse for the hue effect using requestAnimationFrame for smooth, GPU-accelerated updates
   useEffect(() => {
+    // initialize dark state from document class or localStorage
+    try {
+      const saved = localStorage.getItem("site-theme");
+      if (saved) setIsDark(saved === "dark");
+      else setIsDark(document.documentElement.classList.contains("dark"));
+    } catch (_) {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    }
+
     let rafId: number | null = null;
     let targetX = window.innerWidth / 2;
     let targetY = window.innerHeight / 2;
@@ -33,7 +44,12 @@ const LandingPage: React.FC = () => {
         const h = 250 + Math.round((targetX / window.innerWidth) * 60);
         // Use transform (translate3d) so motion is GPU-accelerated and precise
         hueRef.current.style.transform = `translate3d(${targetX}px, ${targetY}px, 0) translate(-50%, -50%)`;
-        hueRef.current.style.background = `radial-gradient(circle at 30% 30%, hsla(${h},80%,62%,0.14), rgba(0,0,0,0) 40%)`;
+        // adjust hue background based on theme
+        if (isDark) {
+          hueRef.current.style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.06), rgba(255,255,255,0) 40%)`;
+        } else {
+          hueRef.current.style.background = `radial-gradient(circle at 30% 30%, hsla(${h},80%,62%,0.14), rgba(0,0,0,0) 40%)`;
+        }
       }
 
       // only drive the grid spring after the first real mouse event
@@ -61,6 +77,17 @@ const LandingPage: React.FC = () => {
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, [mouseX, mouseY]);
+
+  // react to manual theme changes (toggle from ThemeToggle)
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === "site-theme") {
+        setIsDark(e.newValue === "dark");
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -111,7 +138,7 @@ const LandingPage: React.FC = () => {
           transition={{ duration: 1.2, ease: "easeOut" }}
           onAnimationComplete={() => setIsGridActive(true)}
         >
-          <motion.div
+            <motion.div
             animate={{ y: [0, -10, 0, 8, 0], x: [0, 7, 0, -3, 0] }}
             transition={{ duration: 12, ease: "easeInOut", repeat: Infinity }}
             className="absolute inset-0"
@@ -119,10 +146,9 @@ const LandingPage: React.FC = () => {
             <motion.div
               className="absolute inset-0"
               style={{
-                backgroundImage: `
-                  linear-gradient(to right, rgba(0, 0, 0, 0.12) 1.5px, transparent 1px),
-                  linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 1.5px, transparent 1px)
-                `,
+                backgroundImage: isDark
+                  ? `linear-gradient(to right, rgba(255,255,255,0.06) 1.5px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1.5px, transparent 1px)`
+                  : `linear-gradient(to right, rgba(0, 0, 0, 0.12) 1.5px, transparent 1px), linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 1.5px, transparent 1px)`,
                 backgroundSize: "clamp(20px, 4vw, 40px) clamp(20px, 4vw, 40px)",
                 x: isGridActive ? gridX : 0,
                 y: isGridActive ? gridY : 0,
@@ -139,6 +165,7 @@ const LandingPage: React.FC = () => {
         <div className="h-2 w-2 rounded-full bg-black"></div>
       </div>
       <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle className="mr-2" />
         <SignedOut>
           <SignInButton mode="modal">
             <button className="px-4 py-2 border border-black bg-black text-white rounded-md hover:bg-white hover:text-black transition">

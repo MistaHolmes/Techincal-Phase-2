@@ -28,6 +28,7 @@ interface TagItem {
 }
 
 import { AppShell } from "@/components/layout/AppShell";
+import FooterNewsletter from "@/components/FooterNewsletter";
 
 const Explore = () => {
   const navigate = useNavigate();
@@ -375,6 +376,8 @@ const Explore = () => {
         </div>
       </section>
 
+      {/* Newsletter CTA above site footer */}
+      <FooterNewsletter />
     </AppShell>
   );
 };

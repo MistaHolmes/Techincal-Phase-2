@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { Helmet } from "react-helmet-async";
@@ -414,8 +415,13 @@ const NewExplorePage = () => {
           ) : (
             <div className="flex flex-col gap-16">
               {displayBlogs.map((blog, idx) => (
-                <article
+                <motion.article
                   key={blog.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.45, ease: "easeOut", delay: idx * 0.05 }}
                   className="grid grid-cols-12 gap-8 items-center group cursor-pointer rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
                   onClick={() => navigate(`/blog/${blog.id}`)}
                 >
@@ -463,7 +469,7 @@ const NewExplorePage = () => {
                       <ExploreBookmarkButton blogId={blog.id} />
                     </div>
                   </div>
-                </article>
+                </motion.article>
               ))}
             </div>
           )}

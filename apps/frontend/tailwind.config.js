@@ -9,6 +9,9 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Unified accent color for site components
+        accent: '#0284c7',
+
         // DraftDock Material Design 3 tokens
         "primary": "#000000",
         "on-primary": "#e2e2e2",
