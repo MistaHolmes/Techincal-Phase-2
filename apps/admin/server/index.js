@@ -3,10 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
+require('./db'); // Intialize SQLite strictly for Admin Auth
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(cors({ origin: true, credentials: true }));
@@ -18,12 +19,18 @@ app.use(express.static(path.join(__dirname, '..')));
 // Export prisma for route files
 app.locals.prisma = prisma;
 
-// ── Mount API routes (no auth — admin panel is standalone) ───────────────────
-app.use('/api/admin/stats', require('./routes/stats'));
-app.use('/api/admin/content', require('./routes/content'));
-app.use('/api/admin/users', require('./routes/users'));
-app.use('/api/admin/analytics', require('./routes/analytics'));
-app.use('/api/admin/check', require('./routes/admin-check'));
+const { verifyToken } = require('./middleware/auth');
+
+// ── Mount API routes ─────────────────────────────────────────────────────────────
+// Auth route is public
+app.use('/api/admin/auth', require('./routes/auth'));
+
+// Protected admin routes
+app.use('/api/admin/stats', verifyToken, require('./routes/stats'));
+app.use('/api/admin/content', verifyToken, require('./routes/content'));
+app.use('/api/admin/users', verifyToken, require('./routes/users'));
+app.use('/api/admin/analytics', verifyToken, require('./routes/analytics'));
+app.use('/api/admin/check', verifyToken, require('./routes/admin-check'));
 
 // Redirect root to dashboard
 app.get('/', (req, res) => res.redirect('/dashboard.html'));

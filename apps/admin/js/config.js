@@ -1,7 +1,18 @@
 // ── Admin Panel Shared Configuration ─────────────────────────────────────────
-const API_BASE = 'http://localhost:4000/api/admin';
+const API_BASE = 'http://localhost:3000/api/admin';
 
-// ── Fetch Helper with Client-Side Caching (Session Storage) ─────────────────────
+// ── Auth Check on Load ───────────────────────────────────────────────────────
+function checkAuth() {
+  const token = localStorage.getItem('adminToken');
+  const isLoginPage = window.location.pathname.includes('login.html');
+  
+  if (!token && !isLoginPage) {
+    window.location.href = './login.html';
+  }
+}
+checkAuth();
+
+// ── Fetch Helper with Client-Side Caching (Session Storage) & Auth ─────────────────────
 async function fetchAdmin(path, options = {}) {
   const method = options.method || 'GET';
   const cacheKey = `admin_cache_${path}`;
@@ -30,15 +41,26 @@ async function fetchAdmin(path, options = {}) {
     console.log(`[Cache Cleared] due to ${method} request`);
   }
 
-  // 3. Perform network fetch
-  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  // 3. Perform network fetch with Token
+  const token = localStorage.getItem('adminToken');
+  const headers = { 
+    'Content-Type': 'application/json', 
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...options.headers 
+  };
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+
+  if (res.status === 401) {
+    localStorage.removeItem('adminToken');
+    window.location.href = './login.html';
+    throw new Error('Session expired');
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || `HTTP ${res.status}`);
   }
-  
+
   const fetchedData = await res.json();
 
   // 4. Save to cache
@@ -48,7 +70,7 @@ async function fetchAdmin(path, options = {}) {
         timestamp: Date.now(),
         data: fetchedData
       }));
-    } catch(e) {
+    } catch (e) {
       console.warn("Could not save to session storage:", e);
     }
   }
