@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsc -b && node dist/server.js",
-    "build": "tsc -b",
+    "build": "npx prisma generate --schema=prisma/schema.prisma && tsc -b",
     "seed:achievements": "npx ts-node --project tsconfig.json src/seed-achievements.ts",
     "seed:blogs": "npx ts-node --project tsconfig.json src/create-sample-blogs.ts",
     "seed": "npm run seed:achievements && npm run seed:blogs"
