@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
-require('./db'); // Intialize SQLite strictly for Admin Auth
+// SQLite removed — admin auth uses hardcoded credentials via JWT
 
 const app = express();
 const prisma = new PrismaClient();
