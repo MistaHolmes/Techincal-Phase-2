@@ -92,7 +92,7 @@ router.post('/grammar-check', writeLimiter, async (req, res: any) => {
     return res.status(500).json({ error: 'Failed to check grammar' });
   }
 });
- 
+
 // POST /api/ai/generate-image — generate cover image from prompt
 router.post('/generate-image', writeLimiter, async (req, res: any) => {
   try {
@@ -105,6 +105,29 @@ router.post('/generate-image', writeLimiter, async (req, res: any) => {
   } catch (err) {
     console.error('Error generating image:', err);
     return res.status(500).json({ error: 'Failed to generate image' });
+  }
+});
+
+// POST /api/ai/generate-content — generate full blog post body from a topic
+// Body: { topic: string, tone?: "professional"|"casual"|"educational"|"humorous", length?: "short"|"medium"|"long" }
+router.post('/generate-content', writeLimiter, async (req, res: any) => {
+  try {
+    const { topic, tone = 'professional', length = 'medium' } = req.body;
+    if (!topic?.trim()) return res.status(400).json({ error: 'topic is required' });
+
+    const validTones = ['professional', 'casual', 'educational', 'humorous', 'inspirational'];
+    const validLengths = ['short', 'medium', 'long'];
+    if (tone && !validTones.includes(tone))
+      return res.status(400).json({ error: `tone must be one of: ${validTones.join(', ')}` });
+    if (length && !validLengths.includes(length))
+      return res.status(400).json({ error: `length must be one of: ${validLengths.join(', ')}` });
+
+    const provider = getAIProvider();
+    const content = await provider.generateContent(topic, tone, length);
+    return res.json({ content });
+  } catch (err) {
+    console.error('Error generating content:', err);
+    return res.status(500).json({ error: 'Failed to generate content' });
   }
 });
 
