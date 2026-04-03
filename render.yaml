@@ -1,11 +1,11 @@
 services:
   - type: web
     name: draftdock-admin-backend
-    env: docker
+    runtime: node
     plan: free
     region: oregon
-    rootDir: apps/admin
-    dockerfilePath: ./Dockerfile
+    buildCommand: cd apps/admin/server && npm install && npx prisma generate
+    startCommand: node apps/admin/server/index.js
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -15,6 +15,8 @@ services:
         value: 10000
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: 20
       - key: ADMIN_JWT_SECRET
         generateValue: true # Render will generate a random secret
 
