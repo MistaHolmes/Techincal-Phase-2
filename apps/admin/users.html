@@ -86,52 +86,48 @@ h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
 <body class="bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container">
 <div class="flex min-h-screen">
 <!-- SideNavBar -->
-<aside class="hidden md:flex flex-col h-screen w-64 p-4 bg-slate-100 dark:bg-slate-900 border-r-0 fixed left-0 top-0 overflow-y-auto">
-<div class="mb-8 flex items-center gap-3 px-2">
-<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-lg shadow-primary/20">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">edit_square</span>
+<aside class="hidden md:flex flex-col h-screen w-64 bg-slate-100 dark:bg-slate-900 font-['Plus_Jakarta_Sans'] font-medium text-sm p-4 fixed left-0 top-0">
+<div class="flex items-center gap-3 px-2 py-4 mb-8">
+<div class="w-10 h-10 bg-primary flex items-center justify-center rounded-xl rotate-3">
+<span class="material-symbols-outlined text-on-primary" data-icon="edit_square">edit_square</span>
 </div>
 <div>
 <h1 class="text-xl font-bold text-violet-700 dark:text-violet-300 italic leading-none">DraftDock</h1>
-<p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Editorial Admin</p>
+<span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Editorial Admin</span>
 </div>
 </div>
-<button class="mb-8 w-full py-4 px-6 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-2 scale-95 active:scale-90 transition-all shadow-md shadow-primary/10">
-<span class="material-symbols-outlined">add</span>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors rounded-xl transition-all scale-95 active:scale-90" href="./dashboard.html">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+    Dashboard
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors rounded-xl transition-all scale-95 active:scale-90" href="./content.html">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+    Content
+</a>
+<!-- Active Tab: Users -->
+<a class="flex items-center gap-3 px-4 py-3 text-violet-700 dark:text-violet-300 bg-violet-100/50 dark:bg-violet-900/30 rounded-xl font-bold transition-all scale-95 active:scale-90" href="./users.html">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+    Users
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors rounded-xl transition-all scale-95 active:scale-90" href="./analytics.html">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+    Analytics
+</a>
+</nav>
+<div class="mt-auto pt-4 border-t border-slate-200/10 space-y-1">
+<button class="w-full bg-primary text-on-primary py-3 rounded-full font-bold flex items-center justify-center gap-2 mb-4 hover:bg-primary-dim transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined" data-icon="add">add</span>
     Write
 </button>
-<nav class="flex-1 space-y-1">
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 font-medium text-sm hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors rounded-xl" href="./dashboard.html">
-<span class="material-symbols-outlined">dashboard</span>
-        Dashboard
-    </a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 font-medium text-sm hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors rounded-xl" href="./content.html">
-<span class="material-symbols-outlined">description</span>
-        Content
-    </a>
-<!-- Active Tab: Users -->
-<a class="flex items-center gap-3 px-4 py-3 text-violet-700 dark:text-violet-300 bg-violet-100/50 dark:bg-violet-900/30 rounded-xl font-bold transition-colors" href="./users.html">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
-        Users
-    </a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 font-medium text-sm hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors rounded-xl" href="./analytics.html">
-<span class="material-symbols-outlined">monitoring</span>
-        Analytics
-    </a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 font-medium text-sm hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors rounded-xl" href="./settings.html">
-<span class="material-symbols-outlined">settings</span>
-        Settings
-    </a>
-</nav>
-<div class="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 font-medium text-sm hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors rounded-xl" href="#">
-<span class="material-symbols-outlined">help</span>
-        Help
-    </a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 font-medium text-sm hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors rounded-xl" href="#">
-<span class="material-symbols-outlined">logout</span>
-        Logout
-    </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 transition-colors rounded-xl" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+    Help
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 transition-colors rounded-xl" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+    Logout
+</a>
 </div>
 </aside>
 <!-- Main Content Area -->
@@ -141,7 +137,7 @@ h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
 <div class="flex items-center gap-4 flex-1">
 <div class="relative w-full max-w-md">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-slate-500" placeholder="Search authors, emails, or roles..." type="text"/>
+<input id="user-search" class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-slate-500" placeholder="Search authors, emails, or roles..." type="text"/>
 </div>
 </div>
 <div class="flex items-center gap-6">
@@ -171,7 +167,7 @@ h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
 <p class="text-on-surface-variant mt-2 font-medium">Manage your editorial team, roles, and platform permissions.</p>
 </div>
 <div class="flex items-center gap-3">
-<button class="flex items-center gap-2 px-5 py-2.5 bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/15 hover:bg-surface-container-low transition-all shadow-sm">
+<button id="export-users" class="flex items-center gap-2 px-5 py-2.5 bg-surface-container-lowest text-on-surface font-semibold rounded-xl border border-outline-variant/15 hover:bg-surface-container-low transition-all shadow-sm">
 <span class="material-symbols-outlined text-xl">ios_share</span>
         Export User Data
     </button>
@@ -182,112 +178,68 @@ h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
 </div>
 </section>
 <!-- Users Grid: Bento Style (Modern Editorial) -->
-<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-<!-- Author Card 1 -->
-<div class="group bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/5 hover:shadow-md transition-all relative overflow-hidden">
-<div class="absolute top-0 right-0 p-4">
-<span class="px-3 py-1 bg-primary-container/20 text-on-primary-container text-[10px] font-bold rounded-full tracking-wider uppercase">Admin</span>
-</div>
+<section id="users-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Skeleton Card 1 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/5 animate-pulse">
 <div class="flex items-center gap-4 mb-6">
-<img alt="Elena Vance" class="w-16 h-16 rounded-2xl object-cover ring-4 ring-primary/5" data-alt="modern editorial portrait of a woman with short hair and colorful glasses in a bright architectural space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBvjK8rlA21esgbredlWNg-3kgCOI0FxZukwwdsXfe0m9oD2FElKnyfyG7U-KZDfINVu3BqWJUfIIgzFkaUG6Pu3QBjDP8TCQunpTLBcaCc44VBoan3PXUT8yVv62qaBLTWHl0yzTmyazg2TmeCbZpwvEn4y7GT2p6Wrhy1PNTHy6e9WZh2wLgTZ4GRosHSGFeRYF_Whg5XpxGhjnHDOCX8mVoRE0pMVrkhLdT2jJHhCENxE-1q7zxdLXKhnN-GPvsxRpy74b9IwBB"/>
-<div>
-<h3 class="font-bold text-lg text-on-surface">Elena Vance</h3>
-<p class="text-sm text-on-surface-variant">elena.v@draftdock.com</p>
+<div class="w-16 h-16 rounded-2xl bg-surface-container-low flex-shrink-0"></div>
+<div class="space-y-2">
+<div class="h-4 w-28 rounded bg-surface-container-low"></div>
+<div class="h-3 w-36 rounded bg-surface-container-low"></div>
 </div>
 </div>
 <div class="grid grid-cols-2 gap-4 pt-4 border-t border-surface-container-low">
-<div>
-<p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Posts</p>
-<p class="text-xl font-extrabold text-on-surface">142</p>
+<div class="space-y-1"><div class="h-2 w-8 rounded bg-surface-container-low"></div><div class="h-6 w-12 rounded bg-surface-container-low"></div></div>
+<div class="space-y-1"><div class="h-2 w-16 rounded bg-surface-container-low"></div><div class="h-6 w-12 rounded bg-surface-container-low"></div></div>
 </div>
-<div>
-<p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Total Views</p>
-<p class="text-xl font-extrabold text-on-surface">892k</p>
+<div class="mt-6 h-8 w-full rounded-lg bg-surface-container-low"></div>
 </div>
-</div>
-<button class="mt-6 w-full py-2 text-primary font-bold text-sm bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors">
-        Manage Permissions
-    </button>
-</div>
-<!-- Author Card 2 -->
-<div class="group bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/5 hover:shadow-md transition-all relative overflow-hidden">
-<div class="absolute top-0 right-0 p-4">
-<span class="px-3 py-1 bg-secondary-container/30 text-on-secondary-container text-[10px] font-bold rounded-full tracking-wider uppercase">Editor</span>
-</div>
+<!-- Skeleton Card 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/5 animate-pulse">
 <div class="flex items-center gap-4 mb-6">
-<img alt="Marcus Thorne" class="w-16 h-16 rounded-2xl object-cover ring-4 ring-secondary/5" data-alt="stylish portrait of a man with a beard wearing a linen shirt standing in front of a neutral textured wall" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDw0WzwnuzRlAPM-9kjczI9a8fXRV8XGfPsNd2_-BAsHCfC8Mz2UABH1tAywyDsNnfMA8ZzeUMu2wUrckMkkCK4mLxdRRJP9OP6SsjUfsYoSWYOX2i8VQB3lGC7fBf3SRR_L4k9lL9qbBpJhWWKfjaq_Hd5SCGihcapm01__-dzdIQYry9HaSdHg9oApFi3zl8rkwpW2xqyOzSFvQrwDHMVuHdejKl_oGHvslyfbP_8LUjja8w1lZTW6MPTE_yf9GI9IDmqc4mmXaDZ"/>
-<div>
-<h3 class="font-bold text-lg text-on-surface">Marcus Thorne</h3>
-<p class="text-sm text-on-surface-variant">m.thorne@draftdock.com</p>
+<div class="w-16 h-16 rounded-2xl bg-surface-container-low flex-shrink-0"></div>
+<div class="space-y-2">
+<div class="h-4 w-32 rounded bg-surface-container-low"></div>
+<div class="h-3 w-40 rounded bg-surface-container-low"></div>
 </div>
 </div>
 <div class="grid grid-cols-2 gap-4 pt-4 border-t border-surface-container-low">
-<div>
-<p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Posts</p>
-<p class="text-xl font-extrabold text-on-surface">86</p>
+<div class="space-y-1"><div class="h-2 w-8 rounded bg-surface-container-low"></div><div class="h-6 w-10 rounded bg-surface-container-low"></div></div>
+<div class="space-y-1"><div class="h-2 w-16 rounded bg-surface-container-low"></div><div class="h-6 w-12 rounded bg-surface-container-low"></div></div>
 </div>
-<div>
-<p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Total Views</p>
-<p class="text-xl font-extrabold text-on-surface">412k</p>
+<div class="mt-6 h-8 w-full rounded-lg bg-surface-container-low"></div>
 </div>
-</div>
-<button class="mt-6 w-full py-2 text-primary font-bold text-sm bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors">
-        Manage Permissions
-    </button>
-</div>
-<!-- Author Card 3 -->
-<div class="group bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/5 hover:shadow-md transition-all relative overflow-hidden">
-<div class="absolute top-0 right-0 p-4">
-<span class="px-3 py-1 bg-tertiary-container/20 text-on-tertiary-container text-[10px] font-bold rounded-full tracking-wider uppercase">Contributor</span>
-</div>
+<!-- Skeleton Card 3 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/5 animate-pulse">
 <div class="flex items-center gap-4 mb-6">
-<img alt="Aria Chen" class="w-16 h-16 rounded-2xl object-cover ring-4 ring-tertiary/5" data-alt="close up of a confident young woman with braided hair against a soft sun-drenched garden background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDox0XkDKpmUX1QpavqS82g3Kee-PZuyoDb9mw4-egKZUhY5laQxTTUvnyrSAtqnhOUX9XkuZUlTuPsrZIRRDDmiwiuIcP0g7tSseJkq5bLxx8xs7MHw-c4Kns560H1mI3r0valTyVAld4JumOTkwjEQHUVXkyJTxtH_7isVh0Vhln4vZg-GvCVQ0KE9diQ_0cBLuh7La9G8yWWmPTnL5L9NCwElpqCxP2FZJiQTfo0JyvMI1Cngx-nF4NMnwe2Q1cyWOwJlibPaU0x"/>
-<div>
-<h3 class="font-bold text-lg text-on-surface">Aria Chen</h3>
-<p class="text-sm text-on-surface-variant">aria.chen@draftdock.com</p>
+<div class="w-16 h-16 rounded-2xl bg-surface-container-low flex-shrink-0"></div>
+<div class="space-y-2">
+<div class="h-4 w-24 rounded bg-surface-container-low"></div>
+<div class="h-3 w-36 rounded bg-surface-container-low"></div>
 </div>
 </div>
 <div class="grid grid-cols-2 gap-4 pt-4 border-t border-surface-container-low">
-<div>
-<p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Posts</p>
-<p class="text-xl font-extrabold text-on-surface">12</p>
+<div class="space-y-1"><div class="h-2 w-8 rounded bg-surface-container-low"></div><div class="h-6 w-8 rounded bg-surface-container-low"></div></div>
+<div class="space-y-1"><div class="h-2 w-16 rounded bg-surface-container-low"></div><div class="h-6 w-10 rounded bg-surface-container-low"></div></div>
 </div>
-<div>
-<p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Total Views</p>
-<p class="text-xl font-extrabold text-on-surface">45k</p>
+<div class="mt-6 h-8 w-full rounded-lg bg-surface-container-low"></div>
 </div>
-</div>
-<button class="mt-6 w-full py-2 text-primary font-bold text-sm bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors">
-        Manage Permissions
-    </button>
-</div>
-<!-- Author Card 4 -->
-<div class="group bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/5 hover:shadow-md transition-all relative overflow-hidden">
-<div class="absolute top-0 right-0 p-4">
-<span class="px-3 py-1 bg-secondary-container/30 text-on-secondary-container text-[10px] font-bold rounded-full tracking-wider uppercase">Editor</span>
-</div>
+<!-- Skeleton Card 4 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/5 animate-pulse">
 <div class="flex items-center gap-4 mb-6">
-<img alt="Julian Black" class="w-16 h-16 rounded-2xl object-cover ring-4 ring-secondary/5" data-alt="man with thoughtful expression looking away from camera in a clean minimalist art gallery space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChnasaH8DLqIa31wMO-Z5Vor0if-QzljgXs0sCe8otSrHBxQ-n0d2WSWKGzL2_HqR-r0wUWHWMaAk0b3m-6lAZpkDkNFPmYJQI5oq0IB9QR-jBgK9eEhvVQJHHUgBSH74eHVcRsRACFKMWTvHruC8drDqzSAewf16jhy9oNcnv87dPhg0j9CpjLlcD1mmsv3d99gYrTLYhKZLgcYAWMPGxrlwUNeInIACsh62PpXsSvz9Mz3hnWTO8QSM99L9bB5qEeaJofxLkAinS"/>
-<div>
-<h3 class="font-bold text-lg text-on-surface">Julian Black</h3>
-<p class="text-sm text-on-surface-variant">j.black@draftdock.com</p>
+<div class="w-16 h-16 rounded-2xl bg-surface-container-low flex-shrink-0"></div>
+<div class="space-y-2">
+<div class="h-4 w-28 rounded bg-surface-container-low"></div>
+<div class="h-3 w-32 rounded bg-surface-container-low"></div>
 </div>
 </div>
 <div class="grid grid-cols-2 gap-4 pt-4 border-t border-surface-container-low">
-<div>
-<p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Posts</p>
-<p class="text-xl font-extrabold text-on-surface">64</p>
+<div class="space-y-1"><div class="h-2 w-8 rounded bg-surface-container-low"></div><div class="h-6 w-10 rounded bg-surface-container-low"></div></div>
+<div class="space-y-1"><div class="h-2 w-16 rounded bg-surface-container-low"></div><div class="h-6 w-12 rounded bg-surface-container-low"></div></div>
 </div>
-<div>
-<p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-1">Total Views</p>
-<p class="text-xl font-extrabold text-on-surface">228k</p>
+<div class="mt-6 h-8 w-full rounded-lg bg-surface-container-low"></div>
 </div>
-</div>
-<button class="mt-6 w-full py-2 text-primary font-bold text-sm bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors">
-        Manage Permissions
-    </button>
-</div>
-<!-- Invite Empty State / CTA Card -->
+<!-- Invite CTA Card (static, always visible) -->
 <div class="group bg-primary border-2 border-dashed border-primary-container/40 p-6 rounded-xl flex flex-col items-center justify-center text-center gap-4 cursor-pointer hover:bg-primary-dim transition-all">
 <div class="w-16 h-16 rounded-full bg-on-primary/10 flex items-center justify-center text-on-primary">
 <span class="material-symbols-outlined text-4xl">mail</span>
@@ -298,6 +250,7 @@ h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
 </div>
 </div>
 </section>
+<div id="users-pagination" class="flex items-center justify-between"></div>
 <!-- Roles & Permissions Section -->
 <section class="bg-surface-container-low rounded-2xl p-8">
 <div class="mb-8">
@@ -394,10 +347,8 @@ h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
 <span class="material-symbols-outlined">monitoring</span>
 <span class="text-[10px] font-bold">Stats</span>
 </a>
-<a class="flex flex-col items-center gap-1 text-slate-500" href="./settings.html">
-<span class="material-symbols-outlined">settings</span>
-<span class="text-[10px] font-bold">Settings</span>
-</a>
 </nav>
+<script src="./js/config.js"></script>
+<script src="./js/users.js"></script>
 </body>
 </html>
