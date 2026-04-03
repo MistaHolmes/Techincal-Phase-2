@@ -133,7 +133,7 @@ h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
 <!-- Main Content Area -->
 <main class="flex-1 md:ml-64 min-h-screen">
 <!-- TopNavBar (Authority: JSON) -->
-<header class="w-full h-16 sticky top-0 z-50 bg-white/60 dark:bg-slate-950/60 backdrop-blur-md flex items-center justify-between px-8 border-b border-slate-200/10">
+<header class="w-full h-20 sticky top-0 z-50 bg-background dark:bg-slate-950 flex items-center justify-between px-8">
 <div class="flex items-center gap-4 flex-1">
 <div class="relative w-full max-w-md">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
@@ -150,13 +150,10 @@ h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
 </button>
 </div>
 <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800"></div>
-<div class="flex items-center gap-3">
-<div class="text-right hidden sm:block">
-<p class="text-xs font-bold text-slate-900 dark:text-white leading-none">Alex Rivera</p>
-<p class="text-[10px] text-slate-500 font-medium mt-1">Super Admin</p>
-</div>
-<img alt="Admin Profile" class="w-10 h-10 rounded-full object-cover ring-2 ring-primary/10" data-alt="professional headshot of a creative director in a minimal studio setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcLMEd5Jqv6Y76P0IgX73q05JeuRGePR-g01g6dqhvElHsg_AIODTGoONtoR1ObeYDmr5B4D-lpH9le-FRBWUWQVf_wISYhedVKxwkoVgJLa_Lkn8-qVv1BNCiYkPeIwTU_JFrPZbArxB4bJCSkF8KiXAQePKeSIZkAo6gNmxO9K8C1opH2oZCV9ZO8IGbSO4XXAwiqh-6Shh-Uc270-Whm6gYZ-SXvBQbNohz1KtGqKNmQlWBO68nXIjepK3k2SWEsVVl5RZu8lfM"/>
-</div>
+<button id="top-logout-btn" class="ml-2 flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded-xl font-bold transition-all text-sm border border-red-100 dark:border-red-900/50">
+    <span class="material-symbols-outlined text-sm">logout</span>
+    Logout
+</button>
 </div>
 </header>
 <div class="p-8 max-w-7xl mx-auto space-y-10">
@@ -350,5 +347,6 @@ h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; }
 </nav>
 <script src="./js/config.js"></script>
 <script src="./js/users.js"></script>
+    <script src="./js/ui.js"></script>
 </body>
 </html>
