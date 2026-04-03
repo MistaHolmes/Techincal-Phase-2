@@ -160,12 +160,8 @@ export const NewAppShell: React.FC<NewAppShellProps> = ({
         )}
 
         {/* Main Content Area */}
-        <main
-          className={`flex-1 min-w-0 flex flex-col ${
-            hideFooter ? "h-[calc(100vh-4.5rem)] overflow-hidden" : "min-h-[calc(100vh-4.5rem)]"
-          }`}
-        >
-          <div className={hideFooter ? "h-full" : "flex-1"}>{children}</div>
+        <main className="flex-1 min-w-0 flex flex-col min-h-[calc(100vh-4.5rem)]">
+          <div className="flex-1">{children}</div>
         </main>
 
         {/* Right Sidebar / Panel */}

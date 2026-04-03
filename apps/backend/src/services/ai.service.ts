@@ -232,7 +232,7 @@ class AnthropicProvider implements AIProvider {
   private apiKey: string;
   private model: string;
 
-  constructor(apiKey: string, model: string = 'claude-haiku-3-5') {
+  constructor(apiKey: string, model: string = 'claude-sonnet-4-20250514') {
     this.apiKey = apiKey;
     this.model = model;
   }
@@ -452,7 +452,7 @@ let provider: AIProvider | null = null;
 export function getAIProvider(): AIProvider {
   if (!provider) {
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
-    const claudeModel = process.env.CLAUDE_MODEL || 'claude-haiku-3-5';
+    const claudeModel = process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514';
     const geminiKey = process.env.GEMINI_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
 

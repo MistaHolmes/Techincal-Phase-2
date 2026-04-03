@@ -4,8 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import MDEditor from "@uiw/react-md-editor";
 import axios from "axios";
 import { NewAppShell } from "@/components/new-components";
-import { Upload, X as CloseIcon, Plus, Sparkles } from "lucide-react";
-import AISuggestionPanel from "@/components/editor/AISuggestionPanel";
+import { Upload, X as CloseIcon, Plus, Sparkles, Bot } from "lucide-react";
+import AIAssistantPanel from "@/components/editor/AIAssistantPanel";
 
 export function BlogForm() {
   const titleRef = useRef<HTMLInputElement>(null);
@@ -32,6 +32,7 @@ export function BlogForm() {
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [startLoading, setStartLoading] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
   const AUTO_SAVE_KEY = "draftdock_autosave";
@@ -266,12 +267,17 @@ export function BlogForm() {
 
   return (
     <>
-      {/* ── Floating AI Assistant Panel ─────────────────────────── */}
-      <AISuggestionPanel
+      {/* ── AI Assistant Panel ─────────────────────────── */}
+      <AIAssistantPanel
         content={formData.content}
-        onTitleSelect={(title) => setFormData({ ...formData, title })}
-        onTagsSelect={(tags) => setFormData({ ...formData, tags: [...new Set([...formData.tags, ...tags])] })}
-        onSummaryGenerated={(summary) => setFormData({ ...formData, summary })}
+        title={formData.title}
+        currentTags={formData.tags}
+        open={showAIPanel}
+        onToggle={() => setShowAIPanel(v => !v)}
+        onTitleSelect={(title) => setFormData(fd => ({ ...fd, title }))}
+        onTagsSelect={(tags) => setFormData(fd => ({ ...fd, tags: [...new Set([...fd.tags, ...tags])] }))}
+        onSummaryGenerated={(summary) => setFormData(fd => ({ ...fd, summary }))}
+        onContentGenerated={(content) => setFormData(fd => ({ ...fd, content: fd.content ? fd.content + '\n\n' + content : content }))}
       />
 
       <NewAppShell hideRightPanel hideFooter>
@@ -330,6 +336,17 @@ export function BlogForm() {
 
               {/* ── Right side: help + publish settings + word count + status + actions ── */}
               <div className="flex items-center gap-2 px-2 flex-shrink-0">
+                {/* AI Assistant button */}
+                <button
+                  type="button"
+                  onClick={() => setShowAIPanel(v => !v)}
+                  title="AI Writing Assistant"
+                  className="p-1.5 hover:bg-purple-100/40 rounded-lg text-slate-400 hover:text-[#702ae1] transition-colors flex items-center gap-1.5 group"
+                >
+                  <Bot size={17} className="group-hover:text-[#702ae1] transition-colors" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider hidden md:inline">AI</span>
+                </button>
+
                 {/* Help button */}
                 <button
                   type="button"

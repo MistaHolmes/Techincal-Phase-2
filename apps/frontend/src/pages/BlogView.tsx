@@ -91,6 +91,7 @@ const BlogView = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [streak, setStreak] = useState<number | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const ttsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const API_URL = import.meta.env.VITE_API_URL;
   const cache = usePageCache();
   const likeHook = useLike(blogId ?? "");
@@ -167,29 +168,86 @@ const BlogView = () => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  const stopTTS = () => {
+    window.speechSynthesis.cancel();
+    if (ttsIntervalRef.current) {
+      clearInterval(ttsIntervalRef.current);
+      ttsIntervalRef.current = null;
+    }
+    utteranceRef.current = null;
+    setIsPlaying(false);
+  };
+
   const toggleTTS = () => {
     if (isPlaying) {
+      stopTTS();
+      return;
+    }
+
+    const rawContent = blog?.content || '';
+    const cleanContent = rawContent
+      .replace(/!\[.*?\]\(.*?\)/g, '')        // Strip markdown images
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1')     // Strip markdown links, keep text
+      .replace(/<[^>]*>?/gm, '')              // Strip HTML tags
+      .replace(/https?:\/\/[^\s)]+/g, '')     // Strip any remaining URLs
+      .replace(/[#*`>\[\]]/g, '')             // Strip markdown symbols
+      .replace(/\n{2,}/g, '. ')               // Paragraph breaks → pauses
+      .replace(/\s{2,}/g, ' ')               // Collapse whitespace
+      .trim();
+
+    const text = `${blog?.title}. ${cleanContent}`;
+
+    const speak = () => {
       window.speechSynthesis.cancel();
-      setIsPlaying(false);
-    } else {
-      const rawContent = blog?.content || '';
-      const cleanContent = rawContent
-        .replace(/!\[.*?\]\(.*?\)/g, '')           // Strip markdown images
-        .replace(/\[(.*?)\]\(.*?\)/g, '$1')        // Strip markdown links, keep text
-        .replace(/<[^>]*>?/gm, '')                 // Strip HTML tags
-        .replace(/https?:\/\/[^\s)]+/g, '')        // Strip any remaining URLs
-        .replace(/[#*`>\[\]]/g, '')                // Strip markdown symbols
-        .replace(/\n{2,}/g, '. ')                  // Convert paragraph breaks to pauses
-        .replace(/\s{2,}/g, ' ')                   // Collapse whitespace
-        .trim();
-      const text = `${blog?.title}. . . ${cleanContent}`;
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.onend = () => setIsPlaying(false);
+
+      // Prefer a natural English voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => v.lang.startsWith('en') && v.localService)
+        ?? voices.find(v => v.lang.startsWith('en'))
+        ?? voices[0];
+      if (preferred) utterance.voice = preferred;
+
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      utterance.onend = () => stopTTS();
+      utterance.onerror = () => stopTTS();
+
       utteranceRef.current = utterance;
       window.speechSynthesis.speak(utterance);
       setIsPlaying(true);
+
+      // Chrome bug: SpeechSynthesis pauses after ~15s unless resumed periodically
+      ttsIntervalRef.current = setInterval(() => {
+        if (!window.speechSynthesis.speaking) {
+          stopTTS();
+        } else {
+          window.speechSynthesis.pause();
+          window.speechSynthesis.resume();
+        }
+      }, 10000);
+    };
+
+    // Voices may not be loaded yet on first call
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      speak();
+    } else {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.onvoiceschanged = null;
+        speak();
+      };
+      // Fallback: some browsers never fire onvoiceschanged
+      setTimeout(() => {
+        if (!isPlaying) speak();
+      }, 300);
     }
   };
+
+  // Cancel speech when navigating away
+  useEffect(() => () => stopTTS(), []);
 
   const handleSelection = () => {
     const sel = window.getSelection();
