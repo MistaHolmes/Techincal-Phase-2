@@ -1,12 +1,11 @@
 services:
   - type: web
     name: draftdock-admin-backend
-    runtime: node
+    env: docker
     plan: free
     region: oregon
-    # Change directory to admin/server to install its specific dependencies
-    buildCommand: cd apps/admin/server && npm install && npx prisma generate
-    startCommand: node apps/admin/server/index.js
+    rootDir: apps/admin
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DATABASE_URL
         fromDatabase:
