@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Mail,
   Github,
@@ -37,7 +37,10 @@ export function Footer() {
 
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-  const footerLinks = [
+  type FooterLink = { label: string; href: string; external?: boolean; pulse?: boolean };
+  type FooterSection = { title: string; links: FooterLink[] };
+
+  const footerLinks: FooterSection[] = [
     {
       title: "Resources",
       links: [
