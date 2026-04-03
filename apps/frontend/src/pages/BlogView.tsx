@@ -260,7 +260,7 @@ const BlogView = () => {
 
   if (!blog) {
     return (
-      <NewAppShell>
+      <NewAppShell hideFooter>
         <div className="py-12 px-4 sm:px-8 lg:px-12">
            <BlogSkeleton variant="large" />
         </div>
@@ -355,6 +355,7 @@ const BlogView = () => {
     <NewAppShell
       hideSidebar={isFocusMode}
       hideRightPanel={isFocusMode}
+      hideFooter
       rightPanelContent={RightPanelContent}
       showSearch={!isFocusMode}
     >

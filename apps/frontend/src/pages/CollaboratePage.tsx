@@ -16,6 +16,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { NewAppShell } from '@/components/new-components';
+import { usePageCache } from '@/context/PageCacheContext';
 import {
   ArrowRight,
   Link2,
@@ -31,6 +32,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function CollaboratePage() {
   const { getToken } = useAuth();
   const navigate = useNavigate();
+  const cache = usePageCache();
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
@@ -41,7 +43,19 @@ export default function CollaboratePage() {
   const [inviteError, setInviteError] = useState('');
   const [joiningInvite, setJoiningInvite] = useState(false);
 
-  const fetchSessions = async () => {
+  const CACHE_KEY = 'collab:sessions';
+  const CACHE_TTL = 60_000; // 60 seconds — sessions change infrequently
+
+  const fetchSessions = async (forceRefresh = false) => {
+    if (!forceRefresh) {
+      const cached = cache.get(CACHE_KEY, CACHE_TTL);
+      if (cached) {
+        setOwnedDrafts(cached.owned);
+        setCoAuthored(cached.coAuthored);
+        setLoading(false);
+        return;
+      }
+    }
     try {
       const token = await getToken();
       const { data } = await axios.get(`${API_URL}/api/collab/my-sessions`, {
@@ -49,8 +63,11 @@ export default function CollaboratePage() {
         withCredentials: true,
       });
       // Show only draft / unpublished blogs as active sessions
-      setOwnedDrafts((data.owned || []).filter((b: any) => !b.published));
-      setCoAuthored(data.coAuthored || []);
+      const owned = (data.owned || []).filter((b: any) => !b.published);
+      const coAuth = data.coAuthored || [];
+      cache.set(CACHE_KEY, { owned, coAuthored: coAuth });
+      setOwnedDrafts(owned);
+      setCoAuthored(coAuth);
     } catch (err) {
       console.error('Failed to fetch sessions:', err);
     } finally {
@@ -80,7 +97,8 @@ export default function CollaboratePage() {
         { headers: { Authorization: `Bearer ${token}` }, withCredentials: true },
       );
 
-      // 3. Navigate
+      // 3. Navigate — invalidate cache so the sessions list is fresh on return
+      cache.invalidate(CACHE_KEY);
       navigate(`/collab/${blogId}`);
     } catch (err) {
       console.error('Failed to start session:', err);
@@ -97,6 +115,7 @@ export default function CollaboratePage() {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
+      cache.invalidate(CACHE_KEY);
       setOwnedDrafts((s) => s.filter((b) => b.id !== id));
     } catch (err) {
       console.error('Failed to delete session:', err);

@@ -67,8 +67,42 @@ const collabPort = parseInt(process.env.COLLAB_PORT || '3002', 10);
 const server = http.createServer(app);
 
 // ── Middleware ────────────────────────────────────────────────────────────────
+// CORS: allow requests from the frontend and support credentials.
+// Be future-ready: accept configured FRONTEND_URL, common draftdock domains,
+// local dev origins and any subdomain under the draftdock or abhasbehera roots.
+const allowedOrigins = (() => {
+  const list: string[] = [];
+  if (process.env.FRONTEND_URL) list.push(process.env.FRONTEND_URL);
+  // Allow local dev origins when not in production
+  if (process.env.NODE_ENV !== 'production') {
+    list.push('http://localhost:5173', 'http://127.0.0.1:5173');
+  }
+  // Add common production frontends as sensible defaults
+  list.push('https://draftdock.abhasbehera.in', 'https://draftdock.in', 'https://www.draftdock.in');
+  return list;
+})();
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // allow non-browser requests like curl or server-to-server
+    if (!origin) return callback(null, true);
+    // Exact allow-list match
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Permit any subdomain of draftdock.in or abhasbehera.in to ease migration
+    try {
+      const hostname = new URL(origin).hostname.toLowerCase();
+      if (hostname.endsWith('.draftdock.in') || hostname === 'draftdock.in') return callback(null, true);
+      if (hostname.endsWith('.abhasbehera.in') || hostname === 'abhasbehera.in') return callback(null, true);
+    } catch (err) {
+      // fall through to deny
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(clerkMiddleware());
-app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(globalLimiter);
 

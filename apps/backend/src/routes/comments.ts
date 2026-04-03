@@ -8,7 +8,7 @@ import { checkAndAwardAchievements } from '../services/achievement.service';
 const router = Router();
 
 // GET /api/blogs/:id/comments
-router.get('/blog/:id', async (req, res: any) => {
+router.get('/:id/comments', async (req, res: any) => {
   try {
     const { id } = req.params;
     const comments = await prisma.comment.findMany({
@@ -23,8 +23,8 @@ router.get('/blog/:id', async (req, res: any) => {
   }
 });
 
-// POST /api/comments/blog/:id
-router.post('/blog/:id', requireAuth(), writeLimiter, async (req, res: any) => {
+// POST /api/blogs/:id/comments
+router.post('/:id/comments', requireAuth(), writeLimiter, async (req, res: any) => {
   try {
     const { id } = req.params;
     const { content } = req.body;

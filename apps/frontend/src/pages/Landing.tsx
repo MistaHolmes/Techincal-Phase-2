@@ -67,8 +67,8 @@ const LandingPage: React.FC = () => {
     visible: {
       opacity: 1,
       transition: {
-        delayChildren: 0.3,
-        staggerChildren: 0.2,
+        delayChildren: 0.45,
+        staggerChildren: 0.35,
        },
     },
   };
@@ -80,10 +80,21 @@ const LandingPage: React.FC = () => {
       y: 0,
       filter: "blur(0px)",
       transition: {
-        duration: 0.7,
+        duration: 1.0,
         ease: easeOut,
       },
     },
+  };
+
+  // Reveal-on-scroll variants (waterfall / stagger)
+  const revealContainer = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.18 } },
+  };
+
+  const revealItem = {
+    hidden: { opacity: 0, y: 28 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.95, ease: easeOut } },
   };
 
   return (
@@ -129,7 +140,7 @@ const LandingPage: React.FC = () => {
       </div>
       <div className="absolute top-4 right-4 z-20">
         <SignedOut>
-          <SignInButton>
+          <SignInButton mode="modal">
             <button className="px-4 py-2 border border-black bg-black text-white rounded-md hover:bg-white hover:text-black transition">
               Sign In
             </button>
@@ -241,9 +252,15 @@ const LandingPage: React.FC = () => {
       />
 
       {/* Designed for Mental Clarity */}
-      <section className="py-24 px-6 md:px-12 w-full max-w-screen-2xl mx-auto overflow-hidden">
+      <motion.section
+        className="py-24 px-6 md:px-12 w-full max-w-screen-2xl mx-auto overflow-hidden"
+        variants={revealContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.18 }}
+      >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-7 relative">
+          <motion.div className="lg:col-span-7 relative" variants={revealItem}>
             <div className="aspect-video bg-surface-container-low relative overflow-hidden">
               <img
                 alt="Minimalist workstation"
@@ -252,8 +269,8 @@ const LandingPage: React.FC = () => {
               />
               <div className="absolute inset-0 bg-primary/5"></div>
             </div>
-          </div>
-          <div className="lg:col-span-5 lg:pl-12">
+          </motion.div>
+          <motion.div className="lg:col-span-5 lg:pl-12" variants={revealItem}>
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-8 leading-none">
               Designed for <br/>Mental Clarity.
             </h2>
@@ -270,18 +287,24 @@ const LandingPage: React.FC = () => {
                 <span className="font-bold uppercase text-xs tracking-widest">Ink-Ready Typography</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="py-24 px-6 md:px-12 w-full max-w-screen-2xl mx-auto">
+      <motion.section
+        className="py-24 px-6 md:px-12 w-full max-w-screen-2xl mx-auto"
+        variants={revealContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.18 }}
+      >
         <div className="mb-16">
           <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-on-surface-variant">Module.01</span>
           <h2 className="text-4xl font-black uppercase tracking-tighter mt-2">Core Features</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Card 1 */}
-          <div className="bg-surface-container-low p-10 flex flex-col justify-between group hover:bg-surface-container-highest transition-colors cursor-default">
+          <motion.div variants={revealItem} className="bg-surface-container-low p-10 flex flex-col justify-between group hover:bg-surface-container-highest transition-colors cursor-default">
             <div>
               <span className="material-symbols-outlined text-6xl mb-6 block" data-icon="groups">groups</span>
               <h3 className="text-xl font-bold uppercase mb-3">Real-Time Collaboration</h3>
@@ -301,9 +324,9 @@ const LandingPage: React.FC = () => {
                 Presence indicators per section
               </li>
             </ul>
-          </div>
+          </motion.div>
           {/* Card 2 – accent */}
-          <div className="bg-primary p-10 flex flex-col justify-between">
+          <motion.div variants={revealItem} className="bg-primary p-10 flex flex-col justify-between">
             <div>
               <span className="material-symbols-outlined text-6xl mb-6 block text-white" data-icon="code">edit_note</span>
               <h3 className="text-xl font-bold uppercase mb-3 text-white">Rich Markdown Editor</h3>
@@ -323,9 +346,9 @@ const LandingPage: React.FC = () => {
                 Cover images & tags
               </li>
             </ul>
-          </div>
+          </motion.div>
           {/* Card 3 */}
-          <div className="bg-surface-container-low p-10 flex flex-col justify-between group hover:bg-surface-container-highest transition-colors cursor-default">
+          <motion.div variants={revealItem} className="bg-surface-container-low p-10 flex flex-col justify-between group hover:bg-surface-container-highest transition-colors cursor-default">
             <div>
               <span className="material-symbols-outlined text-6xl mb-6 block" data-icon="ai_assistant">auto_awesome</span>
               <h3 className="text-xl font-bold uppercase mb-3">AI Writing Assistant</h3>
@@ -345,65 +368,71 @@ const LandingPage: React.FC = () => {
                 One-click TL;DR summaries
               </li>
             </ul>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="py-24 bg-surface-container-high">
+      <motion.section
+        className="py-24 bg-surface-container-high"
+        variants={revealContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+      >
         <div className="max-w-screen-xl mx-auto px-6 md:px-12 text-center">
-          <div className="mb-12">
+          <motion.div variants={revealItem} className="mb-12">
             <span className="material-symbols-outlined text-primary text-5xl" data-icon="format_quote" data-weight="fill" style={{fontVariationSettings: "'FILL' 1"}}>format_quote</span>
-          </div>
-          <blockquote className="text-3xl md:text-5xl font-light italic tracking-tight mb-12 text-on-surface">
+          </motion.div>
+          <motion.blockquote variants={revealItem} className="text-3xl md:text-5xl font-light italic tracking-tight mb-12 text-on-surface">
             "DraftDock is the first writing environment that respects the mathematical structure of a story. It’s an essential part of my technical workflow."
-          </blockquote>
-          <div className="flex flex-col items-center">
+          </motion.blockquote>
+          <motion.div variants={revealItem} className="flex flex-col items-center">
             <div className="w-16 h-16 bg-primary mb-4 grayscale">
               <img alt="User portrait" className="w-full h-full object-cover opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWdNSsIipQb-1ZDVz6dpAla8uJrQSeEmdZynYrrURAp2XjRjdQ73A154QGyuVVF6irsyRq4IFTxWLHCPJt3PoEz9i5OSFSQnn1rJKYnePAbD13XNJ6EBqLom0JFCrWnNSLY9x62QG5PjQK6CwebJhc6Q3nST_-vXhA2rbHPRx7TPUlOwfPIi0RR4e-AfvUycejVtVjOrfXqnVV-s01SG0-YD-7SKxwjMFz1XKCwD54i0h4YJnooAYQbKNaAVJscVRA5zBoB-UyU1g"/>
             </div>
             <p className="font-bold uppercase text-xs tracking-[0.2em]">Julian Thorne</p>
             <p className="text-[10px] uppercase text-on-surface-variant mt-1">Lead Architect, NEXUS LABS</p>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       <section className="py-24 px-6 md:px-12 w-full max-w-screen-2xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-24">
           <div>
             <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-on-surface-variant">How it works</span>
             <h2 className="text-4xl font-black uppercase tracking-tighter mt-2 mb-12">From Draft to Published</h2>
-            <div className="space-y-12">
-              <div className="group">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-2xl font-bold uppercase flex items-center gap-3">
-                    <span className="material-symbols-outlined text-2xl text-primary">edit_note</span>
-                    Write &amp; Format
-                  </h4>
-                  <span className="font-mono text-[10px] text-outline">01</span>
-                </div>
-                <p className="text-on-surface-variant pb-8 border-b border-outline-variant/20">Open the editor, write in Markdown, drop in cover art, and organise with tags. The live preview shows exactly how readers will see your post before you hit publish.</p>
+                <div className="space-y-12">
+                <motion.div variants={revealItem} className="group">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-2xl font-bold uppercase flex items-center gap-3">
+                      <span className="material-symbols-outlined text-2xl text-primary">edit_note</span>
+                      Write &amp; Format
+                    </h4>
+                    <span className="font-mono text-[10px] text-outline">01</span>
+                  </div>
+                  <p className="text-on-surface-variant pb-8 border-b border-outline-variant/20">Open the editor, write in Markdown, drop in cover art, and organise with tags. The live preview shows exactly how readers will see your post before you hit publish.</p>
+                </motion.div>
+                <motion.div variants={revealItem} className="group">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-2xl font-bold uppercase flex items-center gap-3">
+                      <span className="material-symbols-outlined text-2xl text-primary">explore</span>
+                      Publish &amp; Get Discovered
+                    </h4>
+                    <span className="font-mono text-[10px] text-outline">02</span>
+                  </div>
+                  <p className="text-on-surface-variant pb-8 border-b border-outline-variant/20">One click publishes your post to your public profile. The Explore feed surfaces your work to readers browsing by topic, trending posts, and personalised recommendations.</p>
+                </motion.div>
+                <motion.div variants={revealItem} className="group">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-2xl font-bold uppercase flex items-center gap-3">
+                      <span className="material-symbols-outlined text-2xl text-primary">local_fire_department</span>
+                      Build Streaks &amp; Earn Badges
+                    </h4>
+                    <span className="font-mono text-[10px] text-outline">03</span>
+                  </div>
+                  <p className="text-on-surface-variant pb-8 border-b border-outline-variant/20">Write consistently to build publishing streaks and climb the Leaderboard. Unlock achievement badges as you hit milestones — your progress is always on display on your profile.</p>
+                </motion.div>
               </div>
-              <div className="group">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-2xl font-bold uppercase flex items-center gap-3">
-                    <span className="material-symbols-outlined text-2xl text-primary">explore</span>
-                    Publish &amp; Get Discovered
-                  </h4>
-                  <span className="font-mono text-[10px] text-outline">02</span>
-                </div>
-                <p className="text-on-surface-variant pb-8 border-b border-outline-variant/20">One click publishes your post to your public profile. The Explore feed surfaces your work to readers browsing by topic, trending posts, and personalised recommendations.</p>
-              </div>
-              <div className="group">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-2xl font-bold uppercase flex items-center gap-3">
-                    <span className="material-symbols-outlined text-2xl text-primary">local_fire_department</span>
-                    Build Streaks &amp; Earn Badges
-                  </h4>
-                  <span className="font-mono text-[10px] text-outline">03</span>
-                </div>
-                <p className="text-on-surface-variant pb-8 border-b border-outline-variant/20">Write consistently to build publishing streaks and climb the Leaderboard. Unlock achievement badges as you hit milestones — your progress is always on display on your profile.</p>
-              </div>
-            </div>
           </div>
           <div className="flex items-center justify-center">
             <div className="w-full aspect-square bg-gray-50 relative p-8">

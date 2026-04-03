@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { NewHeader } from "./NewHeader";
 import { NewSidebar } from "./NewSidebar";
 import { Footer } from "../Footer";
+import { Zap } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -46,8 +47,12 @@ const RightPanel: React.FC = () => {
         <p className="font-body text-xs opacity-90 mb-6 leading-relaxed">
           Early access to premium drafts, and help build the future of the Dock.
         </p>
-        <button className="w-full py-3 bg-white text-violet-600 font-label font-bold text-xs uppercase tracking-widest rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
-          Get Started
+        <button
+          onClick={() => navigate("/pricing")}
+          className="w-full py-3 bg-white text-violet-600 font-label font-bold text-xs uppercase tracking-widest rounded-xl shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+        >
+          <Zap size={13} />
+          View Plans
         </button>
       </div>
 

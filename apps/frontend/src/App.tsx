@@ -31,6 +31,7 @@ const AdminUserDetails = lazy(() => import("./pages/admin/UserDetails"));
 const CollaboratePage = lazy(() => import("./pages/CollaboratePage"));
 const CollaborativeBlogForm = lazy(() => import("./pages/CollaborativeBlogForm").then(m => ({ default: m.CollaborativeBlogForm })));
 const CollabJoinPage = lazy(() => import("./pages/CollaborativeBlogForm").then(m => ({ default: m.CollabJoinPage })));
+const PricingPage = lazy(() => import("./pages/Pricing"));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -99,6 +100,7 @@ const App: React.FC = () => {
           {/* static */}
           <Route path="/my-story" element={<MyStory />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/pricing" element={<NewAppShell hideRightPanel><PricingPage /></NewAppShell>} />
         </Routes>
       </Suspense>
     </Router>

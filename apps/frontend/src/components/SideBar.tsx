@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   LayoutGrid, FileDiff, Compass, Bookmark, BarChart2, Settings,
-  Menu, X, Search, History, Trophy, MessageSquare, ChevronLeft, ChevronRight, Shield
+  Menu, X, Search, History, Trophy, MessageSquare, ChevronLeft, ChevronRight
 } from "lucide-react";
 import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
@@ -79,7 +79,7 @@ const Sidebar: React.FC<{ activePage?: string }> = ({ activePage = "dock" }) => 
   const { user, isLoaded } = useUser();
   const [userBlogs, setUserBlogs] = useState<Blog[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  // Admin feature removed — no admin check
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebar-collapsed") === "true";
@@ -95,15 +95,7 @@ const Sidebar: React.FC<{ activePage?: string }> = ({ activePage = "dock" }) => 
     localStorage.setItem("sidebar-collapsed", String(collapsed));
   }, [collapsed]);
 
-  // Check admin status
-  useEffect(() => {
-    if (!isLoaded || !user) return;
-    const API_URL = import.meta.env.VITE_API_URL;
-    axios
-      .get(`${API_URL}/api/admin/check`, { withCredentials: true })
-      .then(() => setIsAdmin(true))
-      .catch(() => setIsAdmin(false));
-  }, [user, isLoaded]);
+  // (Removed admin check — frontend no longer queries /api/admin/check)
 
   useEffect(() => {
     if (!isLoaded || !user || !user.id) return;
@@ -217,16 +209,7 @@ const Sidebar: React.FC<{ activePage?: string }> = ({ activePage = "dock" }) => 
             />
           ))}
 
-          {/* Admin link — only visible to admins */}
-          {isAdmin && (
-            <NavItem
-              href="/admin"
-              icon={<Shield size={18} />}
-              label="Admin"
-              active={isActive("/admin")}
-              collapsed={collapsed}
-            />
-          )}
+          {/* Admin feature removed */}
 
           {/* Your Blogs section (expanded only) */}
           {!collapsed && userBlogs.length > 0 && (

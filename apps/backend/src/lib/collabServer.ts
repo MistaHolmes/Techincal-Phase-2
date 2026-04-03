@@ -14,6 +14,7 @@ import { clerkClient } from '@clerk/express';
 import prisma from './prisma';
 import redisClient from './redis';
 import { broadcastNotificationUpdate } from './websocket';
+import { ydocToMarkdown } from './ydocToContent';
 
 // ── Redis key helpers ────────────────────────────────────────────────────────
 const ydocKey   = (blogId: string) => `collab:ydoc:${blogId}`;
@@ -169,9 +170,8 @@ export function initCollabServer(port: number = 3002): HocuspocusServer {
           data: { ydocState: Buffer.from(update) },
         });
 
-        // Also save plain-text content and title for non-collab readers
-        const ytext = data.document.getText('content');
-        const plainContent = ytext.toJSON();
+        // Also save content and title for non-collab readers
+        const plainContent = ydocToMarkdown(data.document);
         const ytitle = data.document.getText('title');
         const plainTitle = ytitle.toJSON();
         const updatePayload: { content?: string; title?: string } = {};

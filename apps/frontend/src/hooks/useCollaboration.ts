@@ -4,15 +4,12 @@
  * Architecture (React-18 / Strict-Mode safe):
  *
  *  1. Y.Doc is created once in a ref (stable, never recreated).
- *  2. TipTap editor is created immediately with only StarterKit + Collaboration(ydoc).
- *     It does NOT depend on the provider at construction time — Collaboration only
- *     needs the Y.Doc, not a WebSocket connection.
- *  3. The HocuspocusProvider is created ENTIRELY inside useEffect([blogId]).
- *     React Strict Mode will mount→cleanup→remount the effect, recreating the provider
- *     each time, which is safe and expected.
- *  4. CollaborationCursor is intentionally excluded: its ProseMirror Plugin.init reads
- *     provider.awareness.doc synchronously before the WS lifecycle is ready, causing
- *     an unrecoverable crash in development.
+ *  2. HocuspocusProvider is created in useEffect([blogId]) and stored in state.
+ *  3. TipTap editor uses StarterKit (undoRedo disabled) + Collaboration.
+ *     Collaboration ships its own Y.js undo manager, so StarterKit's must be off.
+ *  4. Awareness tracks connected users (name/color) via Hocuspocus provider.
+ *     CollaborationCursor is omitted — @tiptap/extension-collaboration-cursor
+ *     has no v3 release yet and the v2 build crashes against TipTap v3 APIs.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -23,6 +20,8 @@ import Collaboration from '@tiptap/extension-collaboration';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import * as Y from 'yjs';
 import axios from 'axios';
+// Note: @tiptap/extension-collaboration-cursor has no v3 release yet;
+// cursors are disabled until a compatible version is published.
 
 const API_URL = import.meta.env.VITE_API_URL;
 const WS_BASE  = import.meta.env.VITE_COLLAB_WS_URL || 'ws://localhost:3002';
@@ -56,6 +55,7 @@ export function useCollaboration({ blogId, token: externalToken, inviteToken }: 
   const [isSaving,       setIsSaving]       = useState(false);
   const [lastSavedAt,    setLastSavedAt]    = useState<Date | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<CollabUser[]>([]);
+  const [provider,       setProvider]       = useState<HocuspocusProvider | null>(null);
 
   // ── Refs so closures inside useEffect always see fresh values ─────────────
   const getTokenRef      = useRef(getToken);
@@ -74,25 +74,6 @@ export function useCollaboration({ blogId, token: externalToken, inviteToken }: 
   }
   const ydoc = ydocRef.current;
 
-  // ── Exposed provider ref (read-only to consumers) ─────────────────────────
-  const providerRef = useRef<HocuspocusProvider | null>(null);
-
-  // ── TipTap editor — only needs ydoc, no provider ──────────────────────────
-  const editor = useEditor(
-    {
-      extensions: [
-        StarterKit.configure({ undoRedo: false }),
-        Collaboration.configure({ document: ydoc }),
-      ],
-      editorProps: {
-        attributes: {
-          class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-4 py-3',
-        },
-      },
-    },
-    [], // stable deps — editor is never recreated
-  );
-
   // ── Provider lifecycle — fully inside useEffect ────────────────────────────
   useEffect(() => {
     const tokenFn = async (): Promise<string> => {
@@ -101,14 +82,14 @@ export function useCollaboration({ blogId, token: externalToken, inviteToken }: 
       try { return (await getTokenRef.current()) ?? ''; } catch { return ''; }
     };
 
-    const provider = new HocuspocusProvider({
+    const prov = new HocuspocusProvider({
       url:      WS_BASE,
       name:     blogId,
       document: ydoc,
       token:    tokenFn,
     });
 
-    providerRef.current = provider;
+    setProvider(prov);
 
     const onStatus = ({ status: s }: { status: string }) => {
       setStatus(
@@ -120,7 +101,7 @@ export function useCollaboration({ blogId, token: externalToken, inviteToken }: 
     const onAwareness = () => {
       const users: CollabUser[] = [];
       const seen = new Set<string>();
-      provider.awareness?.getStates().forEach((state: any) => {
+      prov.awareness?.getStates().forEach((state: any) => {
         const u = state.user;
         if (u?.userId && !seen.has(u.userId)) {
           seen.add(u.userId);
@@ -130,13 +111,13 @@ export function useCollaboration({ blogId, token: externalToken, inviteToken }: 
       setConnectedUsers(users);
     };
 
-    provider.on('status',           onStatus);
-    provider.on('awarenessUpdate',  onAwareness);
+    prov.on('status',           onStatus);
+    prov.on('awarenessUpdate',  onAwareness);
 
     // Set local awareness
     const u = userRef.current;
-    if (u && provider.awareness) {
-      provider.setAwarenessField('user', {
+    if (u && prov.awareness) {
+      prov.setAwarenessField('user', {
         userId: u.id,
         name:   u.fullName || u.primaryEmailAddress?.emailAddress || 'Anonymous',
         color:  userColor(u.id),
@@ -145,24 +126,42 @@ export function useCollaboration({ blogId, token: externalToken, inviteToken }: 
     }
 
     return () => {
-      provider.off('status',          onStatus);
-      provider.off('awarenessUpdate', onAwareness);
-      provider.destroy();
-      providerRef.current = null;
+      prov.off('status',          onStatus);
+      prov.off('awarenessUpdate', onAwareness);
+      prov.destroy();
+      setProvider(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blogId]);
 
+  // ── TipTap editor — recreated when provider becomes available ─────────────
+  const editor = useEditor(
+    {
+      extensions: [
+        // undoRedo: false — TipTap v3 renamed history→undoRedo; Collaboration
+        // ships its own Y.js undo manager so the built-in one must be disabled.
+        StarterKit.configure({ undoRedo: false }),
+        Collaboration.configure({ document: ydoc }),
+      ],
+      editorProps: {
+        attributes: {
+          class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-4 py-3',
+        },
+      },
+    },
+    [], // editor is stable; ydoc is shared via ref so content is preserved
+  );
+
   // ── Update awareness if user loads after provider connects ────────────────
   useEffect(() => {
-    if (!user || !providerRef.current?.awareness) return;
-    providerRef.current.setAwarenessField('user', {
+    if (!user || !provider?.awareness) return;
+    provider.setAwarenessField('user', {
       userId: user.id,
       name:   user.fullName || user.primaryEmailAddress?.emailAddress || 'Anonymous',
       color:  userColor(user.id),
       avatar: user.imageUrl,
     });
-  }, [user?.id]);
+  }, [user?.id, provider]);
 
   // ── Explicit save ──────────────────────────────────────────────────────────
   const save = useCallback(async () => {
@@ -192,7 +191,7 @@ export function useCollaboration({ blogId, token: externalToken, inviteToken }: 
 
   return {
     editor,
-    provider: providerRef.current,
+    provider,
     ydoc,
     status,
     connectedUsers,

@@ -1,4 +1,5 @@
 import { Mail, MessageCircle, Github, Twitter, Coffee, MapPin, Clock } from "lucide-react";
+import { Footer } from "@/components/Footer";
 
 export function Contact() {
   const email = 'abhasbehera320@gmail.com';
@@ -185,6 +186,7 @@ export function Contact() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

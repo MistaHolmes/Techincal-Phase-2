@@ -23,12 +23,12 @@ const BlogSkeleton: React.FC<BlogSkeletonProps> = ({ variant = "small" }) => {
   ];
 
   const extraLinesLarge = [
-    <Skeleton key="extra3" className="h-5 w-full mb-2" />,
-    <Skeleton key="extra4" className="h-5 w-4/6 mb-2" />,
-    <Skeleton key="extra5" className="h-5 w-3/4 mb-2" />,
-    <Skeleton key="extra6" className="h-5 w-3/4 mb-2" />,
-    <Skeleton key="extra7" className="h-5 w-3/4 mb-2" />,
-    <Skeleton key="extra8" className="h-5 w-3/4 mb-2" />,
+    <Skeleton key="large1" className="h-5 w-full mb-2" />,
+    <Skeleton key="large2" className="h-5 w-4/6 mb-2" />,
+    <Skeleton key="large3" className="h-5 w-3/4 mb-2" />,
+    <Skeleton key="large4" className="h-5 w-3/4 mb-2" />,
+    <Skeleton key="large5" className="h-5 w-3/4 mb-2" />,
+    <Skeleton key="large6" className="h-5 w-3/4 mb-2" />,
   ];
 
   let skeletons = baseLines;
