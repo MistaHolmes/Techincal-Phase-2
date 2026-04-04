@@ -78,7 +78,13 @@ const allowedOrigins = (() => {
     list.push('http://localhost:5173', 'http://127.0.0.1:5173');
   }
   // Add common production frontends as sensible defaults
-  list.push('https://draftdock.abhasbehera.in', 'https://draftdock.in', 'https://www.draftdock.in');
+  list.push(
+    'https://draftdock.abhasbehera.in',
+    'https://draftdock.in',
+    'https://www.draftdock.in',
+    'https://draftdocks.in',
+    'https://www.draftdocks.in'
+  );
   return list;
 })();
 
