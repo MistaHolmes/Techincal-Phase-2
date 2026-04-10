@@ -7,7 +7,6 @@ import RotatingWords from "@/components/RotatingWords";
 import { useNavigate } from "react-router-dom";
 import BackgroundGlow from "@/components/ui/BackgroundGlow";
 import { Footer } from "@/components/Footer";
-import ThemeToggle from "@/components/ThemeToggle";
 
 const LandingPage: React.FC = () => {
   const mouseX = useMotionValue(0);
