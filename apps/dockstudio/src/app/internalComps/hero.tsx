@@ -48,6 +48,17 @@ export function Hero() {
               Get Started <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
+
+          {/* Link back to original DraftDock site */}
+          <a
+            href="https://www.draftdocks.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-violet-200 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 px-3 py-2 rounded-md"
+          >
+            DraftDock
+          </a>
+
           {/* Theme toggle */}
           <ThemeToggle />
         </div>
