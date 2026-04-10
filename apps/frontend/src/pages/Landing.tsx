@@ -164,8 +164,15 @@ const LandingPage: React.FC = () => {
         <div className="h-2 w-2 rounded-full bg-black"></div>
         <div className="h-2 w-2 rounded-full bg-black"></div>
       </div>
-      <div className="absolute top-4 right-4 z-20">
-        <ThemeToggle className="mr-2" />
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <a
+          href="https://dockstudio.abhasbehera.in/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-4 py-2 border border-black bg-transparent text-black rounded-md hover:bg-black hover:text-white transition"
+        >
+          DockStudio
+        </a>
         <SignedOut>
           <SignInButton mode="modal">
             <button className="px-4 py-2 border border-black bg-black text-white rounded-md hover:bg-white hover:text-black transition">
