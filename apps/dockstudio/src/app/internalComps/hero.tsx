@@ -10,7 +10,10 @@ import {
   Terminal,
   Eye,
   Layers,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -40,11 +43,13 @@ export function Hero() {
           <Link href="/sign-up">
             <Button
               size="sm"
-              className="bg-white text-[#00042e] hover:bg-violet-100 font-semibold gap-1.5 px-5"
+              className="bg-accent text-accent-foreground hover:opacity-95 font-semibold gap-1.5 px-5 dark:bg-white dark:text-[#00042e]"
             >
               Get Started <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
+          {/* Theme toggle */}
+          <ThemeToggle />
         </div>
       </nav>
 
@@ -108,7 +113,7 @@ export function Hero() {
           <Link href="/sign-up">
             <Button
               size="lg"
-              className="gap-2 bg-white text-[#00042e] hover:bg-violet-100 font-headline font-semibold px-8 active:scale-95 transition-all shadow-lg shadow-violet-500/20"
+              className="gap-2 bg-accent text-accent-foreground hover:opacity-95 font-headline font-semibold px-8 active:scale-95 transition-all shadow-lg shadow-accent/20 dark:bg-white dark:text-[#00042e]"
             >
               Start Building
               <ArrowRight className="w-4 h-4" />
@@ -191,6 +196,20 @@ export function Hero() {
   );
 }
 
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+
+  return (
+    <button
+      aria-label="Toggle theme"
+      onClick={toggle}
+      className="p-2 rounded-md bg-white/5 hover:bg-white/10 text-white flex items-center justify-center"
+    >
+      {theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-[#00042e]" />}
+    </button>
+  );
+}
+
 /* ── Feature card ── */
 function FeatureCard({
   icon,
@@ -202,14 +221,14 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="group p-5 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm hover:bg-white/[0.07] hover:border-violet-400/25 transition-all duration-300">
+    <div className="group p-5 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm hover:bg-white/[0.07] hover:border-violet-400/25 transition-all duration-300 dark:bg-white/[0.98] dark:border-slate-200 dark:hover:border-violet-200">
       <div className="mb-3 p-2.5 w-fit rounded-lg bg-violet-500/10 border border-violet-400/15">
         {icon}
       </div>
-      <h3 className="font-headline text-[15px] font-semibold text-white mb-1.5">
+      <h3 className="font-headline text-[15px] font-semibold text-white mb-1.5 dark:text-[#00042e]">
         {title}
       </h3>
-      <p className="text-[13px] text-violet-200/50 leading-relaxed">
+      <p className="text-[13px] text-violet-200/50 leading-relaxed dark:text-slate-600">
         {description}
       </p>
     </div>
@@ -234,7 +253,7 @@ function StepCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: parseInt(step) * 0.12 }}
-      className="relative p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm"
+      className="relative p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm dark:bg-white/[0.98] dark:border-slate-200"
     >
       <div className="flex items-center gap-3 mb-4">
         <span className="text-[11px] font-bold tracking-widest text-violet-400/60 uppercase">
@@ -242,11 +261,11 @@ function StepCard({
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-violet-400/20 to-transparent" />
       </div>
-      <div className="mb-3 p-2.5 w-fit rounded-lg bg-violet-500/10 border border-violet-400/15 text-violet-400">
+      <div className="mb-3 p-2.5 w-fit rounded-lg bg-violet-500/10 border border-violet-400/15 text-violet-400 dark:text-violet-600">
         {icon}
       </div>
-      <h3 className="font-headline text-lg font-semibold text-white mb-2">{title}</h3>
-      <p className="text-sm text-violet-200/50 leading-relaxed">{description}</p>
+      <h3 className="font-headline text-lg font-semibold text-white mb-2 dark:text-[#00042e]">{title}</h3>
+      <p className="text-sm text-violet-200/50 leading-relaxed dark:text-slate-600">{description}</p>
     </motion.div>
   );
 }

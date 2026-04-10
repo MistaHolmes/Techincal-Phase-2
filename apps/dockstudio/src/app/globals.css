@@ -10,30 +10,8 @@
 ──────────────────────────────────────────────────────────────── */
 
 @layer base {
+  /* Dark mode by default */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 0 0% 5%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 210 20% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 262 83% 58%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 91%;
-    --input: 0 0% 91%;
-    --ring: 262 83% 58%;
-    --radius: 0.625rem;
-  }
-
-  .dark {
     /* Material Design 3 dark surface system matching DockStudio IDE mock */
     --background: 220 15% 8%;           /* #111317  surface */
     --foreground: 240 12% 90%;          /* #e2e2e8  on-surface */
@@ -54,6 +32,31 @@
     --border: 0 0% 100% / 0.06;         /* white/5-6 subtle borders */
     --input: 222 9% 13%;                /* same as card */
     --ring: 222 100% 84%;               /* same as primary */
+    --radius: 0.625rem;
+  }
+
+  /* Light-theme overrides when `.dark` is present */
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 5%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 91%;
+    --input: 0 0% 91%;
+    --ring: 262 83% 58%;
+    --radius: 0.625rem;
   }
 }
 

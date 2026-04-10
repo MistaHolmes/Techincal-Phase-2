@@ -18,14 +18,17 @@ const ThemeContext = createContext<{
 export const useTheme = () => useContext(ThemeContext);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  // Visual default is dark (CSS :root); `.dark` class is used as the
+  // light-mode override. So default theme state is "dark".
+  const [theme, setTheme] = useState<Theme>("dark");
 
   // Hydrate from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem("dockstudio-theme") as Theme | null;
     if (stored === "dark" || stored === "light") {
       setTheme(stored);
-      document.documentElement.classList.toggle("dark", stored === "dark");
+      // `.dark` class presence means light theme now (we inverted CSS vars).
+      document.documentElement.classList.toggle("dark", stored === "light");
     }
   }, []);
 
@@ -33,7 +36,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme((prev) => {
       const next = prev === "light" ? "dark" : "light";
       localStorage.setItem("dockstudio-theme", next);
-      document.documentElement.classList.toggle("dark", next === "dark");
+      // Add the `.dark` class when the visual theme should be light.
+      document.documentElement.classList.toggle("dark", next === "light");
       return next;
     });
   }, []);

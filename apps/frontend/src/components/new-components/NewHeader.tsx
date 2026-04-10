@@ -36,6 +36,7 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
   };
 
   const navItems = [
+    { label: "DockStudio", href: "https://dockstudio.abhasbehera.in/", external: true },
     { label: "Explore", href: "/explore" },
     { label: "Collaborate", href: "/collaborate" },
     { label: "My Profile", href: "/profile" },
@@ -60,22 +61,41 @@ export const NewHeader: React.FC<NewHeaderProps> = ({
 
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
-              <button
-                key={item.href}
-                onClick={() => navigate(item.href)}
-                className={`font-medium font-headline tracking-tight transition-colors flex items-center gap-1.5 ${
-                  isActive(item.href)
-                    ? "text-black dark:text-white font-bold border-b-2 border-black dark:border-white pb-1"
-                    : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                }`}
-              >
-                {item.label === "Explore" && <Compass size={15} />}
-                {item.label === "Collaborate" && <Users size={15} />}
-                {item.label === "My Profile" && <User size={15} />}
-                <span>{item.label}</span>
-              </button>
-            ))}
+            {navItems.map((item) => {
+              const commonClass = `font-medium font-headline tracking-tight transition-colors flex items-center gap-1.5 ${
+                isActive(item.href)
+                  ? "text-black dark:text-white font-bold border-b-2 border-black dark:border-white pb-1"
+                  : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+              }`;
+
+              // External links (open in new tab)
+              if ((item as any).external) {
+                return (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={commonClass}
+                  >
+                    <span>{item.label}</span>
+                  </a>
+                );
+              }
+
+              return (
+                <button
+                  key={item.href}
+                  onClick={() => navigate(item.href)}
+                  className={commonClass}
+                >
+                  {item.label === "Explore" && <Compass size={15} />}
+                  {item.label === "Collaborate" && <Users size={15} />}
+                  {item.label === "My Profile" && <User size={15} />}
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
